@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#ffffff">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Illume — The Work</title>
+<meta name="description" content="What you already have, reimagined. Illume's portfolio of studio-feel marketing content.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ind.css">
+<style>
+.intro{padding:36px 0 0}
+.intro h1{font-family:var(--display);font-weight:900;letter-spacing:-.03em;font-size:clamp(38px,7.5vw,92px);line-height:.98;color:var(--ink);max-width:16ch}
+.intro p{margin-top:18px;max-width:52ch;font-size:16.5px;color:var(--ink-soft)}
+.transform-feat{margin-top:44px;padding:44px 40px;background:var(--panel);border-radius:var(--r)}
+.transform-feat .tf-label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-deep);margin-bottom:22px;display:block}
+.tf-row{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center}
+.tf-panel{border-radius:14px;overflow:hidden;aspect-ratio:4/5}
+.tf-arrow{font-family:var(--display);font-weight:700;font-size:28px;color:var(--accent);text-align:center}
+.tf-tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:10px;text-align:center}
+.gallery-section{margin-top:70px}
+.gallery-label{display:flex;align-items:baseline;gap:16px;margin-bottom:20px}
+.gallery-label h2{font-family:var(--display);font-weight:700;font-size:clamp(19px,2.2vw,25px);letter-spacing:-.01em;margin:0}
+.gallery-label span{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-left:auto}
+.grid-uniform{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.tile-uniform{aspect-ratio:4/5;border-radius:14px;overflow:hidden;background:var(--panel)}
+.tile-uniform img{width:100%;height:100%;object-fit:cover;display:block}
+.tile-zoom img{transform:scale(1.15);transform-origin:50% 30%}
+.tile-contain{background:var(--panel)}
+.tile-contain img{object-fit:contain;padding:8px}
+.spec-note{margin-top:20px;font-size:12.5px;color:var(--muted);max-width:60ch}
+footer.band{margin-top:80px;padding:26px 0 46px}
+@media (max-width:900px){.grid-uniform{grid-template-columns:repeat(2,1fr)}.tf-row{grid-template-columns:1fr}.tf-arrow{transform:rotate(90deg)}.transform-feat{padding:30px 22px}}
+@media (max-width:640px){.intro h1{font-size:clamp(32px,10vw,52px)}}
+</style>
+</head>
+<body style="background:#ffffff">
+<div class="wrap">
+<header class="masthead">
+<a class="logo-link" href="index.html" aria-label="Illume home"><img src="logo.svg" alt="Illume"></a>
+<nav class="nav">
+<a href="index.html">Home</a>
+</nav>
+<a class="btn" href="start.html">Start your project</a>
+</header>
+
+<section class="intro">
+<span class="eyebrow">Portfolio</span>
+<h1>What you already have. Reimagined.</h1>
+<p>Illume takes the content a business already has and gives it a studio-produced finish. Here's a look at the work.</p>
+</section>
+
+<section class="transform-feat">
+<span class="tf-label">Original &rarr; Illume &rarr; Studio feel</span>
+<div class="tf-row">
+<div>
+<div class="tf-panel"><img src="images/before/wallet-keychain.jpg" alt="Original phone photo of a wallet keychain"></div>
+<p class="tf-tag">Original</p>
+</div>
+<div class="tf-arrow">&rarr;</div>
+<div>
+<div class="tf-panel"><img src="images/after/wallet-keychain-studio.png" alt="Studio-feel finished wallet creative by Illume"></div>
+<p class="tf-tag">Studio feel</p>
+</div>
+</div>
+</section>
+
+<section class="gallery-section">
+<div class="gallery-label"><h2>Product &amp; packaging</h2><span>Skincare &middot; beverage &middot; fragrance</span></div>
+<div class="grid-uniform">
+<div class="tile-uniform"><img src="images/work/fragrance-bottle.png" alt="Fragrance bottle creative"></div>
+<div class="tile-uniform"><img src="images/work/skincare-hand-cream.png" alt="Skincare hand cream creative"></div>
+<div class="tile-uniform"><img src="images/work/confectionery-tin.png" alt="Confectionery tin creative"></div>
+<div class="tile-uniform"><img src="images/work/botanica-facial-balm-flatlay.webp" alt="Botanica Studios facial balm flat lay creative"></div>
+</div>
+</section>
+
+<section class="gallery-section">
+<div class="gallery-label"><h2>Food &amp; beverage</h2><span>Hero imagery &middot; behind the counter</span></div>
+<div class="grid-uniform">
+<div class="tile-uniform"><img src="images/work/panini-and-iced-coffee-flatlay.png" alt="Panini and iced coffee flat lay"></div>
+<div class="tile-uniform"><img src="images/work/chef-plating-a-dish.png" alt="Chef plating a dish"></div>
+<div class="tile-uniform"><img src="images/work/nutella-crepe.webp" alt="Banana strawberry Nutella crepe creative"></div>
+<div class="tile-uniform"><img src="images/work/matcha-iced-drinks.png" alt="Moody Matcha iced drinks creative"></div>
+</div>
+</section>
+
+<section class="gallery-section">
+<div class="gallery-label"><h2>Beauty &amp; salon</h2><span>Feed grids &middot; brand atmosphere</span></div>
+<div class="grid-uniform">
+<div class="tile-uniform"><img src="images/work/hair-result-hero.png" alt="Hair result hero"></div>
+<div class="tile-uniform"><img src="images/work/editorial-macro-texture.png" alt="Editorial macro texture creative"></div>
+<div class="tile-uniform tile-zoom"><img src="images/work/manicure-hero.png" alt="Manicure hero creative"></div>
+<div class="tile-uniform"><img src="images/work/salon-portrait.png" alt="Salon portrait creative"></div>
+</div>
+</section>
+
+<section class="gallery-section">
+<div class="gallery-label"><h2>Offer &amp; promo graphics</h2><span>Templates &middot; social ads</span></div>
+<div class="grid-uniform">
+<div class="tile-uniform"><img src="images/work/social-ad-mockup.png" alt="Social media ad mockup"></div>
+<div class="tile-uniform tile-contain"><img src="images/promo/bakery-new-menu.png" alt="Bakery new menu promo graphic"></div>
+<div class="tile-uniform tile-contain"><img src="images/promo/coffee-shop-opening-week.png" alt="Coffee shop opening week promo graphic"></div>
+<div class="tile-uniform tile-contain"><img src="images/promo/skincare-limited-edition.png" alt="Skincare limited edition promo graphic"></div>
+</div>
+</section>
+<p class="spec-note">Example work shown here is built with our AI-assisted, studio-directed process — concept pieces made to show the craft, not existing client campaigns.</p>
+
+<footer class="band">
+<span>Illume</span>
+<a href="index.html">illumeandco.online</a>
+</footer>
+</div>
+<script src="ind.js"></script>
+</body>
+</html>

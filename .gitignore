@@ -1,0 +1,6 @@
+.DS_Store
+Thumbs.db
+desktop.ini
+.vercel
+node_modules/
+*.log

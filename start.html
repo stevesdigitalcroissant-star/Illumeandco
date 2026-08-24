@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#ffffff">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Illume — Start your project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ind.css">
+<style>
+.page{padding:40px 0 90px;display:grid;grid-template-columns:1fr 1.15fr;gap:50px;align-items:start}
+.side{position:sticky;top:30px}
+.side h1{font-family:var(--display);font-weight:900;letter-spacing:-.025em;font-size:clamp(32px,4.4vw,54px);line-height:1}
+.side p{margin-top:18px;font-size:16.5px;color:var(--ink-soft);max-width:42ch}
+.price-card{background:var(--panel);border-radius:var(--r);padding:32px 30px;margin-top:32px}
+.price-card .fig{font-family:var(--display);font-weight:900;font-size:44px;letter-spacing:-.03em;color:var(--accent-deep);display:block;line-height:1}
+.price-card .unit{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;margin-top:6px}
+.price-card ul{list-style:none;margin-top:22px;display:grid;gap:11px}
+.price-card li{display:flex;gap:11px;font-size:15px;color:var(--ink-soft);line-height:1.45}
+.price-card li::before{content:"";flex:0 0 6px;height:6px;margin-top:8px;border-radius:50%;background:var(--accent)}
+.fx-note{margin-top:18px;font-size:12.5px;color:var(--muted)}
+.founding-flag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:var(--accent);color:#fff;padding:6px 12px;border-radius:100px;margin-bottom:16px}
+.form-card{background:var(--panel);border-radius:var(--r);padding:44px}
+.form-card > h2{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.015em;margin-bottom:8px}
+.form-card > .lead{font-size:15px;color:var(--ink-soft);margin-bottom:26px;max-width:52ch}
+.field{margin-bottom:22px}
+.field label{display:block;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:9px}
+.field input,.field textarea{width:100%;border:1px solid var(--rule);border-radius:12px;background:var(--paper);padding:13px 15px;font-family:var(--body);font-size:15.5px;color:var(--ink);transition:border-color .2s ease, box-shadow .2s ease}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,90,60,.14)}
+.field textarea{min-height:90px;resize:vertical;line-height:1.5}
+.field .hint{font-size:13px;color:var(--muted);margin-top:7px}
+.next-note{background:var(--paper);border:1px dashed var(--rule);border-radius:14px;padding:20px 22px;margin-bottom:26px;font-size:14.5px;color:var(--ink-soft);line-height:1.55}
+.next-note b{color:var(--ink);font-weight:600}
+.submit-btn{display:inline-block;font-family:var(--display);font-weight:700;font-size:14.5px;text-decoration:none;padding:16px 28px;border-radius:100px;width:100%;text-align:center;background:var(--accent);color:#fff;border:none;cursor:pointer;transition:background .2s ease,transform .18s ease,box-shadow .2s ease}
+.submit-btn:hover{background:var(--accent-deep);transform:translateY(-2px);box-shadow:0 10px 24px -10px rgba(255,90,60,.7)}
+.submit-btn:active{transform:translateY(0) scale(.98)}
+.form-foot{margin-top:14px;font-size:13px;color:var(--muted);text-align:center;line-height:1.5}
+.form-foot a{color:var(--ink)}
+@media (max-width:900px){.page{grid-template-columns:1fr;gap:34px}.side{position:static}.form-card{padding:30px 24px}}
+</style>
+</head>
+<body style="background:#ffffff">
+<div class="wrap">
+<header class="masthead">
+<a class="logo-link" href="index.html" aria-label="Illume home"><img src="logo.svg" alt="Illume"></a>
+<nav class="nav">
+<a href="portfolio.html">Our Work</a>
+</nav>
+</header>
+<section class="page">
+<div class="side">
+<span class="eyebrow">Start your project</span>
+<h1>Tell us about your business.</h1>
+<p>Everything starts with understanding your brand — what you make, who it's for, and where you want to grow. Fill out the form and we'll come back to you with next steps.</p>
+<div class="price-card">
+<span class="founding-flag">Founding client offer</span>
+<span class="fig">$250</span>
+<span class="unit">7-day founding client launch</span>
+<ul>
+<li>6 creative assets built from your existing content, tailored to your marketing needs</li>
+<li>Captions written for each creative asset</li>
+<li>1 professional promotional video</li>
+<li>Delivered within 7 days</li>
+</ul>
+<p class="fx-note">Priced in USD. Founding pricing for our first three businesses — payment is only taken once we've spoken and agreed the work.</p>
+</div>
+</div>
+<div class="form-card">
+<h2>What we need from you</h2>
+<p class="lead">No payment yet. Tell us about your brand and send what you've got — we'll come back with what we'd do.</p>
+<div class="next-note">
+<b>What happens next.</b> We'll reply personally to understand your brand and confirm the plan, then get started on your creatives.
+</div>
+<form action="https://formsubmit.co/steves.digitalcroissant@gmail.com" method="POST" enctype="multipart/form-data">
+<input type="hidden" name="_subject" value="New project enquiry — Illume">
+<input type="hidden" name="_template" value="table">
+<input type="hidden" name="_next" value="https://www.illumeandco.online/thanks.html">
+<input type="text" name="_honey" style="display:none">
+<div class="field"><label for="name">Your name</label><input type="text" id="name" name="Your name" required></div>
+<div class="field"><label for="business">Business Name</label><input type="text" id="business" name="Business name" required></div>
+<div class="field"><label for="email">Email</label><input type="email" id="email" name="email" required></div>
+<div class="field"><label for="website">Business website or social media account</label><input type="text" id="website" name="Business website or social media" placeholder="e.g. instagram.com/yourbusiness"></div>
+<div class="field"><label for="what">What does your business make or do?</label><textarea id="what" name="What does your business make or do" required></textarea></div>
+<div class="field"><label for="brand">How would you describe your current brand?</label><textarea id="brand" name="How would you describe your current brand"></textarea></div>
+<div class="field"><label for="goals">What are your marketing goals?</label><textarea id="goals" name="What are your marketing goals" placeholder="e.g. increase in sales, increase in engagement, brand awareness, consistency across marketing"></textarea></div>
+<div class="field"><label for="gap">What's not working?</label><textarea id="gap" name="What's not working" placeholder="e.g. no brand identity, inconsistent posting, no marketing content"></textarea></div>
+<div class="field"><label for="other">Anything else we should know?</label><textarea id="other" name="Anything else"></textarea></div>
+<button type="submit" class="submit-btn">Send this to Illume</button>
+<p class="form-foot">This sends straight to our studio inbox — no email app needed.<br>Prefer email? <a href="mailto:steves.digitalcroissant@gmail.com">steves.digitalcroissant@gmail.com</a></p>
+</form>
+</div>
+</section>
+<footer class="band">
+<span>Illume</span>
+<div class="flinks">
+<a href="index.html">Home</a>
+<a href="portfolio.html">Portfolio</a>
+<a href="mailto:steves.digitalcroissant@gmail.com">steves.digitalcroissant@gmail.com</a>
+</div>
+</footer>
+</div>
+<script src="ind.js"></script>
+</body>
+</html>
