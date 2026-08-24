@@ -37,7 +37,7 @@ external host, so the site cannot break because someone else's link expired.
 ## The enquiry form
 
 `start.html` posts to **formsubmit.co**, which forwards submissions to
-`steves.digitalcroissant@gmail.com` and then sends the visitor to `thanks.html`.
+`illumeandco.online@gmail.com` and then sends the visitor to `thanks.html`.
 There is no server and no database — the form is the whole backend.
 
 If the studio email address ever changes, it has to be updated in two places in
