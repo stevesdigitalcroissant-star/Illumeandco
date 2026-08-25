@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Illume">
+  <rect width="100" height="100" rx="22" fill="#FF5A3C"/>
+  <g transform="translate(50,50) scale(0.66) translate(-52,-52)">
+    <path fill="#FFFFFF" d="M52,0 C57,36 68,47 104,52 C68,57 57,68 52,104 C47,68 36,57 0,52 C36,47 47,36 52,0 Z"/>
+  </g>
+</svg>
