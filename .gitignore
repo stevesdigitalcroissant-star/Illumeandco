@@ -4,3 +4,6 @@ desktop.ini
 .vercel
 node_modules/
 *.log
+
+# Screenshots and scratch files kept beside the site but not published
+images/Screenshots/
