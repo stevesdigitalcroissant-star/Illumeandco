@@ -140,6 +140,13 @@ DISCIPLINES = [
 # discipline list rather than competing with it.
 FOOTNOTE = "Also available — website design."
 
+# Images are referenced from the site root, not relatively. Vercel serves the
+# page at BOTH /showcase and /showcase/ without redirecting between them, and
+# from the slashless URL a relative "images/..." resolves to "/images/..." —
+# the site's own image folder — so every picture 404s. An absolute prefix is
+# correct at either URL. Build with --base "" for a copy opened off disk.
+DEPLOY_BASE = "/showcase/"
+
 TOTAL = sum(len(s["items"]) for s in SECTIONS)
 
 # ---------------------------------------------------------------------------
@@ -679,7 +686,7 @@ def data_uri(name):
     return "data:image/jpeg;base64," + base64.b64encode((IMAGES / name).read_bytes()).decode()
 
 
-def markup(inline):
+def markup(inline, base=""):
     e = html.escape
     piece_no = 0
     pills, rail, sets = [], [], []
@@ -699,7 +706,7 @@ def markup(inline):
         for f, cap in sec["items"]:
             piece_no += 1
             w, h = dims(f)
-            src = data_uri(f) if inline else f"images/{f}"
+            src = data_uri(f) if inline else f"{base}images/{f}"
             tiles.append(
                 f'<figure class="piece" tabindex="0" role="button" '
                 f'aria-label="View {e(cap)} full size" '
@@ -780,11 +787,11 @@ hospitality. Every piece here is our own, made to show the range and the finish.
 </div>"""
 
 
-def build(standalone=None):
+def build(standalone=None, base=DEPLOY_BASE):
     """Write index.html; optionally also a one-file copy at `standalone`."""
     title = "Illume Selected Work"
 
-    page = markup(inline=False)
+    page = markup(inline=False, base=base)
     (HERE / "index.html").write_text(
         f"""<!DOCTYPE html>
 <html lang="en">
@@ -822,5 +829,13 @@ def build(standalone=None):
 
 
 if __name__ == "__main__":
-    import sys
-    build(sys.argv[1] if len(sys.argv) > 1 else None)
+    import argparse
+
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--standalone", metavar="PATH",
+                    help="also write a single self-contained file with images inlined")
+    ap.add_argument("--base", default=DEPLOY_BASE,
+                    help=f'URL prefix for image paths (default {DEPLOY_BASE!r}; '
+                         'pass "" for a copy you open straight off disk)')
+    a = ap.parse_args()
+    build(a.standalone, a.base)
