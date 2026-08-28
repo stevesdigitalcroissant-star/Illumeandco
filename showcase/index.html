@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Illume Selected Work</title>
+<meta name="description" content="Selected work from Illume — 39 pieces across 9 categories.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,500&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ---- Tokens -------------------------------------------------------------
+   Light is the base palette. Dark is a warm, low-glare counterpart — near
+   black with a brown bias rather than grey, so the photography still reads
+   as being on paper. Three states are covered: the viewer's OS preference
+   when nothing is stamped, and either theme stamped explicitly by the
+   toggle or the host.                                                     */
+:root {
+  --paper:      #FFFFFF;
+  --panel:      #FAF9F7;
+  --ink:        #12110F;
+  --ink-soft:   #57534B;
+  --ink-faint:  #8C877D;
+  --line:       #E8E4DD;
+  --line-soft:  #F1EEE9;
+  --accent:     #FF4B12;
+  --accent-text:#C2360D;
+  --bar:        rgba(255, 255, 255, .86);
+  --viewer:     #0B0A09;
+  --display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --body: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --mono: 'DM Mono', ui-monospace, SFMono-Regular, monospace;
+  --gut: 4px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:      #100F0D;
+    --panel:      #191713;
+    --ink:        #F6F3ED;
+    --ink-soft:   #B3ABA0;
+    --ink-faint:  #837C71;
+    --line:       #2E2A24;
+    --line-soft:  #232019;
+    --accent:     #FF5F2B;
+    --accent-text:#FF8355;
+    --bar:        rgba(16, 15, 13, .84);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:      #100F0D;
+  --panel:      #191713;
+  --ink:        #F6F3ED;
+  --ink-soft:   #B3ABA0;
+  --ink-faint:  #837C71;
+  --line:       #2E2A24;
+  --line-soft:  #232019;
+  --accent:     #FF5F2B;
+  --accent-text:#FF8355;
+  --bar:        rgba(16, 15, 13, .84);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--paper); }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--body); font-size: 16px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+::selection { background: var(--accent); color: #fff; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+.shell { max-width: 1320px; margin: 0 auto; padding: 0 34px; }
+
+/* ---- Top bar ---- */
+.topbar {
+  position: sticky; top: 0; z-index: 60;
+  background: var(--bar);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  border-bottom: 1px solid var(--line-soft);
+}
+.topbar-inner {
+  max-width: 1320px; margin: 0 auto; padding: 15px 34px;
+  display: flex; align-items: center; gap: 26px;
+}
+.wordmark {
+  font-family: var(--display); font-weight: 600; font-size: 19px;
+  letter-spacing: .02em; white-space: nowrap; flex: 0 0 auto;
+}
+.wordmark .dot { color: var(--accent); }
+.pills {
+  display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0;
+  /* Fade the ends so a half-scrolled pill doesn't read as a clipped mistake. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 26px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 26px), transparent 100%);
+}
+.pills::-webkit-scrollbar { display: none; }
+.pill {
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .02em;
+  padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--ink-soft);
+  transition: color .25s ease, border-color .25s ease, background .25s ease;
+}
+.pill i { font-style: normal; color: var(--accent-text); font-weight: 500; }
+.pill:hover { border-color: var(--ink); color: var(--ink); }
+.pill.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.progress { height: 2px; background: var(--accent); width: 0; transition: width .12s linear; }
+.theme {
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--ink-soft);
+  transition: color .25s ease, border-color .25s ease, background .25s ease;
+}
+.theme:hover { color: var(--ink); border-color: var(--ink); }
+.theme svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+.theme .moon { display: none; }
+:root[data-theme="dark"] .theme .sun { display: none; }
+:root[data-theme="dark"] .theme .moon { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme .sun { display: none; }
+  :root:not([data-theme="light"]) .theme .moon { display: block; }
+}
+
+/* ---- Hero ---- */
+.hero { padding: 92px 0 58px; }
+.kicker {
+  display: flex; align-items: center; gap: 12px;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--accent-text); margin-bottom: 26px;
+}
+.kicker::before { content: ''; width: 32px; height: 1px; background: var(--accent); }
+.hero h1 {
+  margin: 0; max-width: 15ch; text-wrap: balance;
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(46px, 7.2vw, 88px); line-height: .96; letter-spacing: -.022em;
+}
+.hero h1 em { font-style: italic; font-weight: 300; color: var(--accent); }
+.hero-row {
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr);
+  gap: 56px; align-items: end; margin-top: 44px;
+}
+.hero-copy p { margin: 0; max-width: 56ch; font-size: 17px; line-height: 1.62; color: var(--ink-soft); }
+.disciplines { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 26px; }
+.disciplines span {
+  font-size: 12.5px; font-weight: 500; padding: 7px 13px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+}
+.footnote {
+  margin: 16px 0 0; font-family: var(--mono); font-size: 11px;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint);
+}
+.hero-side { display: flex; flex-direction: column; align-items: flex-start; gap: 30px; }
+.figures { display: flex; gap: 40px; }
+.figure-num {
+  display: block; font-family: var(--display); font-weight: 500; font-size: 40px;
+  line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+}
+.figure-label {
+  display: block; margin-top: 8px; font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint);
+}
+.play {
+  display: inline-flex; align-items: center; gap: 12px; cursor: pointer;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink); background: none; border: 1px solid var(--ink);
+  padding: 14px 22px; border-radius: 999px;
+  transition: background .3s ease, color .3s ease, transform .3s ease;
+}
+.play:hover { background: var(--ink); color: var(--paper); transform: translateY(-2px); }
+.play .tri {
+  width: 0; height: 0; border-left: 7px solid currentColor;
+  border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent;
+}
+
+/* ---- Body ---- */
+.body-grid {
+  max-width: 1320px; margin: 0 auto; padding: 0 34px 130px;
+  display: grid; grid-template-columns: 196px minmax(0, 1fr); gap: 60px;
+}
+.rail { position: sticky; top: 96px; align-self: start; }
+.rail-title {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--ink-faint); margin-bottom: 18px;
+}
+.rail ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--line); }
+.rail li { margin-left: -1px; }
+.rail a {
+  display: flex; gap: 11px; padding: 9px 0 9px 18px;
+  border-left: 2px solid transparent; transition: border-color .3s ease;
+}
+.rail .n {
+  font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint);
+  padding-top: 2px; font-variant-numeric: tabular-nums;
+}
+.rail .t { font-size: 12.5px; line-height: 1.35; color: var(--ink-soft); transition: color .3s ease; }
+.rail a:hover .t { color: var(--ink); }
+.rail li.on a { border-left-color: var(--accent); }
+.rail li.on .t { color: var(--ink); font-weight: 600; }
+.rail li.on .n { color: var(--accent-text); }
+
+.work { min-width: 0; }
+section.set { padding-top: 96px; scroll-margin-top: 96px; }
+section.set:first-child { padding-top: 8px; }
+.set-head { max-width: 62ch; margin-bottom: 30px; }
+.set-index {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--accent-text);
+  font-variant-numeric: tabular-nums;
+}
+.set-index::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.set-head h2 {
+  margin: 0 0 9px; font-family: var(--display); font-weight: 500;
+  font-size: clamp(28px, 3.3vw, 38px); letter-spacing: -.018em; text-wrap: balance;
+}
+.set-head p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
+
+/* Masonry columns: every piece keeps its own proportions, so nothing is
+   cropped — the promo graphics used to lose their headlines to a 4:5 crop. */
+.gallery { column-count: 3; column-gap: var(--gut); }
+.piece {
+  break-inside: avoid; margin: 0 0 var(--gut); padding: 0;
+  position: relative; display: block; width: 100%; cursor: zoom-in;
+  background: var(--panel); overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  opacity: 0; transform: translateY(14px);
+  transition: opacity .7s cubic-bezier(.2, .7, .3, 1), transform .7s cubic-bezier(.2, .7, .3, 1);
+}
+.piece.seen { opacity: 1; transform: none; }
+.piece img { width: 100%; height: auto; transition: transform .75s cubic-bezier(.2, .7, .3, 1); }
+.piece:hover img { transform: scale(1.035); }
+.piece figcaption {
+  position: absolute; inset: auto 0 0 0; padding: 30px 13px 13px;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 10px;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .02em; color: #fff;
+  background: linear-gradient(0deg, rgba(0,0,0,.66) 0%, rgba(0,0,0,.14) 62%, rgba(0,0,0,0) 100%);
+  opacity: 0; transform: translateY(5px);
+  transition: opacity .35s ease, transform .35s ease;
+}
+.piece:hover figcaption, .piece:focus-visible figcaption { opacity: 1; transform: none; }
+.piece figcaption .idx { opacity: .7; font-variant-numeric: tabular-nums; }
+
+/* ---- Lightbox ---- */
+.lb {
+  position: fixed; inset: 0; z-index: 200; background: var(--viewer);
+  display: flex; align-items: center; justify-content: center; padding: 84px 92px;
+  opacity: 0; transition: opacity .3s ease;
+}
+.lb.up { opacity: 1; }
+.lb[hidden] { display: none; }
+.lb-fig {
+  margin: 0; display: flex; flex-direction: column; align-items: center; gap: 20px;
+  max-width: 100%; max-height: 100%;
+}
+.lb-fig img {
+  max-width: 100%; max-height: 74vh; width: auto; height: auto;
+  object-fit: contain; box-shadow: 0 50px 110px -40px rgba(0, 0, 0, .9);
+  transition: opacity .22s ease;
+}
+.lb-fig img.swap { opacity: 0; }
+.lb-cap { text-align: center; display: grid; gap: 7px; }
+.lb-cap .set {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--accent);
+}
+.lb-cap .txt {
+  font-family: var(--display); font-weight: 400; font-size: 18px;
+  letter-spacing: -.005em; color: #fff;
+}
+.lb-btn {
+  position: absolute; display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(255, 255, 255, .26); background: rgba(255, 255, 255, .05);
+  color: #fff; cursor: pointer; border-radius: 999px;
+  transition: background .25s ease, border-color .25s ease, transform .25s ease;
+}
+.lb-btn:hover { background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .6); }
+.lb-btn[hidden] { display: none; }
+.lb-x {
+  top: 26px; right: 30px; height: 40px; padding: 0 18px; gap: 9px;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
+}
+.lb-nav { top: 50%; width: 52px; height: 52px; margin-top: -26px; font-size: 17px; }
+.lb-nav:hover { transform: scale(1.06); }
+.lb-prev { left: 26px; }
+.lb-next { right: 26px; }
+.lb-count {
+  position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 11px; letter-spacing: .16em;
+  color: rgba(255, 255, 255, .55); font-variant-numeric: tabular-nums;
+}
+.lb-count b { color: #fff; font-weight: 500; }
+.lb-hint {
+  position: absolute; left: 30px; bottom: 30px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: rgba(255, 255, 255, .34);
+}
+body.locked { overflow: hidden; }
+
+/* ---- Footer ---- */
+.foot { border-top: 1px solid var(--line); }
+.foot-inner {
+  max-width: 1320px; margin: 0 auto; padding: 34px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1080px) { .gallery { column-count: 2; } }
+@media (max-width: 900px) {
+  .shell, .topbar-inner, .body-grid, .foot-inner { padding-left: 22px; padding-right: 22px; }
+  .body-grid { grid-template-columns: 1fr; gap: 0; }
+  .rail { display: none; }
+  .hero { padding: 58px 0 40px; }
+  .hero-row { grid-template-columns: 1fr; gap: 34px; align-items: start; }
+  .hero-side { flex-direction: row; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; }
+  section.set { padding-top: 68px; }
+  .lb { padding: 76px 16px 92px; }
+  .lb-nav { width: 44px; height: 44px; margin-top: -22px; }
+  .lb-prev { left: 12px; }
+  .lb-next { right: 12px; }
+  .lb-hint { display: none; }
+  .lb-fig img { max-height: 66vh; }
+}
+@media (max-width: 560px) {
+  .figures { gap: 28px; }
+  .figure-num { font-size: 33px; }
+  .gallery { column-count: 2; }
+  .piece figcaption { font-size: 9.5px; padding: 24px 9px 9px; }
+}
+</style>
+<script>try{var t=localStorage.getItem('illume-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+<div class="topbar-inner">
+<div class="wordmark">ILLUME<span class="dot">.</span></div>
+<nav class="pills" aria-label="Sections"><a class="pill" data-for="promotional" href="#promotional"><i>01</i>Promotional Campaigns</a><a class="pill" data-for="wallet" href="#wallet"><i>02</i>Product — Wallet Launch</a><a class="pill" data-for="logos" href="#logos"><i>03</i>Brand Identity — Chunk&#x27;d</a><a class="pill" data-for="food" href="#food"><i>04</i>Food &amp; Confections</a><a class="pill" data-for="locations" href="#locations"><i>05</i>Studio &amp; Storefront</a><a class="pill" data-for="drinks" href="#drinks"><i>06</i>Beverage</a><a class="pill" data-for="cuisine" href="#cuisine"><i>07</i>High-End Cuisine</a><a class="pill" data-for="skincare" href="#skincare"><i>08</i>Fragrance &amp; Skincare</a><a class="pill" data-for="hair" href="#hair"><i>09</i>Hair &amp; Salon</a></nav>
+<button class="theme" type="button" id="theme" aria-label="Switch between light and dark">
+<svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.4"/><path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg>
+<svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1z"/></svg>
+</button>
+</div>
+<div class="progress" id="progress"></div>
+</header>
+
+<div class="shell">
+<div class="hero">
+<span class="kicker">Illume — Creative Studio</span>
+<h1>Selected work, <em>studio&nbsp;quality</em>, made to show what we can do.</h1>
+<div class="hero-row">
+<div class="hero-copy">
+<p>A showcase of what comes out of the studio — product photography, campaign creative,
+brand identity, social content and film, across food and drink, beauty, retail and
+hospitality. Every piece here is our own, made to show the range and the finish.</p>
+<div class="disciplines"><span>Product Photography</span><span>Campaign Creative</span><span>Brand Identity</span><span>Social Content</span><span>On-location Filming</span><span>Menu &amp; Print</span><span>Packaging</span></div>
+<p class="footnote">Also available — website design.</p>
+</div>
+<div class="hero-side">
+<div class="figures">
+<div><span class="figure-num">39</span><span class="figure-label">Pieces shown</span></div>
+<div><span class="figure-num">09</span><span class="figure-label">Categories</span></div>
+</div>
+<button class="play" type="button" id="play"><span class="tri"></span>View as slideshow</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="body-grid">
+<aside class="rail">
+<div class="rail-title">On this page</div>
+<ol><li data-for="promotional"><a href="#promotional"><span class="n">01</span><span class="t">Promotional Campaigns</span></a></li><li data-for="wallet"><a href="#wallet"><span class="n">02</span><span class="t">Product — Wallet Launch</span></a></li><li data-for="logos"><a href="#logos"><span class="n">03</span><span class="t">Brand Identity — Chunk&#x27;d</span></a></li><li data-for="food"><a href="#food"><span class="n">04</span><span class="t">Food &amp; Confections</span></a></li><li data-for="locations"><a href="#locations"><span class="n">05</span><span class="t">Studio &amp; Storefront</span></a></li><li data-for="drinks"><a href="#drinks"><span class="n">06</span><span class="t">Beverage</span></a></li><li data-for="cuisine"><a href="#cuisine"><span class="n">07</span><span class="t">High-End Cuisine</span></a></li><li data-for="skincare"><a href="#skincare"><span class="n">08</span><span class="t">Fragrance &amp; Skincare</span></a></li><li data-for="hair"><a href="#hair"><span class="n">09</span><span class="t">Hair &amp; Salon</span></a></li></ol>
+</aside>
+<main class="work"><section class="set" id="promotional"><div class="set-head"><div class="set-index">01 / 09</div><h2>Promotional Campaigns</h2><p>Social ads, launch posts and seasonal promos built to stop the scroll.</p></div><div class="gallery"><figure class="piece" tabindex="0" role="button" aria-label="View Small business sale — Instagram ad full size" data-set="Promotional Campaigns" data-caption="Small business sale — Instagram ad"><img src="images/IMG_1282.jpg" alt="Small business sale — Instagram ad" width="966" height="1200" loading="lazy" decoding="async"><figcaption><span>Small business sale — Instagram ad</span><span class="idx">01</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Ceramics collection — feed post full size" data-set="Promotional Campaigns" data-caption="Ceramics collection — feed post"><img src="images/IMG_1286.jpg" alt="Ceramics collection — feed post" width="1200" height="896" loading="lazy" decoding="async"><figcaption><span>Ceramics collection — feed post</span><span class="idx">02</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Chef&#x27;s Special — dinner promo full size" data-set="Promotional Campaigns" data-caption="Chef&#x27;s Special — dinner promo"><img src="images/IMG_1293.jpg" alt="Chef&#x27;s Special — dinner promo" width="669" height="1200" loading="lazy" decoding="async"><figcaption><span>Chef&#x27;s Special — dinner promo</span><span class="idx">03</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Opening Week — launch offer full size" data-set="Promotional Campaigns" data-caption="Opening Week — launch offer"><img src="images/IMG_1296.jpg" alt="Opening Week — launch offer" width="669" height="1200" loading="lazy" decoding="async"><figcaption><span>Opening Week — launch offer</span><span class="idx">04</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View New Menu — bakery announcement full size" data-set="Promotional Campaigns" data-caption="New Menu — bakery announcement"><img src="images/IMG_1299.jpg" alt="New Menu — bakery announcement" width="669" height="1200" loading="lazy" decoding="async"><figcaption><span>New Menu — bakery announcement</span><span class="idx">05</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Seasonal Sale — apparel promo full size" data-set="Promotional Campaigns" data-caption="Seasonal Sale — apparel promo"><img src="images/IMG_1297.jpg" alt="Seasonal Sale — apparel promo" width="669" height="1200" loading="lazy" decoding="async"><figcaption><span>Seasonal Sale — apparel promo</span><span class="idx">06</span></figcaption></figure></div></section><section class="set" id="wallet"><div class="set-head"><div class="set-index">02 / 09</div><h2>Product — Wallet Launch</h2><p>Full-range flat lay and styled hero shot for a leather goods drop.</p></div><div class="gallery"><figure class="piece" tabindex="0" role="button" aria-label="View Full colour range — flat lay full size" data-set="Product — Wallet Launch" data-caption="Full colour range — flat lay"><img src="images/IMG_1188.jpg" alt="Full colour range — flat lay" width="966" height="1200" loading="lazy" decoding="async"><figcaption><span>Full colour range — flat lay</span><span class="idx">07</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Hero product shot — styled full size" data-set="Product — Wallet Launch" data-caption="Hero product shot — styled"><img src="images/IMG_1190.jpg" alt="Hero product shot — styled" width="966" height="1200" loading="lazy" decoding="async"><figcaption><span>Hero product shot — styled</span><span class="idx">08</span></figcaption></figure></div></section><section class="set" id="logos"><div class="set-head"><div class="set-index">03 / 09</div><h2>Brand Identity — Chunk&#x27;d</h2><p>Wordmark, packaging and product photography for a stuffed-cookie brand.</p></div><div class="gallery"><figure class="piece" tabindex="0" role="button" aria-label="View Wordmark lockup full size" data-set="Brand Identity — Chunk&#x27;d" data-caption="Wordmark lockup"><img src="images/IMG_1262.jpg" alt="Wordmark lockup" width="1200" height="895" loading="lazy" decoding="async"><figcaption><span>Wordmark lockup</span><span class="idx">09</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Packaging application full size" data-set="Brand Identity — Chunk&#x27;d" data-caption="Packaging application"><img src="images/IMG_1263.jpg" alt="Packaging application" width="1200" height="1200" loading="lazy" decoding="async"><figcaption><span>Packaging application</span><span class="idx">10</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Stuffed chocolate chunk cookie full size" data-set="Brand Identity — Chunk&#x27;d" data-caption="Stuffed chocolate chunk cookie"><img src="images/IMG_1268.jpg" alt="Stuffed chocolate chunk cookie" width="895" height="1200" loading="lazy" decoding="async"><figcaption><span>Stuffed chocolate chunk cookie</span><span class="idx">11</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View M&amp;M caramel-stuffed cookie full size" data-set="Brand Identity — Chunk&#x27;d" data-caption="M&amp;M caramel-stuffed cookie"><img src="images/IMG_1265.jpg" alt="M&amp;M caramel-stuffed cookie" width="895" height="1200" loading="lazy" decoding="async"><figcaption><span>M&amp;M caramel-stuffed cookie</span><span class="idx">12</span></figcaption></figure></div></section><section class="set" id="food"><div class="set-head"><div class="set-index">04 / 09</div><h2>Food &amp; Confections</h2><p>Product photography for bakeries, confectioners and dessert menus.</p></div><div class="gallery"><figure class="piece" tabindex="0" role="button" aria-label="View Peanut butter cup cookie full size" data-set="Food &amp; Confections" data-caption="Peanut butter cup cookie"><img src="images/IMG_1269.jpg" alt="Peanut butter cup cookie" width="895" height="1200" loading="lazy" decoding="async"><figcaption><span>Peanut butter cup cookie</span><span class="idx">13</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Red velvet white-chocolate cookie full size" data-set="Food &amp; Confections" data-caption="Red velvet white-chocolate cookie"><img src="images/IMG_1270.jpg" alt="Red velvet white-chocolate cookie" width="895" height="1200" loading="lazy" decoding="async"><figcaption><span>Red velvet white-chocolate cookie</span><span class="idx">14</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Salted caramel blondie full size" data-set="Food &amp; Confections" data-caption="Salted caramel blondie"><img src="images/IMG_1267.jpg" alt="Salted caramel blondie" width="895" height="1200" loading="lazy" decoding="async"><figcaption><span>Salted caramel blondie</span><span class="idx">15</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Strawberry &amp; banana crêpe full size" data-set="Food &amp; Confections" data-caption="Strawberry &amp; banana crêpe"><img src="images/IMG_1149.jpg" alt="Strawberry &amp; banana crêpe" width="669" height="1200" loading="lazy" decoding="async"><figcaption><span>Strawberry &amp; banana crêpe</span><span class="idx">16</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Harbour and Salt — sea salt caramels full size" data-set="Food &amp; Confections" data-caption="Harbour and Salt — sea salt caramels"><img src="images/IMG_1306.jpg" alt="Harbour and Salt — sea salt caramels" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Harbour and Salt — sea salt caramels</span><span class="idx">17</span></figcaption></figure></div></section><section class="set" id="locations"><div class="set-head"><div class="set-index">05 / 09</div><h2>Studio &amp; Storefront</h2><p>Interiors, counters and behind-the-scenes environments.</p></div><div class="gallery"><figure class="piece" tabindex="0" role="button" aria-label="View Retail concept store full size" data-set="Studio &amp; Storefront" data-caption="Retail concept store"><img src="images/IMG_1287.jpg" alt="Retail concept store" width="1200" height="669" loading="lazy" decoding="async"><figcaption><span>Retail concept store</span><span class="idx">18</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Terra &amp; Stone — studio counter full size" data-set="Studio &amp; Storefront" data-caption="Terra &amp; Stone — studio counter"><img src="images/IMG_1156.jpg" alt="Terra &amp; Stone — studio counter" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Terra &amp; Stone — studio counter</span><span class="idx">19</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Bakery production kitchen full size" data-set="Studio &amp; Storefront" data-caption="Bakery production kitchen"><img src="images/IMG_1275.jpg" alt="Bakery production kitchen" width="1200" height="675" loading="lazy" decoding="async"><figcaption><span>Bakery production kitchen</span><span class="idx">20</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Bakery back-of-house full size" data-set="Studio &amp; Storefront" data-caption="Bakery back-of-house"><img src="images/IMG_1274.jpg" alt="Bakery back-of-house" width="1200" height="675" loading="lazy" decoding="async"><figcaption><span>Bakery back-of-house</span><span class="idx">21</span></figcaption></figure></div></section><section class="set" id="drinks"><div class="set-head"><div class="set-index">06 / 09</div><h2>Beverage</h2><p>Coffee, tonics and bottled drinks styled for social and print.</p></div><div class="gallery"><figure class="piece" tabindex="0" role="button" aria-label="View Latte art — espresso bar full size" data-set="Beverage" data-caption="Latte art — espresso bar"><img src="images/IMG_1289.jpg" alt="Latte art — espresso bar" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Latte art — espresso bar</span><span class="idx">22</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Larkspur — full tonic range full size" data-set="Beverage" data-caption="Larkspur — full tonic range"><img src="images/IMG_1150.jpg" alt="Larkspur — full tonic range" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Larkspur — full tonic range</span><span class="idx">23</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Iced coffee — lifestyle full size" data-set="Beverage" data-caption="Iced coffee — lifestyle"><img src="images/IMG_1305.jpg" alt="Iced coffee — lifestyle" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Iced coffee — lifestyle</span><span class="idx">24</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Smoothie bowl — overhead full size" data-set="Beverage" data-caption="Smoothie bowl — overhead"><img src="images/IMG_1152.jpg" alt="Smoothie bowl — overhead" width="669" height="1200" loading="lazy" decoding="async"><figcaption><span>Smoothie bowl — overhead</span><span class="idx">25</span></figcaption></figure></div></section><section class="set" id="cuisine"><div class="set-head"><div class="set-index">07 / 09</div><h2>High-End Cuisine</h2><p>Fine-dining plating for menus, press and campaigns.</p></div><div class="gallery"><figure class="piece" tabindex="0" role="button" aria-label="View Plating detail — tasting menu full size" data-set="High-End Cuisine" data-caption="Plating detail — tasting menu"><img src="images/IMG_1283.jpg" alt="Plating detail — tasting menu" width="966" height="1200" loading="lazy" decoding="async"><figcaption><span>Plating detail — tasting menu</span><span class="idx">26</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Duck breast, blackberry jus full size" data-set="High-End Cuisine" data-caption="Duck breast, blackberry jus"><img src="images/IMG_1157.jpg" alt="Duck breast, blackberry jus" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Duck breast, blackberry jus</span><span class="idx">27</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Chef&#x27;s finishing touch full size" data-set="High-End Cuisine" data-caption="Chef&#x27;s finishing touch"><img src="images/IMG_1292.jpg" alt="Chef&#x27;s finishing touch" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Chef&#x27;s finishing touch</span><span class="idx">28</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Seared scallop, wine reduction full size" data-set="High-End Cuisine" data-caption="Seared scallop, wine reduction"><img src="images/IMG_1153.jpg" alt="Seared scallop, wine reduction" width="669" height="1200" loading="lazy" decoding="async"><figcaption><span>Seared scallop, wine reduction</span><span class="idx">29</span></figcaption></figure></div></section><section class="set" id="skincare"><div class="set-head"><div class="set-index">08 / 09</div><h2>Fragrance &amp; Skincare</h2><p>Studio product photography across fragrance and skincare.</p></div><div class="gallery"><figure class="piece" tabindex="0" role="button" aria-label="View Ashcombe — smoked cedar mist full size" data-set="Fragrance &amp; Skincare" data-caption="Ashcombe — smoked cedar mist"><img src="images/IMG_1151.jpg" alt="Ashcombe — smoked cedar mist" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Ashcombe — smoked cedar mist</span><span class="idx">30</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Fielding — restorative hand cream full size" data-set="Fragrance &amp; Skincare" data-caption="Fielding — restorative hand cream"><img src="images/IMG_1302.jpg" alt="Fielding — restorative hand cream" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Fielding — restorative hand cream</span><span class="idx">31</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Tidewell — 24-hour body serum full size" data-set="Fragrance &amp; Skincare" data-caption="Tidewell — 24-hour body serum"><img src="images/IMG_1304.jpg" alt="Tidewell — 24-hour body serum" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Tidewell — 24-hour body serum</span><span class="idx">32</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Botanica Studios — facial balm full size" data-set="Fragrance &amp; Skincare" data-caption="Botanica Studios — facial balm"><img src="images/IMG_1155.jpg" alt="Botanica Studios — facial balm" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Botanica Studios — facial balm</span><span class="idx">33</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Anua — niacinamide serum full size" data-set="Fragrance &amp; Skincare" data-caption="Anua — niacinamide serum"><img src="images/IMG_1130.jpg" alt="Anua — niacinamide serum" width="966" height="1200" loading="lazy" decoding="async"><figcaption><span>Anua — niacinamide serum</span><span class="idx">34</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Anua — serum macro detail full size" data-set="Fragrance &amp; Skincare" data-caption="Anua — serum macro detail"><img src="images/IMG_1129.jpg" alt="Anua — serum macro detail" width="1200" height="1200" loading="lazy" decoding="async"><figcaption><span>Anua — serum macro detail</span><span class="idx">35</span></figcaption></figure></div></section><section class="set" id="hair"><div class="set-head"><div class="set-index">09 / 09</div><h2>Hair &amp; Salon</h2><p>Editorial hair photography and in-salon lifestyle.</p></div><div class="gallery"><figure class="piece" tabindex="0" role="button" aria-label="View Lumière Studio Salon — editorial full size" data-set="Hair &amp; Salon" data-caption="Lumière Studio Salon — editorial"><img src="images/IMG_1307.jpg" alt="Lumière Studio Salon — editorial" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Lumière Studio Salon — editorial</span><span class="idx">36</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View In-salon service full size" data-set="Hair &amp; Salon" data-caption="In-salon service"><img src="images/IMG_1308.jpg" alt="In-salon service" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>In-salon service</span><span class="idx">37</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Precision bob — portrait full size" data-set="Hair &amp; Salon" data-caption="Precision bob — portrait"><img src="images/IMG_1310.jpg" alt="Precision bob — portrait" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Precision bob — portrait</span><span class="idx">38</span></figcaption></figure><figure class="piece" tabindex="0" role="button" aria-label="View Salon retail shelf full size" data-set="Hair &amp; Salon" data-caption="Salon retail shelf"><img src="images/IMG_1298.jpg" alt="Salon retail shelf" width="928" height="1152" loading="lazy" decoding="async"><figcaption><span>Salon retail shelf</span><span class="idx">39</span></figcaption></figure></div></section></main>
+</div>
+
+<footer class="foot">
+<div class="foot-inner"><span>Illume — Creative Studio</span><span>Selected work, 39 pieces</span></div>
+</footer>
+
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Portfolio viewer">
+<button class="lb-btn lb-x" type="button" id="lbX">Close &#10005;</button>
+<button class="lb-btn lb-nav lb-prev" type="button" id="lbPrev" aria-label="Previous piece">&#8592;</button>
+<button class="lb-btn lb-nav lb-next" type="button" id="lbNext" aria-label="Next piece">&#8594;</button>
+<figure class="lb-fig">
+<img id="lbImg" alt="">
+<figcaption class="lb-cap"><span class="set" id="lbSet"></span><span class="txt" id="lbTxt"></span></figcaption>
+</figure>
+<p class="lb-hint">&#8592; &#8594; to browse &middot; Esc to close</p>
+<p class="lb-count"><b id="lbNow">01</b> / 39</p>
+</div>
+<script>
+(function () {
+  'use strict';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- Light / dark ----
+     No stamp means "follow the viewer's system setting", which is the default.
+     The toggle stamps an explicit choice and remembers it where it can. */
+  var root = document.documentElement;
+  var KEY = 'illume-theme';
+  var stored = null;
+  try { stored = localStorage.getItem(KEY); } catch (err) { stored = null; }
+  if (stored === 'dark' || stored === 'light') root.setAttribute('data-theme', stored);
+
+  function dark() {
+    var stamp = root.getAttribute('data-theme');
+    if (stamp) return stamp === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  document.getElementById('theme').addEventListener('click', function () {
+    var next = dark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem(KEY, next); } catch (err) { /* private mode; fine */ }
+  });
+
+  /* Reveal pieces as they arrive. */
+  var pieces = [].slice.call(document.querySelectorAll('.piece'));
+  if (reduce || !('IntersectionObserver' in window)) {
+    pieces.forEach(function (p) { p.classList.add('seen'); });
+  } else {
+    var reveal = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var i = pieces.indexOf(e.target) % 3;
+        setTimeout(function () { e.target.classList.add('seen'); }, i * 70);
+        reveal.unobserve(e.target);
+      });
+    }, { threshold: .08, rootMargin: '0px 0px -40px 0px' });
+    pieces.forEach(function (p) { reveal.observe(p); });
+  }
+
+  /* ---- Lightbox: one continuous slideshow across the whole portfolio ---- */
+  var lb = document.getElementById('lb');
+  var lbImg = document.getElementById('lbImg');
+  var lbSet = document.getElementById('lbSet');
+  var lbTxt = document.getElementById('lbTxt');
+  var lbNow = document.getElementById('lbNow');
+  var btnX = document.getElementById('lbX');
+  var btnPrev = document.getElementById('lbPrev');
+  var btnNext = document.getElementById('lbNext');
+  var at = 0, lastFocus = null;
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  function show(i, animate) {
+    at = (i + pieces.length) % pieces.length;
+    var p = pieces[at];
+    var img = p.querySelector('img');
+    var apply = function () {
+      lbImg.src = img.src;
+      lbImg.alt = img.alt;
+      lbSet.textContent = p.getAttribute('data-set');
+      lbTxt.textContent = p.getAttribute('data-caption');
+      lbNow.textContent = pad(at + 1);
+      lbImg.classList.remove('swap');
+    };
+    if (animate && !reduce) {
+      lbImg.classList.add('swap');
+      setTimeout(apply, 130);
+    } else {
+      apply();
+    }
+    /* Warm the neighbours so stepping through feels instant. */
+    [-1, 1].forEach(function (d) {
+      var n = pieces[(at + d + pieces.length) % pieces.length].querySelector('img');
+      var pre = new Image();
+      pre.src = n.src;
+    });
+  }
+
+  function open(i) {
+    lastFocus = document.activeElement;
+    show(i, false);
+    lb.hidden = false;
+    document.body.classList.add('locked');
+    requestAnimationFrame(function () { lb.classList.add('up'); });
+    btnX.focus();
+  }
+
+  function close() {
+    lb.classList.remove('up');
+    var done = function () {
+      lb.hidden = true;
+      lbImg.removeAttribute('src');
+      document.body.classList.remove('locked');
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    };
+    reduce ? done() : setTimeout(done, 260);
+  }
+
+  function step(d) { show(at + d, true); }
+
+  pieces.forEach(function (p, i) {
+    p.addEventListener('click', function () { open(i); });
+    p.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      open(i);
+    });
+  });
+
+  document.getElementById('play').addEventListener('click', function () { open(0); });
+  btnX.addEventListener('click', close);
+  btnPrev.addEventListener('click', function () { step(-1); });
+  btnNext.addEventListener('click', function () { step(1); });
+  lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
+
+  document.addEventListener('keydown', function (e) {
+    if (lb.hidden) return;
+    if (e.key === 'Escape') { close(); return; }
+    if (e.key === 'ArrowLeft') { step(-1); return; }
+    if (e.key === 'ArrowRight') { step(1); return; }
+    if (e.key !== 'Tab') return;
+    var stops = [btnX, btnPrev, btnNext];
+    var i = stops.indexOf(document.activeElement);
+    e.preventDefault();
+    stops[(i + (e.shiftKey ? -1 : 1) + stops.length) % stops.length].focus();
+  });
+
+  /* Swipe, for reading it on a phone. */
+  var x0 = null, y0 = null;
+  lb.addEventListener('touchstart', function (e) {
+    x0 = e.changedTouches[0].clientX;
+    y0 = e.changedTouches[0].clientY;
+  }, { passive: true });
+  lb.addEventListener('touchend', function (e) {
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0;
+    var dy = e.changedTouches[0].clientY - y0;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) step(dx < 0 ? 1 : -1);
+    x0 = y0 = null;
+  }, { passive: true });
+
+  /* ---- Section tracking + scroll progress ---- */
+  var sets = [].slice.call(document.querySelectorAll('section.set'));
+  var pillEls = [].slice.call(document.querySelectorAll('.pill'));
+  var railEls = [].slice.call(document.querySelectorAll('.rail li'));
+  var bar = document.getElementById('progress');
+  var current = null;
+
+  function mark(id) {
+    if (id === current) return;
+    current = id;
+    pillEls.forEach(function (p) { p.classList.toggle('on', p.getAttribute('data-for') === id); });
+    railEls.forEach(function (l) { l.classList.toggle('on', l.getAttribute('data-for') === id); });
+    var live = document.querySelector('.pill.on');
+    if (live && live.scrollIntoView) live.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', inline: 'center', block: 'nearest' });
+  }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%';
+      var line = window.innerHeight * 0.34, best = sets[0];
+      sets.forEach(function (s) { if (s.getBoundingClientRect().top <= line) best = s; });
+      mark(best.id);
+      ticking = false;
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  onScroll();
+})();
+</script>
+</body>
+</html>

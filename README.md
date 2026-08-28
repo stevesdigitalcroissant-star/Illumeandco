@@ -14,6 +14,27 @@ framework, no dependencies. Open `index.html` in a browser and it works.
 | `start.html` | Enquiry form ("Start your project") |
 | `thanks.html` | Confirmation page the form redirects to after submitting |
 
+## The showcase page
+
+`showcase/` is a standalone portfolio, live at **https://www.illumeandco.online/showcase**.
+It is separate from the site: it carries its own CSS inline, never loads `ind.css`, and
+nothing on the site links to it — it exists to be sent to people directly.
+
+| File | What it is |
+|---|---|
+| `showcase/index.html` | The page. Generated, but committed, so nothing needs building to deploy |
+| `showcase/images/` | The 39 pieces it displays |
+| `showcase/build.py` | Regenerates `index.html` from the section list at the top of the file |
+
+To change what appears or how it is grouped, edit the `SECTIONS` list in
+`showcase/build.py` and run it — it needs Python and Pillow:
+
+```bash
+cd showcase
+python3 build.py                     # rewrites index.html
+python3 build.py /tmp/one-file.html  # also writes a single-file copy with images inlined
+```
+
 ## Shared files
 
 | File | What it is |
