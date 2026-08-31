@@ -7,3 +7,6 @@ node_modules/
 
 # Screenshots and scratch files kept beside the site but not published
 images/Screenshots/
+
+# Python bytecode from showcase/build.py
+__pycache__/

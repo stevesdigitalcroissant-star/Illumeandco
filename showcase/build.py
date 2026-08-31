@@ -47,11 +47,9 @@ SECTIONS = [
     {
         "id": "logos",
         "title": "Brand Identity — Chunk'd",
-        "blurb": "Wordmark, packaging and product photography for a stuffed-cookie brand.",
+        "blurb": "Packaging and product photography for a stuffed-cookie brand.",
         "items": [
-            ("IMG_1262.jpg", "Wordmark lockup"),
             ("IMG_1263.jpg", "Packaging application"),
-            ("IMG_1268.jpg", "Stuffed chocolate chunk cookie"),
             ("IMG_1265.jpg", "M&M caramel-stuffed cookie"),
         ],
     },
@@ -60,8 +58,6 @@ SECTIONS = [
         "title": "Food & Confections",
         "blurb": "Product photography for bakeries, confectioners and dessert menus.",
         "items": [
-            ("IMG_1269.jpg", "Peanut butter cup cookie"),
-            ("IMG_1270.jpg", "Red velvet white-chocolate cookie"),
             ("IMG_1267.jpg", "Salted caramel blondie"),
             ("IMG_1149.jpg", "Strawberry & banana crêpe"),
             ("IMG_1306.jpg", "Harbour and Salt — sea salt caramels"),
@@ -74,8 +70,6 @@ SECTIONS = [
         "items": [
             ("IMG_1287.jpg", "Retail concept store"),
             ("IMG_1156.jpg", "Terra & Stone — studio counter"),
-            ("IMG_1275.jpg", "Bakery production kitchen"),
-            ("IMG_1274.jpg", "Bakery back-of-house"),
         ],
     },
     {
@@ -84,8 +78,6 @@ SECTIONS = [
         "blurb": "Coffee, tonics and bottled drinks styled for social and print.",
         "items": [
             ("IMG_1289.jpg", "Latte art — espresso bar"),
-            ("IMG_1150.jpg", "Larkspur — full tonic range"),
-            ("IMG_1305.jpg", "Iced coffee — lifestyle"),
             ("IMG_1152.jpg", "Smoothie bowl — overhead"),
         ],
     },
