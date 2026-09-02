@@ -4,267 +4,375 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
+<title>Illume — Your marketing, handled. The Studio Plan for small businesses</title>
+<meta name="description" content="One studio that does everything a small business needs to look professional and get customers — content, posting, video, ads, website and direction. $950 a month, month to month. Dubai.">
+<link rel="canonical" href="https://www.illumeandco.online/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Illume">
+<meta property="og:title" content="Illume — Your marketing, handled.">
+<meta property="og:description" content="Studio-quality content made from what you already have, posted for you, plus video, ads, website and direction. $950 a month, month to month.">
+<meta property="og:url" content="https://www.illumeandco.online/">
+<meta property="og:image" content="https://www.illumeandco.online/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Illume — Your marketing, handled.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Illume — Your marketing, handled.">
+<meta name="twitter:description" content="Studio-quality content made from what you already have, posted for you, plus video, ads, website and direction. $950 a month, month to month.">
+<meta name="twitter:image" content="https://www.illumeandco.online/og.png">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Illume — Content &amp; marketing studio for small businesses</title>
-<meta name="description" content="Illume turns the photos you already have into polished, publish-ready marketing content. 7-Day Founding Client Launch — $250, for our first 3 clients.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/Fraunces-400-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/DMSans-300-500.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/DMMono-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="ind.css">
-<style>
-.hero{padding:18px 0 0}
-.giant{font-family:var(--display);font-weight:900;letter-spacing:-.03em;font-size:clamp(44px,9vw,116px);line-height:.98;color:var(--ink);margin-bottom:22px}
-.hero-sub{font-size:19px;font-weight:400;color:var(--ink-soft);max-width:54ch;margin-bottom:34px}
-.sect{padding:96px 0 0}
-.split-head{margin-bottom:36px;max-width:62ch}
-.split-head h2{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,44px);letter-spacing:-.02em;line-height:1.05}
-.split-head p{font-size:16.5px;color:var(--ink-soft);max-width:58ch;margin-top:14px}
-.transform-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.transform-panel{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/5}
-.transform-tag{position:absolute;top:16px;left:16px;z-index:2;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:7px 13px;border-radius:100px}
-.transform-panel.before .transform-tag{background:rgba(16,16,16,.72);color:#fff}
-.transform-panel.after .transform-tag{background:var(--accent);color:#fff}
-.transform-arrows{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:18px 0}
-.transform-arrows .arrow-down{font-family:var(--display);font-weight:700;font-size:32px;color:var(--accent);text-align:center;line-height:1}
-.work-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.work-tile{aspect-ratio:4/5;border-radius:14px;overflow:hidden}
-.work-link{display:inline-block;margin-top:24px;font-family:var(--mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-deep);text-decoration:none}
-.work-link:hover{color:var(--ink)}
-.offer{background:var(--panel);border-radius:var(--r);padding:52px 48px}
-.offer-flag{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:var(--accent);color:#fff;padding:7px 14px;border-radius:100px;margin-bottom:18px}
-.offer-body{display:grid;grid-template-columns:1.3fr 1fr;gap:44px;align-items:stretch}
-.offer-left h2{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,42px);letter-spacing:-.02em;margin-bottom:16px}
-.offer-tagline{font-family:var(--display);font-weight:600;font-size:20px;color:var(--accent-deep);letter-spacing:-.005em;margin-bottom:14px}
-.offer-left p.offer-sub{font-size:16.5px;color:var(--ink-soft);max-width:52ch;margin-bottom:34px}
-.offer-highlights{display:grid;gap:20px;padding-top:28px;border-top:1px solid var(--rule);max-width:48ch}
-.offer-highlight{display:flex;gap:14px;align-items:flex-start}
-.offer-highlight .hl-num{flex:0 0 auto;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--accent-deep);border:1px solid var(--rule);border-radius:100px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;margin-top:1px}
-.offer-highlight h4{font-family:var(--display);font-weight:600;font-size:15.5px;letter-spacing:-.005em;margin-bottom:3px}
-.offer-highlight p{font-size:14px;color:var(--ink-soft);line-height:1.5}
-.offer-price{background:var(--paper);border-radius:16px;padding:32px 30px;text-align:left;display:flex;flex-direction:column;height:100%}
-.offer-price .fig{font-family:var(--display);font-weight:800;font-size:48px;letter-spacing:-.03em;color:var(--accent-deep);display:block;line-height:1}
-.offer-price .unit{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;margin-top:8px}
-.offer-list{list-style:none;display:grid;gap:14px;margin:24px 0 26px}
-.offer-list li{display:flex;gap:12px;font-size:16px;color:var(--ink);line-height:1.5}
-.offer-list li::before{content:"";flex:0 0 6px;height:6px;margin-top:9px;border-radius:50%;background:var(--accent)}
-.offer-price .btn{margin-top:auto}
-.offer-note{margin-top:20px;font-size:13.5px;color:var(--muted);line-height:1.5}
-.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.step{border:1px solid var(--rule);border-radius:16px;padding:28px 24px 30px;background:var(--paper)}
-.step .num{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--accent);display:block;margin-bottom:14px}
-.step h3{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:-.01em;margin-bottom:8px}
-.step p{font-size:14.5px;color:var(--ink-soft);line-height:1.5}
-#founder .split-head{text-align:center;margin-left:auto;margin-right:auto}
-.founder{max-width:72ch;margin:0 auto;text-align:center;background:var(--panel);border-radius:var(--r);padding:52px 48px}
-.founder p{font-size:18px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px}
-.founder p:last-child{margin-bottom:0}
-.founder p b{color:var(--ink);font-weight:600}
-.faq{max-width:760px}
-.faq details{border-bottom:1px solid var(--rule);padding:22px 0}
-.faq summary{font-family:var(--display);font-weight:600;font-size:17px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:20px}
-.faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"+";font-size:22px;font-weight:400;color:var(--accent);flex-shrink:0;transition:transform .25s ease}
-.faq details[open] summary::after{transform:rotate(45deg)}
-.faq details p{margin-top:14px;font-size:15.5px;color:var(--ink-soft);max-width:60ch}
-.closing{margin-top:96px;padding:64px 48px;text-align:center;background:var(--panel);border-radius:var(--r)}
-.closing h2{font-family:var(--display);font-weight:700;font-size:clamp(26px,4vw,38px);letter-spacing:-.02em;max-width:22ch;margin:0 auto}
-.closing p{margin:16px auto 30px;max-width:46ch;font-size:16px;color:var(--ink-soft)}
-footer.band{margin-top:60px;padding:26px 0 46px}
-@media (max-width:900px){.work-grid{grid-template-columns:repeat(2,1fr)}.offer{padding:36px 26px}.offer-body{grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr}.founder{padding:36px 26px}.closing{padding:46px 26px}}
-@media (max-width:640px){.sect{padding:66px 0 0}.steps{grid-template-columns:1fr}.work-grid{grid-template-columns:repeat(2,1fr)}.transform-row{grid-template-columns:1fr;gap:14px}.transform-arrows{grid-template-columns:1fr;gap:14px;margin:10px 0}}
-</style>
+<script>document.documentElement.className+=" js"</script>
 </head>
 <body style="background:#ffffff">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.6"/><path d="M21 16l-5-5-9 9"/></symbol>
+<symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="14" height="14" rx="3"/><path d="M19 8v9a2 2 0 0 1-2 2"/><path d="M22 10v6"/></symbol>
+<symbol id="i-reel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10.5 9v6l4.5-3z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-plan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="i-vid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="M16 10l6-3v10l-6-3z"/></symbol>
+<symbol id="i-ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></symbol>
+</svg>
 <div class="wrap">
 <header class="masthead">
-<a class="logo-link" href="index.html" aria-label="Illume home"><img src="logo.svg" alt="Illume"></a>
+<a class="logo-link" href="index.html" aria-label="Illume home"><img src="logo.svg" alt="Illume" width="543" height="170" fetchpriority="high"></a>
 <nav class="nav">
 <a href="portfolio.html">Our Work</a>
 </nav>
 <a class="btn" href="start.html">Start your project</a>
 </header>
+<main>
+
 <section class="hero">
-<span class="eyebrow">Content &amp; marketing studio</span>
-<h1 class="giant"><span>You already have the content.</span></h1>
-<p class="hero-sub">Illume takes the photos and videos your business already has and transforms them into polished, publish-ready marketing — the studio feel, without the studio price tag.</p>
+<span class="eyebrow">Content &amp; marketing studio &middot; Dubai</span>
+<h1 class="giant">Your marketing, handled<span class="dot">.</span></h1>
+<p class="hero-sub">One studio that does everything a small business needs to look professional and get customers — for less than one employee. We take the photos and videos you already have, turn them into studio-quality content, and post it for you.</p>
+<div class="hero-cta">
+<a class="btn" href="start.html">Start your project</a>
+<p class="hero-meta">$950 / month &middot; month to month<br>Everything we make is yours to keep</p>
+</div>
 </section>
 
 <section class="sect" id="transformation">
-<div class="split-head">
+<div class="sect-head rv">
 <h2>Same content. Studio quality.</h2>
 <p>No shoot to book, no equipment to rent — just what you already have, refined into something people stop scrolling for.</p>
 </div>
-<div class="transform-row">
-<div class="transform-panel before">
-<span class="transform-tag">Before</span>
-<img src="images/before/serum-dropper-and-bottle.jpg" alt="Unedited phone photo of a serum dropper and bottle before Illume">
+<div class="pairs stagger">
+<div class="pair">
+<div class="panel"><span class="tag">Before</span><img src="images/before/serum-dropper-and-bottle.webp" srcset="images/before/serum-dropper-and-bottle-480.webp 480w, images/before/serum-dropper-and-bottle.webp 960w" sizes="(max-width:640px) 45vw, 31vw" alt="Unedited phone photo of a serum dropper and bottle before Illume" width="924" height="1314" fetchpriority="high"></div>
+<div class="arrow" aria-hidden="true">&darr;</div>
+<div class="panel"><span class="tag after">After — Illume</span><img src="images/after/pomegranate-skincare-flatlay.webp" srcset="images/after/pomegranate-skincare-flatlay-480.webp 480w, images/after/pomegranate-skincare-flatlay.webp 960w" sizes="(max-width:640px) 45vw, 31vw" alt="Finished pomegranate skincare flat-lay creative after Illume" width="960" height="960" loading="lazy" decoding="async"></div>
 </div>
-<div class="transform-panel before">
-<span class="transform-tag">Before</span>
-<img src="images/before/serum-dropper.jpg" alt="Unedited phone photo of a serum dropper before Illume">
+<div class="pair">
+<div class="panel"><span class="tag">Before</span><img src="images/before/serum-dropper.webp" srcset="images/before/serum-dropper-480.webp 480w, images/before/serum-dropper.webp 960w" sizes="(max-width:640px) 45vw, 31vw" alt="Unedited phone photo of a serum dropper before Illume" width="960" height="671"></div>
+<div class="arrow" aria-hidden="true">&darr;</div>
+<div class="panel"><span class="tag after">After — Illume</span><img src="images/after/skincare-beauty-campaign.webp" srcset="images/after/skincare-beauty-campaign-480.webp 480w, images/after/skincare-beauty-campaign.webp 960w" sizes="(max-width:640px) 45vw, 31vw" alt="Finished skincare beauty campaign creative after Illume" width="960" height="1192" loading="lazy" decoding="async"></div>
 </div>
-<div class="transform-panel before">
-<span class="transform-tag">Before</span>
-<img src="images/before/serum-drops.jpg" alt="Unedited phone photo of serum drops before Illume">
-</div>
-</div>
-<div class="transform-arrows">
-<div class="arrow-down">&darr;</div>
-<div class="arrow-down">&darr;</div>
-<div class="arrow-down">&darr;</div>
-</div>
-<div class="transform-row">
-<div class="transform-panel after">
-<span class="transform-tag">After — Illume</span>
-<img src="images/after/pomegranate-skincare-flatlay.png" alt="Finished pomegranate skincare flat-lay creative after Illume">
-</div>
-<div class="transform-panel after">
-<span class="transform-tag">After — Illume</span>
-<img src="images/after/skincare-beauty-campaign.png" alt="Finished skincare beauty campaign creative after Illume">
-</div>
-<div class="transform-panel after">
-<span class="transform-tag">After — Illume</span>
-<img src="images/after/petri-dish-texture.png" alt="Finished petri dish texture creative after Illume">
-</div>
-</div>
-</section>
-
-<section class="sect" id="process">
-<div class="split-head">
-<h2>How it works</h2>
-<p>It starts with a conversation, not a checkout.</p>
-</div>
-<div class="steps">
-<div class="step">
-<span class="num">01</span>
-<h3>Get in touch</h3>
-<p>Tell us about your business — what you make, who it's for, and where you want to grow.</p>
-</div>
-<div class="step">
-<span class="num">02</span>
-<h3>Send your content</h3>
-<p>You send the photos and video you already have — nothing to shoot or stage.</p>
-</div>
-<div class="step">
-<span class="num">03</span>
-<h3>We build it in studio</h3>
-<p>We turn it into strategy-led, publish-ready content over the 7 days.</p>
-</div>
-<div class="step">
-<span class="num">04</span>
-<h3>Review &amp; launch</h3>
-<p>You review, we refine, and everything lands ready to post.</p>
+<div class="pair">
+<div class="panel"><span class="tag">Before</span><img src="images/before/serum-drops.webp" srcset="images/before/serum-drops-480.webp 480w, images/before/serum-drops.webp 960w" sizes="(max-width:640px) 45vw, 31vw" alt="Unedited phone photo of serum drops before Illume" width="929" height="1154"></div>
+<div class="arrow" aria-hidden="true">&darr;</div>
+<div class="panel"><span class="tag after">After — Illume</span><img src="images/after/petri-dish-texture.webp" srcset="images/after/petri-dish-texture-480.webp 480w, images/after/petri-dish-texture.webp 960w" sizes="(max-width:640px) 45vw, 31vw" alt="Finished petri dish texture creative after Illume" width="960" height="1192" loading="lazy" decoding="async"></div>
 </div>
 </div>
 </section>
 
 <section class="sect" id="work">
-<div class="split-head">
+<div class="sect-head rv">
 <h2>The work speaks for itself.</h2>
-<p>A selection of recent creative — product visuals, social content and campaign pieces.</p>
+<p>Recent creative — product visuals, social content and a reel — all made from content the business already had.</p>
 </div>
-<div class="work-grid">
-<div class="work-tile"><img src="images/work/fragrance-bottle.png" alt="Fragrance bottle creative" loading="lazy"></div>
-<div class="work-tile"><img src="images/work/salon-portrait.png" alt="Salon portrait creative" loading="lazy"></div>
-<div class="work-tile"><img src="images/work/skincare-hand-cream.png" alt="Skincare hand cream creative" loading="lazy"></div>
-<div class="work-tile"><img src="images/work/confectionery-tin.png" alt="Confectionery tin creative" loading="lazy"></div>
+<div class="work-row stagger">
+<div class="reel">
+<span class="tag">Reel</span>
+<video muted playsinline loop preload="none" poster="media/reel-poster.webp" width="720" height="1280" aria-label="A short reel made by Illume"><source src="media/reel.mp4" type="video/mp4"></video>
+<span class="reel-note">Reel &middot; coming soon</span>
 </div>
-<a class="work-link" href="portfolio.html">See the full portfolio &rarr;</a>
+<div class="tile"><img src="images/work/fragrance-bottle.webp" srcset="images/work/fragrance-bottle-480.webp 480w, images/work/fragrance-bottle.webp 960w" sizes="(max-width:700px) 80vw, 25vw" alt="Fragrance bottle creative" width="800" height="993" loading="lazy" decoding="async"></div>
+<div class="tile"><img src="images/work/salon-portrait.webp" srcset="images/work/salon-portrait-480.webp 480w, images/work/salon-portrait.webp 960w" sizes="(max-width:700px) 80vw, 25vw" alt="Salon portrait creative" width="800" height="993" loading="lazy" decoding="async"></div>
+<div class="tile"><img src="images/work/confectionery-tin.webp" srcset="images/work/confectionery-tin-480.webp 480w, images/work/confectionery-tin.webp 960w" sizes="(max-width:700px) 80vw, 25vw" alt="Confectionery tin creative" width="800" height="993" loading="lazy" decoding="async"></div>
+</div>
+<p style="margin-top:22px"><a class="text-link" href="portfolio.html">See the full portfolio &rarr;</a></p>
 </section>
 
-<section class="sect" id="offer">
-<div class="offer">
-<div class="offer-body">
-<div class="offer-left">
-<span class="offer-flag">Founding Client Launch — first 3 businesses only</span>
-<h2>7 days. One clear offer.</h2>
-<p class="offer-tagline">Your best marketing yet, one project away.</p>
-<p class="offer-sub">We're opening three spots to experience Illume in full. In exchange, we ask permission to show the work as a case study.</p>
-<div class="offer-highlights">
-<div class="offer-highlight">
-<span class="hl-num">01</span>
-<div><h4>Direct access</h4><p>You work with us directly — no account managers, no middle layer.</p></div>
+<section class="sect" id="plan">
+<div class="plan rv">
+<div class="plan-body">
+<div class="plan-card">
+<span class="flag">The Studio Plan</span>
+<h2>One plan. Everything handled.</h2>
+<p class="plan-tag">Studio-quality content made from what you already have, posted for you — plus video, ads, website and direction. One studio, for less than one employee.</p>
+<div class="price"><span class="fig">$950</span><span class="per">per month &middot; USD</span></div>
+<p class="terms-line">Month to month &middot; cancel anytime with 7 days&rsquo; notice</p>
+<ul class="caps">
+<li><span class="ck"><svg><use href="#i-ck"/></svg></span><span><b>Studio-quality creatives</b> from the content you already have — Instagram pictures, carousels and reels made from your photos, videos, products, menus and before/afters.</span></li>
+<li><span class="ck"><svg><use href="#i-ck"/></svg></span><span><b>We post it for you</b>, on a steady rhythm, so your pages stay active without you lifting a finger.</span></li>
+<li><span class="ck"><svg><use href="#i-ck"/></svg></span><span><b>Captions and a monthly content plan</b> built around your goals.</span></li>
+<li><span class="ck"><svg><use href="#i-ck"/></svg></span><span><b>Promotional videos.</b></span></li>
+<li><span class="ck"><svg><use href="#i-ck"/></svg></span><span><b>Ready-to-run ads</b> for Instagram, Facebook, Google and WhatsApp. You keep control of your ad account and budget — we make what goes in it.</span></li>
+<li><span class="ck"><svg><use href="#i-ck"/></svg></span><span><b>Your website, built or fixed.</b> We take that on from your second month, once we know your brand.</span></li>
+<li><span class="ck"><svg><use href="#i-ck"/></svg></span><span><b>Ongoing direction.</b> We plan each month together and deliver what moves the needle.</span></li>
+</ul>
+<div class="plan-foot">
+<p>The scope flexes to what your business needs that month. No quotas, no counting creatives.</p>
+<p class="founding">$950 is our founding rate. It will rise as we grow.</p>
+<a class="btn btn-accent" href="start.html">Start your project</a>
+<p class="small" style="margin-top:18px">Invoiced at the start of each month; work begins once the month is paid. Everything we make is yours to keep, always.</p>
 </div>
-<div class="offer-highlight">
-<span class="hl-num">02</span>
-<div><h4>Built from what you have</h4><p>Real content from your business, not a stock library or a template.</p></div>
+<div class="guarantee">If after your Launch Month you don&rsquo;t see the value, don&rsquo;t continue — and everything we made is yours to keep.</div>
 </div>
-<div class="offer-highlight">
-<span class="hl-num">03</span>
-<div><h4>No pressure, no lock-in</h4><p>See the finished work before any conversation about continuing.</p></div>
+<div class="plan-proof">
+<div class="ba" style="--pos:88%">
+<img class="after" src="images/after/pomegranate-skincare-flatlay.webp" srcset="images/after/pomegranate-skincare-flatlay-480.webp 480w, images/after/pomegranate-skincare-flatlay.webp 960w" sizes="(max-width:900px) calc(100vw - 88px), 40vw" alt="Finished pomegranate skincare flat-lay creative by Illume" width="960" height="960" loading="lazy" decoding="async">
+<img class="before" src="images/before/serum-dropper-and-bottle.webp" srcset="images/before/serum-dropper-and-bottle-480.webp 480w, images/before/serum-dropper-and-bottle.webp 960w" sizes="(max-width:900px) calc(100vw - 88px), 40vw" alt="The same serum as an unedited phone photo" width="924" height="1314" loading="lazy" decoding="async">
+<span class="tag">Before</span>
+<span class="tag after">After — Illume</span>
+<span class="line" aria-hidden="true"></span>
+<span class="knob" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#101010" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l-5 6 5 6M15 6l5 6-5 6"/></svg></span>
+<input type="range" min="0" max="100" value="88" aria-label="Drag to compare the phone photo with the finished creative">
+</div>
+<p class="ba-cap">Drag to compare. A phone photo in, a studio creative out — this is one of the transformations we&rsquo;d make for you.</p>
 </div>
 </div>
 </div>
-<div class="offer-price">
-<div>
-<span class="fig">$250</span>
-<span class="unit">7-day founding client launch</span>
-<ul class="offer-list">
-<li>6 creative assets built from your existing content, tailored to your marketing needs</li>
-<li>Captions written for each creative asset</li>
-<li>1 professional promotional video</li>
-<li>Delivered within 7 days</li>
+</section>
+
+<section class="sect" id="launch">
+<div class="sect-head rv">
+<span class="eyebrow">Month one</span>
+<h2>Your Launch Month.</h2>
+<p>Month one is defined, so the first yes feels concrete. It&rsquo;s ongoing work across the whole month — you see content going live while we work, not a delivery at the end of 30 days.</p>
+</div>
+<div class="timeline stagger">
+<div class="tl">
+<span class="dot">01</span>
+<div><span class="when">Week one</span><h3>Brand and content review, and your content plan.</h3><p>We look at everything you have and how you currently show up, then build a content plan around your goals.</p></div>
+</div>
+<div class="tl">
+<span class="dot">02</span>
+<div><span class="when">Throughout the month</span><h3>We create and post your content.</h3><p>Studio-quality Instagram pictures, carousels and reels made from your existing content, with captions, posted on a steady rhythm so your pages come alive while we work.</p></div>
+</div>
+<div class="tl">
+<span class="dot">03</span>
+<div><span class="when">End of the month</span><h3>Your promotional video.</h3><p>Created once we know your brand, closing out the Launch Month.</p></div>
+</div>
+</div>
+<p class="tl-note rv">From month two onward, the scope flexes to whatever moves the needle for your business.</p>
+</section>
+
+<section class="sect" id="month">
+<div class="sect-head rv">
+<h2>What a month with Illume looks like.</h2>
+<p>We post for you across the month, so your pages never go quiet. Illustrative — the mix changes with what your business needs.</p>
+</div>
+<div class="month stagger">
+<div class="week"><span class="wk">Week 1</span><div class="chips">
+<div class="chip plan"><svg><use href="#i-plan"/></svg>Review &amp; content plan</div>
+<div class="chip"><svg><use href="#i-pic"/></svg>Picture posted</div>
+<div class="chip"><svg><use href="#i-car"/></svg>Carousel posted</div>
+</div></div>
+<div class="week"><span class="wk">Week 2</span><div class="chips">
+<div class="chip"><svg><use href="#i-pic"/></svg>Picture posted</div>
+<div class="chip"><svg><use href="#i-reel"/></svg>Reel posted</div>
+<div class="chip"><svg><use href="#i-pic"/></svg>Picture posted</div>
+</div></div>
+<div class="week"><span class="wk">Week 3</span><div class="chips">
+<div class="chip"><svg><use href="#i-car"/></svg>Carousel posted</div>
+<div class="chip"><svg><use href="#i-pic"/></svg>Picture posted</div>
+<div class="chip"><svg><use href="#i-reel"/></svg>Reel posted</div>
+</div></div>
+<div class="week"><span class="wk">Week 4</span><div class="chips">
+<div class="chip"><svg><use href="#i-pic"/></svg>Picture posted</div>
+<div class="chip"><svg><use href="#i-reel"/></svg>Reel posted</div>
+<div class="chip hot"><svg><use href="#i-vid"/></svg>Promo video</div>
+</div></div>
+</div>
+</section>
+
+<section class="sect" id="compare">
+<div class="sect-head rv">
+<h2>The maths, stated plainly.</h2>
+<p>What it usually costs to have your marketing handled.</p>
+</div>
+<div class="cmp stagger">
+<div class="cmp-col tilt">
+<h3>Agency</h3>
+<dl>
+<div><dt>Cost</dt><dd class="big">$<span data-to="2500">2,500</span>–<span data-to="5000">5,000</span><small>per month</small></dd></div>
+<div><dt>Commitment</dt><dd>Contracts and retainers.</dd></div>
+<div><dt>What you get</dt><dd>A team you rarely talk to.</dd></div>
+</dl>
+</div>
+<div class="cmp-col tilt">
+<h3>Marketing employee</h3>
+<dl>
+<div><dt>Cost</dt><dd class="big">$<span data-to="3000">3,000</span>+<small>per month, plus you manage them</small></dd></div>
+<div><dt>Commitment</dt><dd>Salary, hiring, onboarding.</dd></div>
+<div><dt>What you get</dt><dd>One skill set.</dd></div>
+</dl>
+</div>
+<div class="cmp-col us tilt">
+<h3>Illume Studio Plan <span class="you">This is us</span></h3>
+<dl>
+<div><dt>Cost</dt><dd class="big">$<span data-to="950">950</span><small>per month</small></dd></div>
+<div><dt>Commitment</dt><dd>Month to month, 7 days&rsquo; notice.</dd></div>
+<div><dt>What you get</dt><dd>Content, video, ads, website, direction — one studio.</dd></div>
+</dl>
+</div>
+</div>
+<p class="small cmp-note rv">Agency and salary figures are typical ranges, not quotes — yours may differ.</p>
+</section>
+
+<section class="sect" id="fit">
+<div class="sect-head rv">
+<h2>Who it&rsquo;s for — and who it isn&rsquo;t.</h2>
+</div>
+<div class="fit stagger">
+<div class="fit-col">
+<h3>The Studio Plan is for</h3>
+<ul>
+<li>Businesses that already have customers and want to look as good as they are.</li>
+<li>Owners who have content but no time or skill to make it work.</li>
+<li>Restaurants, caf&eacute;s, beauty and personal care, home-based food brands, trades and service businesses.</li>
 </ul>
 </div>
-<a class="btn" href="start.html" style="width:100%;text-align:center;background:var(--accent)">Start your project</a>
-<p class="offer-note">If it's a good fit, we'll talk about continuing together afterward — no pressure, no fixed package.</p>
-</div>
+<div class="fit-col no">
+<h3>It isn&rsquo;t for</h3>
+<ul>
+<li>Anyone looking for overnight viral results.</li>
+<li>Anyone who wants to hand over an ad budget and disappear.</li>
+<li>Businesses that don&rsquo;t want to be involved in their own marketing.</li>
+</ul>
 </div>
 </div>
 </section>
 
-<section class="sect" id="founder">
-<div class="split-head">
-<h2>Behind the studio</h2>
+<section class="sect" id="need">
+<div class="sect-head rv">
+<h2>What we&rsquo;ll need from you.</h2>
+<p>Starting is easy. Three things, and we take it from there.</p>
 </div>
-<div class="founder">
-<p>Illume was started after seeing how many genuinely good small businesses were represented online by nothing more than a quick phone photo, simply because a proper shoot cost more than a week's sales.</p>
-<p>The studio exists to close that gap — taking what a business already has and giving it the polish it deserves, without agency overhead or agency pricing.</p>
+<div class="steps stagger">
+<div class="step tilt"><span class="num">01</span><h3>The content you already have</h3><p>Photos and videos of your product, space, team or menu. Phone shots are fine — that&rsquo;s the point.</p></div>
+<div class="step tilt"><span class="num">02</span><h3>Partner access to your pages</h3><p>Access to your Instagram and Facebook pages through Meta Business Suite partner access. We never ask for your password.</p></div>
+<div class="step tilt"><span class="num">03</span><h3>About 30 minutes</h3><p>One kickoff conversation so we understand your business, your customers and your goals.</p></div>
+</div>
+<p class="thats-it rv">That&rsquo;s it.</p>
+</section>
+
+<section class="sect" id="next">
+<div class="sect-head rv">
+<h2>What happens after you reach out.</h2>
+<p>It starts with a conversation, not a checkout.</p>
+</div>
+<div class="steps five stagger">
+<div class="step tilt"><span class="num">01</span><h3>Reach out</h3><p>Send the form, or message us on WhatsApp.</p></div>
+<div class="step tilt"><span class="num">02</span><h3>A quick call or emails</h3><p>We understand your business and answer your questions.</p></div>
+<div class="step tilt"><span class="num">03</span><h3>We plan your Launch Month</h3><p>Together — around your goals and the content you have.</p></div>
+<div class="step tilt"><span class="num">04</span><h3>Work starts</h3><p>Once month one is paid, we get going.</p></div>
+<div class="step tilt"><span class="num">05</span><h3>First creatives land</h3><p>In your inbox — and on your pages.</p></div>
+</div>
+</section>
+
+<section class="sect" id="us">
+<div class="sect-head center rv">
+<h2>The two of us.</h2>
+</div>
+<div class="founder rv">
+<p><b>Illume is the two of us.</b> We started the studio after seeing how many genuinely good small businesses were represented online by nothing more than a quick phone photo, because a proper shoot cost more than a week&rsquo;s sales.</p>
+<p>We lead every project personally, with AI-assisted production. That&rsquo;s why it&rsquo;s $950 and not $3,000 — and why you&rsquo;ll always be talking to us, not an account manager.</p>
 </div>
 </section>
 
 <section class="sect" id="faq">
-<div class="split-head">
+<div class="sect-head rv">
 <h2>A few things people ask</h2>
 </div>
-<div class="faq">
+<div class="faq rv">
 <details>
-<summary>What exactly is included in the $250?</summary>
-<p>6 creative assets built from your existing content and tailored to your marketing needs, captions written for each one, and 1 professional promotional video — all delivered within 7 days. This is open to our first three founding clients.</p>
+<summary>What&rsquo;s included in the Studio Plan?</summary>
+<div class="faq-body"><p>Studio-quality Instagram pictures, carousels and reels made from the content you already have, posted for you on a steady rhythm, with captions and a monthly content plan built around your goals. Plus promotional videos, ready-to-run ads, your website built or fixed from month two, and ongoing direction — we plan each month together. The scope flexes to what your business needs that month.</p></div>
+</details>
+<details>
+<summary>What happens in month one?</summary>
+<div class="faq-body"><p>Your Launch Month. In week one we review your brand and content and build your content plan. Throughout the month we create and post your content, so your pages come alive while we work. At the end of the month we deliver your promotional video, made once we know your brand.</p></div>
+</details>
+<details>
+<summary>Can I cancel?</summary>
+<div class="faq-body"><p>Yes. The Studio Plan is month to month — we just ask for 7 days&rsquo; notice before your next billing date. Everything we made for you is yours to keep, always.</p></div>
+</details>
+<details>
+<summary>Is there a refund?</summary>
+<div class="faq-body"><p>No. The plan is month to month, so there&rsquo;s nothing to lock you in. If after your Launch Month you don&rsquo;t see the value, simply don&rsquo;t continue — and keep everything we made.</p></div>
+</details>
+<details>
+<summary>Do you run my ads?</summary>
+<div class="faq-body"><p>We create ready-to-run ads for Instagram, Facebook, Google and WhatsApp. You keep control of your ad account and budget — we make what goes in it. Ad spend is never included in the plan.</p></div>
+</details>
+<details>
+<summary>Can you build my website?</summary>
+<div class="faq-body"><p>Yes — built or fixed. We take that on from your second month, once we know your brand.</p></div>
+</details>
+<details>
+<summary>Is it really $950 — will it go up?</summary>
+<div class="faq-body"><p>$950 a month, in USD, is our founding rate. It will rise as we grow. You&rsquo;re invoiced at the start of each month, and work begins once the month is paid.</p></div>
 </details>
 <details>
 <summary>Do you use AI to make the work?</summary>
-<p>Yes — AI is part of our toolkit, the same way editing software and colour grading are. Your content, your brand and your direction shape everything, and every piece is art-directed and reviewed by us before it reaches you.</p>
+<div class="faq-body"><p>Yes — AI is part of our toolkit, the same way editing software and colour grading are. Your content, your brand and your direction shape everything, and every piece is art-directed and reviewed by us before it reaches you. AI assists the craft; it doesn&rsquo;t replace it.</p></div>
+</details>
+<details>
+<summary>Who am I working with?</summary>
+<div class="faq-body"><p>The two of us. We lead every project personally — no account managers, no middle layer.</p></div>
 </details>
 <details>
 <summary>What do I need to send?</summary>
-<p>Photos and video of your product, space or team — whatever you already have. We'll tell you what's most useful after our first conversation.</p>
-</details>
-<details>
-<summary>What happens after the 7 days?</summary>
-<p>If it's working for you, we'll talk about an ongoing plan built around your business — no fixed package, no pressure to continue.</p>
+<div class="faq-body"><p>The photos and videos you already have, even phone shots; partner access to your Instagram and Facebook pages through Meta Business Suite (never your password); and about 30 minutes for a kickoff conversation.</p></div>
 </details>
 </div>
 </section>
 
-<section class="closing">
-<h2>Ready to see what we'd make for you?</h2>
-<p>Tell us about your brand — we'll take it from there.</p>
-<a class="btn" href="start.html" style="background:var(--accent)">Start your project</a>
+<section class="closing rv">
+<h2>Ready to have your marketing handled?</h2>
+<p>Tell us about your business — we&rsquo;ll reply personally and plan your Launch Month together.</p>
+<a class="btn btn-accent" href="start.html">Start your project</a>
+<p class="alt">Prefer to chat? <a href="https://wa.me/971555045014?text=Hi%20Illume%2C%20I%27d%20like%20to%20know%20more%20about%20the%20Studio%20Plan" target="_blank" rel="noopener">Message us on WhatsApp</a></p>
 </section>
 
-<footer class="band">
-<span>Illume</span>
-<div class="flinks">
-<a href="portfolio.html">Portfolio</a>
-<a href="mailto:illumeandco.online@gmail.com">illumeandco.online@gmail.com</a>
+</main>
+<footer class="foot">
+<div>
+<a class="brand" href="index.html">Illume</a>
+<p>Content &amp; marketing studio for small businesses.<br>Dubai, United Arab Emirates.</p>
+</div>
+<div>
+<span class="lbl">Contact</span>
+<ul>
+<li><a href="mailto:illumeandco.online@gmail.com">illumeandco.online@gmail.com</a></li>
+<li><a href="https://wa.me/971555045014?text=Hi%20Illume%2C%20I%27d%20like%20to%20know%20more%20about%20the%20Studio%20Plan" target="_blank" rel="noopener">WhatsApp +971 55 504 5014</a></li>
+<li><a href="https://www.instagram.com/illumeandco" target="_blank" rel="noopener">Instagram @illumeandco</a></li>
+</ul>
+</div>
+<div>
+<span class="lbl">Privacy</span>
+<p class="fine">What you send us is used only to reply to you and to do the work. We don&rsquo;t share it or sell it.</p>
+<p class="fine" style="margin-top:10px">&copy; 2026 Illume</p>
 </div>
 </footer>
 </div>
-<script src="ind.js"></script>
+
+<a class="wa" href="https://wa.me/971555045014?text=Hi%20Illume%2C%20I%27d%20like%20to%20know%20more%20about%20the%20Studio%20Plan" target="_blank" rel="noopener" aria-label="Message us on WhatsApp">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#25D366" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/><path fill="#fff" d="M16.6 13.9c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.7-.3-1.4-.7-2-1.3-.5-.5-1-1.1-1.3-1.7-.1-.2 0-.4.1-.5l.4-.5c.2-.2.2-.4.1-.6l-.7-1.6c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.6.6-.9 1.3-.9 2.1.1.9.4 1.8 1 2.6 1.1 1.6 2.5 2.9 4.2 3.7.5.2 1 .4 1.5.5.5.1 1 .1 1.5 0 .7-.2 1.3-.7 1.6-1.4.1-.3.2-.7.1-1-.1-.2-.2-.3-.4-.4z"/></svg>
+<span>Message us on WhatsApp</span>
+</a>
+<script src="ind.js" defer></script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
