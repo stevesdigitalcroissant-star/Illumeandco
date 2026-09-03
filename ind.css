@@ -72,7 +72,6 @@ strong,b{font-weight:600}
 .hero-cta .btn{padding:16px 30px;font-size:15.5px}
 .hero-meta{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;line-height:1.7}
 .hero-media{position:relative;margin-top:0;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9;background:var(--panel)}
-.hero>.hero-meta{margin-top:16px}
 .hero-media video{position:absolute;inset:0}
 .snd{position:absolute;right:14px;bottom:14px;z-index:3;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.92);color:var(--ink);border:1px solid var(--rule);border-radius:100px;padding:9px 14px 9px 11px;font-family:var(--body);font-size:13px;font-weight:500;cursor:pointer;transition:transform .18s ease,background .2s ease}
 .snd svg{width:18px;height:18px}
