@@ -71,7 +71,8 @@ strong,b{font-weight:600}
 .hero-cta{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
 .hero-cta .btn{padding:16px 30px;font-size:15.5px}
 .hero-meta{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;line-height:1.7}
-.hero-media{position:relative;margin-top:44px;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9;background:var(--panel)}
+.hero-media{position:relative;margin-top:0;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9;background:var(--panel)}
+.hero>.hero-meta{margin-top:16px}
 .hero-media video{position:absolute;inset:0}
 .snd{position:absolute;right:14px;bottom:14px;z-index:3;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.92);color:var(--ink);border:1px solid var(--rule);border-radius:100px;padding:9px 14px 9px 11px;font-family:var(--body);font-size:13px;font-weight:500;cursor:pointer;transition:transform .18s ease,background .2s ease}
 .snd svg{width:18px;height:18px}
@@ -299,7 +300,7 @@ footer.foot .fine{font-size:13px;color:var(--muted);line-height:1.55}
   .wrap{padding:0 18px}
   .sect{padding:66px 0 0}
   .hero{padding:14px 0 0}
-  .hero-media{margin-top:30px;border-radius:14px}
+  .hero-media{border-radius:14px}
   .snd{right:10px;bottom:10px;padding:8px 11px 8px 9px;font-size:12.5px}
   .media-note{left:10px;bottom:10px}
   .hero-sub{font-size:17.5px}
