@@ -71,6 +71,25 @@ strong,b{font-weight:600}
 .hero-cta{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
 .hero-cta .btn{padding:16px 30px;font-size:15.5px}
 .hero-meta{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;line-height:1.7}
+.hero-media{position:relative;margin-top:44px;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9;background:var(--panel)}
+.hero-media video{position:absolute;inset:0}
+.snd{position:absolute;right:14px;bottom:14px;z-index:3;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.92);color:var(--ink);border:1px solid var(--rule);border-radius:100px;padding:9px 14px 9px 11px;font-family:var(--body);font-size:13px;font-weight:500;cursor:pointer;transition:transform .18s ease,background .2s ease}
+.snd svg{width:18px;height:18px}
+.snd[aria-pressed="false"] .snd-w{opacity:.25}
+.snd:hover{background:#fff;transform:translateY(-1px)}
+.snd:active{transform:scale(.97)}
+.snd:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.media-note{display:none;position:absolute;left:14px;bottom:14px;z-index:2;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);background:rgba(255,255,255,.9);padding:9px 12px;border-radius:10px}
+.hero-media.missing .media-note{display:block}
+.hero-media.missing .snd{display:none}
+/* Headline words rise in once on load */
+.giant .w{display:inline-block}
+.js .giant .w{opacity:0;transform:translateY(.32em);animation:rise .8s cubic-bezier(.2,.7,.3,1) forwards}
+.js .giant .w:nth-child(2){animation-delay:.1s}
+.js .giant .w:nth-child(3){animation-delay:.2s}
+.js .giant .dot{display:inline-block;opacity:0;transform:scale(.4);animation:pop .5s cubic-bezier(.2,.7,.3,1) .75s forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+@keyframes pop{to{opacity:1;transform:none}}
 
 /* Transformation pairs */
 .pairs{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
@@ -79,6 +98,17 @@ strong,b{font-weight:600}
 .tag{position:absolute;top:14px;left:14px;z-index:2;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:7px 12px;border-radius:100px;background:rgba(16,16,16,.72);color:#fff}
 .tag.after{background:var(--accent-deep)}
 .arrow{font-family:var(--display);font-weight:700;font-size:30px;color:var(--accent);text-align:center;line-height:1}
+/* Before → after sweep: the before photo sits over the after panel and wipes away once the pair is in view */
+.wipe-before{display:none}
+.js .wipe .wipe-before{display:block;position:absolute;inset:0;z-index:1;clip-path:inset(0 0 0 0)}
+.js .wipe::after{content:"";position:absolute;top:0;bottom:0;left:0;width:3px;background:var(--accent);z-index:2;opacity:0}
+.js .pairs.in .wipe-before{animation:wipeAway 1.2s cubic-bezier(.65,0,.35,1) forwards}
+.js .pairs.in .wipe::after{animation:wipeLine 1.2s cubic-bezier(.65,0,.35,1) forwards}
+.js .pairs.in .pair:nth-child(1) .wipe-before,.js .pairs.in .pair:nth-child(1) .wipe::after{animation-delay:.45s}
+.js .pairs.in .pair:nth-child(2) .wipe-before,.js .pairs.in .pair:nth-child(2) .wipe::after{animation-delay:.7s}
+.js .pairs.in .pair:nth-child(3) .wipe-before,.js .pairs.in .pair:nth-child(3) .wipe::after{animation-delay:.95s}
+@keyframes wipeAway{to{clip-path:inset(0 0 0 100%)}}
+@keyframes wipeLine{0%{left:0;opacity:1}90%{opacity:1}100%{left:100%;opacity:0}}
 
 /* Our Work teaser: reel + tiles, one row of equal heights */
 .work-row{display:grid;grid-template-columns:.5625fr .8fr .8fr .8fr;gap:14px;align-items:stretch}
@@ -149,6 +179,24 @@ strong,b{font-weight:600}
 .chip.hot svg{color:#fff}
 .chip.plan{background:var(--paper);border:1px dashed var(--rule)}
 .month-note{margin-top:18px}
+.month-line{height:2px;background:var(--rule);border-radius:2px;margin-bottom:16px;overflow:hidden}
+.month-line span{display:block;height:100%;width:100%;background:var(--accent);transform:scaleX(0);transform-origin:left}
+.js .month .chip{opacity:0;transform:translateY(8px) scale(.96)}
+.js .month.in .chip{animation:pop .45s cubic-bezier(.2,.7,.3,1) forwards}
+.js .month.in .week:nth-child(1) .chip:nth-child(1){animation-delay:.2s}
+.js .month.in .week:nth-child(1) .chip:nth-child(2){animation-delay:.35s}
+.js .month.in .week:nth-child(1) .chip:nth-child(3){animation-delay:.5s}
+.js .month.in .week:nth-child(2) .chip:nth-child(1){animation-delay:.7s}
+.js .month.in .week:nth-child(2) .chip:nth-child(2){animation-delay:.85s}
+.js .month.in .week:nth-child(2) .chip:nth-child(3){animation-delay:1s}
+.js .month.in .week:nth-child(3) .chip:nth-child(1){animation-delay:1.2s}
+.js .month.in .week:nth-child(3) .chip:nth-child(2){animation-delay:1.35s}
+.js .month.in .week:nth-child(3) .chip:nth-child(3){animation-delay:1.5s}
+.js .month.in .week:nth-child(4) .chip:nth-child(1){animation-delay:1.7s}
+.js .month.in .week:nth-child(4) .chip:nth-child(2){animation-delay:1.85s}
+.js .month.in .week:nth-child(4) .chip:nth-child(3){animation-delay:2.05s}
+.js .month-line.in span{animation:fill 2.3s cubic-bezier(.3,.6,.4,1) .2s forwards}
+@keyframes fill{to{transform:scaleX(1)}}
 
 /* Comparison */
 .cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -250,6 +298,9 @@ footer.foot .fine{font-size:13px;color:var(--muted);line-height:1.55}
   .wrap{padding:0 18px}
   .sect{padding:66px 0 0}
   .hero{padding:14px 0 0}
+  .hero-media{margin-top:30px;border-radius:14px}
+  .snd{right:10px;bottom:10px;padding:8px 11px 8px 9px;font-size:12.5px}
+  .media-note{left:10px;bottom:10px}
   .hero-sub{font-size:17.5px}
   .pairs{grid-template-columns:1fr;gap:26px}
   .pair{grid-template-columns:1fr auto 1fr;grid-template-rows:auto;align-items:center;gap:10px}
@@ -273,6 +324,8 @@ footer.foot .fine{font-size:13px;color:var(--muted);line-height:1.55}
 /* Reduced motion: no animation anywhere, everything visible */
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
-  .js .rv,.js .stagger>*{opacity:1;transform:none}
+  .js .rv,.js .stagger>*,.js .giant .w,.js .giant .dot,.js .month .chip{opacity:1;transform:none}
+  .wipe-before,.js .wipe .wipe-before,.js .wipe::after{display:none}
+  .month-line span{transform:none}
   html{scroll-behavior:auto}
 }

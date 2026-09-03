@@ -68,6 +68,14 @@ add or replace an image, make a WebP at roughly 800–960px wide and point the p
 | `images/work/` | Portfolio pieces |
 | `images/promo/` | Promo / social graphics with text on them |
 
+## The ad film (hero)
+
+The hero has a 16:9 slot: `media/ad.mp4` with the poster `media/ad-poster.webp`. It autoplays
+muted after the page has loaded, loops, pauses when scrolled away, and has a "Sound on" button
+that unmutes and restarts from the top. Until `media/ad.mp4` exists the slot shows the poster
+with a "coming soon" label. Send an H.264 MP4, 1920×1080 or 1280×720, ideally under 5 MB, and
+a 1280×720 still for the poster.
+
 ## The reel
 
 The homepage work teaser has a self-hosted reel slot: `media/reel.mp4` with the poster

@@ -12,7 +12,7 @@
       if (x.isIntersecting) { x.target.classList.add("in"); io.unobserve(x.target); }
     });
   }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
-  document.querySelectorAll(".rv, .stagger").forEach(function (el) { io.observe(el); });
+  document.querySelectorAll(".rv, .stagger, .month-line").forEach(function (el) { io.observe(el); });
 
   /* Before / after slider. The divider follows the pointer: hover on desktop,
      a finger sliding across on touch — no press needed. The hidden range input
@@ -85,6 +85,34 @@
         el.style.transform = "perspective(900px) rotateX(" + (-y * 4).toFixed(2) + "deg) rotateY(" + (x * 4).toFixed(2) + "deg) translateY(-3px)";
       });
       el.addEventListener("pointerleave", function () { el.style.transform = ""; });
+    });
+  }
+
+  /* Hero ad film: poster paints first; the video only starts downloading after
+     the page has loaded, autoplays muted, and pauses when scrolled away. The
+     sound button unmutes and restarts from the top. */
+  var ad = document.querySelector(".hero-media video");
+  if (ad) {
+    var box = ad.parentNode, snd = box.querySelector(".snd");
+    ad.addEventListener("error", function () { box.classList.add("missing"); }, true);
+    if (reduce) {
+      ad.setAttribute("controls", "");
+    } else {
+      var start = function () { ad.preload = "auto"; var p = ad.play(); if (p && p.catch) p.catch(function () {}); };
+      if (document.readyState === "complete") start(); else window.addEventListener("load", start);
+      var aio = new IntersectionObserver(function (entries) {
+        entries.forEach(function (x) {
+          if (x.isIntersecting) { var p = ad.play(); if (p && p.catch) p.catch(function () {}); }
+          else { ad.pause(); }
+        });
+      }, { threshold: 0.25 });
+      aio.observe(ad);
+    }
+    if (snd) snd.addEventListener("click", function () {
+      ad.muted = !ad.muted;
+      if (!ad.muted) { ad.currentTime = 0; var p = ad.play(); if (p && p.catch) p.catch(function () {}); }
+      snd.setAttribute("aria-pressed", ad.muted ? "false" : "true");
+      snd.querySelector("span").textContent = ad.muted ? "Sound on" : "Sound off";
     });
   }
 
