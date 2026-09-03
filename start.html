@@ -31,12 +31,12 @@
 .side h1{font-family:var(--display);font-weight:900;letter-spacing:-.025em;font-size:clamp(32px,4.4vw,54px);line-height:1}
 .side p{margin-top:18px;font-size:16.5px;color:var(--ink-soft);max-width:42ch}
 .price-card{background:var(--panel);border-radius:var(--r);padding:32px 30px;margin-top:32px}
-.price-card .fig{font-family:var(--display);font-weight:900;font-size:44px;letter-spacing:-.03em;color:var(--accent-deep);display:block;line-height:1}
-.price-card .unit{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;margin-top:8px;line-height:1.7}
+.price-card .unit{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;line-height:1.7}
 .price-card ul{list-style:none;margin-top:22px;display:grid;gap:11px}
 .price-card li{display:flex;gap:11px;font-size:15px;color:var(--ink-soft);line-height:1.45}
 .price-card li::before{content:"";flex:0 0 6px;height:6px;margin-top:8px;border-radius:50%;background:var(--accent)}
 .fx-note{margin-top:18px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.fx-note a{color:var(--ink)}
 .form-card{background:var(--panel);border-radius:var(--r);padding:44px}
 .form-card > h2{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.015em;margin-bottom:8px}
 .form-card > .lead{font-size:15px;color:var(--ink-soft);margin-bottom:26px;max-width:52ch}
@@ -72,16 +72,15 @@
 <p>Everything starts with understanding your brand — what you make, who it&rsquo;s for, and where you want to grow. Fill out the form and we&rsquo;ll reply personally to plan your Launch Month together.</p>
 <div class="price-card">
 <span class="flag">The Studio Plan</span>
-<span class="fig">$950</span>
-<span class="unit">per month &middot; USD &middot; month to month<br>cancel anytime with 7 days&rsquo; notice</span>
+<span class="unit">Month to month &middot; cancel anytime with 7 days&rsquo; notice</span>
 <ul>
-<li>Studio-quality Instagram pictures, carousels and reels made from the content you already have</li>
+<li>Studio-quality Instagram pictures, carousels and reels built around what you sell, made from your own photos and videos</li>
 <li>Posted for you, on a steady rhythm, with captions and a monthly content plan</li>
 <li>Promotional videos and ready-to-run ads</li>
 <li>Your website built or fixed, from month two</li>
 <li>Ongoing direction — we plan each month together</li>
 </ul>
-<p class="fx-note">$950 is our founding rate; it will rise as we grow. Invoiced at the start of each month; work begins once the month is paid. Everything we make is yours to keep.</p>
+<p class="fx-note">Invoiced at the start of each month; work begins once the month is paid. Everything we make is yours to keep. Full details are on the <a href="index.html#plan">home page</a>.</p>
 </div>
 </div>
 <div class="form-card">
@@ -105,7 +104,7 @@
 <div class="field"><label for="gap">What's not working?</label><textarea id="gap" name="What's not working" placeholder="e.g. no brand identity, inconsistent posting, no marketing content"></textarea></div>
 <div class="field"><label for="other">Anything else we should know?</label><textarea id="other" name="Anything else"></textarea></div>
 <button type="submit" class="submit-btn">Send this to Illume</button>
-<p class="form-foot">This sends straight to our studio inbox — no email app needed.<br>Prefer email? <a href="mailto:illumeandco.online@gmail.com">illumeandco.online@gmail.com</a> &middot; Prefer WhatsApp? <a href="https://wa.me/971555045014?text=Hi%20Illume%2C%20I%27d%20like%20to%20know%20more%20about%20the%20Studio%20Plan" target="_blank" rel="noopener">Message us</a></p>
+<p class="form-foot">This sends straight to our studio inbox — no email app needed.<br>Prefer email? <a href="mailto:illumeandco.online@gmail.com">illumeandco.online@gmail.com</a> &middot; Prefer Instagram? <a href="https://www.instagram.com/illumeandco" target="_blank" rel="noopener">DM us</a></p>
 </form>
 </div>
 </section>
@@ -119,7 +118,6 @@
 <span class="lbl">Contact</span>
 <ul>
 <li><a href="mailto:illumeandco.online@gmail.com">illumeandco.online@gmail.com</a></li>
-<li><a href="https://wa.me/971555045014?text=Hi%20Illume%2C%20I%27d%20like%20to%20know%20more%20about%20the%20Studio%20Plan" target="_blank" rel="noopener">WhatsApp +971 55 504 5014</a></li>
 <li><a href="https://www.instagram.com/illumeandco" target="_blank" rel="noopener">Instagram @illumeandco</a></li>
 </ul>
 </div>
@@ -130,10 +128,6 @@
 </div>
 </footer>
 </div>
-<a class="wa" href="https://wa.me/971555045014?text=Hi%20Illume%2C%20I%27d%20like%20to%20know%20more%20about%20the%20Studio%20Plan" target="_blank" rel="noopener" aria-label="Message us on WhatsApp">
-<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#25D366" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/><path fill="#fff" d="M16.6 13.9c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.7-.3-1.4-.7-2-1.3-.5-.5-1-1.1-1.3-1.7-.1-.2 0-.4.1-.5l.4-.5c.2-.2.2-.4.1-.6l-.7-1.6c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.6.6-.9 1.3-.9 2.1.1.9.4 1.8 1 2.6 1.1 1.6 2.5 2.9 4.2 3.7.5.2 1 .4 1.5.5.5.1 1 .1 1.5 0 .7-.2 1.3-.7 1.6-1.4.1-.3.2-.7.1-1-.1-.2-.2-.3-.4-.4z"/></svg>
-<span>Message us on WhatsApp</span>
-</a>
 <script src="ind.js" defer></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>

@@ -9,7 +9,7 @@ framework, no dependencies. Open `index.html` in a browser and it works.
 
 | File | What it is |
 |---|---|
-| `index.html` | Home — hero, transformation, work teaser with the reel, the Studio Plan, Launch Month, sample month, comparison, who it's for, what we need, what happens next, the two of us, FAQ, CTA |
+| `index.html` | Home — hero, transformation (phone photo → studio creative), work teaser with the reel, the Studio Plan, Launch Month, sample month, comparison, who it's for, what we need, what happens next, the two of us, FAQ, CTA |
 | `portfolio.html` | Full portfolio grid |
 | `start.html` | Enquiry form ("Start your project") — applying for the Studio Plan |
 | `thanks.html` | Confirmation page the form redirects to after submitting |
@@ -46,7 +46,7 @@ python3 build.py /tmp/one-file.html  # also writes a single-file copy with image
 
 | File | What it is |
 |---|---|
-| `ind.css` | All shared styling — tokens, fonts, type, buttons, footer, WhatsApp button, homepage sections |
+| `ind.css` | All shared styling — tokens, fonts, type, buttons, footer, homepage sections |
 | `ind.js` | Scroll reveal, before/after slider, comparison count-up, desktop card tilt, reel autoplay |
 | `logo.svg` | The Illume wordmark used in every header |
 | `fonts/` | Self-hosted, latin-subset woff2 files for Fraunces, DM Sans and DM Mono |
@@ -90,8 +90,10 @@ If the studio email address ever changes, it has to be updated in two places in
 
 ## Contact links
 
-WhatsApp: `https://wa.me/971555045014` with a prefilled message. Instagram:
-`https://www.instagram.com/illumeandco` — the only social account, don't add others.
+Contact is email (`illumeandco.online@gmail.com`) and Instagram
+(`https://www.instagram.com/illumeandco`) only. No phone number or WhatsApp anywhere on the
+site — don't add one. The price appears only in the Studio Plan card, the comparison and the
+price FAQ on the home page.
 
 ## Analytics
 
