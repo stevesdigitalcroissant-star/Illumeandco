@@ -94,8 +94,8 @@ strong,b{font-weight:600}
 /* Transformation pairs */
 .pairs{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 .pair{display:grid;grid-template-rows:auto auto auto;gap:14px}
-.panel{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/5;background:var(--panel)}
-.panel img{object-fit:contain}
+.panel{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:1/1;background:var(--panel)}
+.panel img{object-fit:cover}
 .tag{position:absolute;top:14px;left:14px;z-index:2;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:7px 12px;border-radius:100px;background:rgba(16,16,16,.72);color:#fff}
 .tag.after{background:var(--accent-deep)}
 .arrow{font-family:var(--display);font-weight:700;font-size:30px;color:var(--accent);text-align:center;line-height:1}
