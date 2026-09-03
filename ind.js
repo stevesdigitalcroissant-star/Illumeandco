@@ -14,13 +14,22 @@
   }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
   document.querySelectorAll(".rv, .stagger").forEach(function (el) { io.observe(el); });
 
-  /* Before / after slider. The range input covers the whole frame, so drag or
-     tap anywhere works; the visible line and knob just follow --pos. */
+  /* Before / after slider. The divider follows the pointer: hover on desktop,
+     a finger sliding across on touch — no press needed. The hidden range input
+     stays for keyboard users. */
   document.querySelectorAll(".ba").forEach(function (ba) {
     var range = ba.querySelector("input[type=range]");
     if (!range) return;
+    var touched = false;
     var set = function (v) { ba.style.setProperty("--pos", v + "%"); };
-    range.addEventListener("input", function () { set(range.value); });
+    var follow = function (e) {
+      var r = ba.getBoundingClientRect();
+      var v = Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100));
+      touched = true; range.value = v; set(v);
+    };
+    range.addEventListener("input", function () { touched = true; set(range.value); });
+    ba.addEventListener("pointermove", follow);
+    ba.addEventListener("pointerdown", follow);
     set(range.value);
     if (reduce) return;
     var seen = false;
@@ -30,6 +39,7 @@
         seen = true; bio.unobserve(ba);
         var from = +range.value, to = 50, t0 = null;
         var step = function (t) {
+          if (touched) return;
           if (t0 === null) t0 = t;
           var p = Math.min(1, (t - t0) / 1100);
           var v = from + (to - from) * ease(p);
