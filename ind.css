@@ -95,12 +95,13 @@ strong,b{font-weight:600}
 .pairs{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 .pair{display:grid;grid-template-rows:auto auto auto;gap:14px}
 .panel{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/5;background:var(--panel)}
+.panel img{object-fit:contain}
 .tag{position:absolute;top:14px;left:14px;z-index:2;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:7px 12px;border-radius:100px;background:rgba(16,16,16,.72);color:#fff}
 .tag.after{background:var(--accent-deep)}
 .arrow{font-family:var(--display);font-weight:700;font-size:30px;color:var(--accent);text-align:center;line-height:1}
 /* Before → after sweep: the before photo sits over the after panel and wipes away once the pair is in view */
 .wipe-before{display:none}
-.js .wipe .wipe-before{display:block;position:absolute;inset:0;z-index:1;clip-path:inset(0 0 0 0)}
+.js .wipe .wipe-before{display:block;position:absolute;inset:0;z-index:1;clip-path:inset(0 0 0 0);background:var(--panel)}
 .js .wipe::after{content:"";position:absolute;top:0;bottom:0;left:0;width:3px;background:var(--accent);z-index:2;opacity:0}
 .js .pairs.in .wipe-before{animation:wipeAway 1.2s cubic-bezier(.65,0,.35,1) forwards}
 .js .pairs.in .wipe::after{animation:wipeLine 1.2s cubic-bezier(.65,0,.35,1) forwards}
@@ -142,9 +143,9 @@ strong,b{font-weight:600}
 
 /* Before / after slider */
 .plan-proof{position:sticky;top:24px}
-.ba{--pos:50%;position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/5;background:var(--panel);user-select:none;-webkit-user-select:none;cursor:ew-resize;touch-action:pan-y}
+.ba{--pos:50%;position:relative;border-radius:16px;overflow:hidden;aspect-ratio:1/1;background:var(--panel);user-select:none;-webkit-user-select:none;cursor:ew-resize;touch-action:pan-y}
 .ba img{position:absolute;inset:0}
-.ba .before{clip-path:inset(0 calc(100% - var(--pos)) 0 0)}
+.ba .before{clip-path:inset(0 calc(100% - var(--pos)) 0 0);object-position:50% 68%}
 .ba .line{position:absolute;top:0;bottom:0;left:var(--pos);width:2px;background:#fff;transform:translateX(-1px);z-index:3;pointer-events:none;box-shadow:0 0 0 1px rgba(16,16,16,.12)}
 .ba .knob{position:absolute;top:50%;left:var(--pos);width:44px;height:44px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);z-index:3;pointer-events:none;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -8px rgba(16,16,16,.5)}
 .ba .knob svg{width:18px;height:18px}
