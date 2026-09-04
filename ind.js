@@ -113,15 +113,49 @@
     }
   }
 
-  /* videos: autoplay muted in view, sound button, ad film placeholder */
+  /* videos: play in view; if the phone blocks autoplay, offer a tap */
   $$(".frame video, .frame16 video").forEach(function (v) {
     var box = v.parentNode, snd = $(".snd", box);
     var isAd = box.classList.contains("frame16");
-    var ready = function () { box.classList.add("ready"); };
-    if (isAd) { v.addEventListener("loadeddata", ready); v.addEventListener("error", function () { box.classList.remove("ready"); }, true); if (v.readyState >= 2) ready(); }
-    if (!reduce) { new IntersectionObserver(function (es) { es.forEach(function (x) { if (x.isIntersecting) { var p = v.play(); p && p.catch && p.catch(function () {}); } else v.pause(); }); }, { threshold: .4 }).observe(v); }
-    else { v.controls = true; }
-    if (snd) snd.addEventListener("click", function () { v.muted = !v.muted; if (!v.muted) { v.currentTime = 0; v.play(); } snd.textContent = v.muted ? "Sound on" : "Sound off"; snd.setAttribute("aria-pressed", String(!v.muted)); });
+    var hasFile = !!v.querySelector("source");
+
+    if (isAd) {
+      var ready = function () { box.classList.add("ready"); };
+      v.addEventListener("loadeddata", ready);
+      v.addEventListener("error", function () { box.classList.remove("ready"); }, true);
+      if (v.readyState >= 2) ready();
+    }
+    if (!hasFile) return;           /* the film slot until the file lands */
+    if (reduce) { v.controls = true; return; }
+
+    /* wants = we asked for playback. If the phone refuses or stops it
+       (Low Power Mode, data saver), a tap badge appears over the frame. */
+    var wants = false;
+    var tryPlay = function () {
+      wants = true;
+      var p = v.play();
+      if (p && p.catch) p.catch(function () { if (wants) box.classList.add("tap"); });
+    };
+    var stop = function (badge) { wants = false; v.pause(); box.classList.toggle("tap", !!badge); };
+
+    v.addEventListener("playing", function () { box.classList.remove("tap"); });
+    v.addEventListener("pause", function () { if (wants) box.classList.add("tap"); });
+
+    new IntersectionObserver(function (es) {
+      es.forEach(function (x) { if (x.isIntersecting) tryPlay(); else stop(false); });
+    }, { threshold: 0.25 }).observe(v);
+
+    box.addEventListener("click", function (e) {
+      if (e.target.closest(".snd")) return;
+      if (v.paused) { box.classList.remove("tap"); tryPlay(); } else stop(true);
+    });
+
+    if (snd) snd.addEventListener("click", function () {
+      v.muted = !v.muted;
+      if (!v.muted) { v.currentTime = 0; tryPlay(); }
+      snd.textContent = v.muted ? "Sound on" : "Sound off";
+      snd.setAttribute("aria-pressed", String(!v.muted));
+    });
   });
 
   /* service hover previews */
