@@ -38,7 +38,8 @@ button{font:inherit;color:inherit}
 html:not(.js) .intro{display:none}
 
 /* header */
-.top{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 4vw;mix-blend-mode:difference}
+.top{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 4vw;color:var(--ink);transition:background .35s,padding .35s,box-shadow .35s}
+.top.scrolled{background:rgba(var(--veil),.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:12px 4vw;box-shadow:0 1px 0 var(--line)}
 .top .logo{display:block;text-decoration:none}
 .top .logo img{height:34px;width:auto}
 .top nav{display:flex;gap:28px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase}
@@ -120,8 +121,8 @@ h1.giant .w:nth-child(2) span{animation-delay:.08s}h1.giant .w:nth-child(3) span
 .theatre{display:grid;grid-template-columns:1.05fr .95fr;gap:60px;align-items:center}
 .stage{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--bg2);--pos:62%;touch-action:pan-y;transition:transform .35s ease}
 .stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.stage .before{filter:brightness(.42) saturate(.7);object-position:50% 66%}
-.stage .after{clip-path:inset(0 calc(100% - var(--pos)) 0 0)}
+.stage .before{filter:brightness(.5) saturate(.75);object-position:50% 66%}
+.stage .after{clip-path:inset(0 0 0 var(--pos))}
 .stage .beam{position:absolute;top:0;bottom:0;left:var(--pos);width:2px;background:var(--light2);transform:translateX(-1px);box-shadow:0 0 40px 6px rgba(var(--glow),.45)}
 .stage .lamp{position:absolute;top:50%;left:var(--pos);transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:var(--light);display:grid;place-items:center;box-shadow:0 0 60px 12px rgba(var(--glow),.35)}
 .stage .lamp svg{width:22px;height:22px}
@@ -150,15 +151,16 @@ h1.giant .w:nth-child(2) span{animation-delay:.08s}h1.giant .w:nth-child(3) span
 
 /* services */
 .svc{list-style:none;border-top:1px solid var(--line)}
-.svc li{position:relative;display:grid;grid-template-columns:70px 1fr auto;align-items:baseline;gap:26px;padding:34px 0;border-bottom:1px solid var(--line)}
-.svc li .n{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--mute)}
-.svc li h3{font-family:var(--display);font-weight:400;font-size:clamp(28px,5vw,72px);letter-spacing:-.035em;line-height:1;transition:transform .5s cubic-bezier(.2,.8,.2,1),color .3s}
-.svc li:hover h3{transform:translateX(22px);color:var(--light2)}
-.svc li p{max-width:34ch;color:var(--mute);font-size:14.5px;justify-self:end;text-align:right}
+.svc li{position:relative;display:grid;grid-template-columns:110px minmax(0,1.1fr) minmax(0,.9fr);align-items:center;gap:30px;padding:30px 0;border-bottom:1px solid var(--line)}
+.svc li .n{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--light);display:flex;align-items:center;gap:10px}
+.svc li .n::before{content:"";width:18px;height:1px;background:var(--light);flex:none}
+.svc li h3{font-family:var(--display);font-weight:500;font-size:clamp(26px,3.4vw,48px);letter-spacing:-.03em;line-height:1.02;transition:transform .5s cubic-bezier(.2,.8,.2,1),color .3s}
+.svc li:hover h3{transform:translateX(14px);color:var(--light2)}
+.svc li p{max-width:40ch;color:var(--ink2);font-size:15.5px;line-height:1.55}
 .float{position:fixed;left:0;top:0;width:240px;border-radius:6px;overflow:hidden;pointer-events:none;z-index:40;opacity:0;transform:translate(-50%,-50%) rotate(-4deg) scale(.9);transition:opacity .3s,transform .5s cubic-bezier(.2,.8,.2,1)}
 .float.on{opacity:1;transform:translate(-50%,-50%) rotate(-4deg) scale(1)}
 .float img{width:100%;height:auto}
-@media (max-width:760px){.svc li{grid-template-columns:1fr;gap:8px;padding:26px 0}.svc li p{justify-self:start;text-align:left}.svc li:hover h3{transform:none}.float{display:none}}
+@media (max-width:900px){.svc li{grid-template-columns:1fr;gap:10px;padding:26px 0}.svc li:hover h3{transform:none}.float{display:none}}
 
 /* numbers */
 .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}

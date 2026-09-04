@@ -14,6 +14,10 @@
   var intro = $(".intro");
   if (intro) { try { if (sessionStorage.getItem("illume-intro")) intro.remove(); else sessionStorage.setItem("illume-intro", "1"); } catch (e) {} }
 
+  /* header turns solid once scrolled */
+  var top = $(".top");
+  if (top) { var hb = function () { top.classList.toggle("scrolled", scrollY > 60); }; addEventListener("scroll", hb, { passive: true }); hb(); }
+
   /* reveal */
   var io = new IntersectionObserver(function (es) { es.forEach(function (x) { if (x.isIntersecting) { x.target.classList.add("in"); io.unobserve(x.target); } }); }, { threshold: 0.1, rootMargin: "0px 0px -6% 0px" });
   $$(".rv").forEach(function (el) { io.observe(el); });
