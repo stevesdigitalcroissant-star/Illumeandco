@@ -179,5 +179,21 @@
   });
 
   /* work page: tap to flip on touch */
-  if (!fine) $$(".piece.flip").forEach(function (p) { p.addEventListener("click", function () { p.classList.toggle("show"); }); });
+  /* work page: tap or click a B piece to see what we started from.
+     It holds for four seconds, then goes back on its own. */
+  $$(".piece.flip").forEach(function (p) {
+    var timer = null;
+    var hide = function () { clearTimeout(timer); timer = null; p.classList.remove("show"); };
+    var show = function () {
+      clearTimeout(timer);
+      p.classList.add("show");
+      timer = setTimeout(function () { p.classList.remove("show"); timer = null; }, 4000);
+    };
+    var toggle = function () { p.classList.contains("show") ? hide() : show(); };
+    p.addEventListener("click", toggle);
+    p.setAttribute("tabindex", "0");
+    p.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+    });
+  });
 })();
