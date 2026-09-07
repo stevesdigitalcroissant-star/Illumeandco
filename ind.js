@@ -73,16 +73,23 @@
   var stage = $(".stage");
   if (stage) {
     var rng = $("input", stage);
-    var setPos = function (v) { stage.style.setProperty("--pos", v + "%"); rng.value = v; };
-    var follow = function (e) { var b = stage.getBoundingClientRect(); setPos(Math.max(2, Math.min(98, (e.clientX - b.left) / b.width * 100))); };
-    stage.addEventListener("pointermove", follow, { passive: true }); stage.addEventListener("pointerdown", follow);
+    var setPos = function (v) { v = Math.max(0, Math.min(100, v)); stage.style.setProperty("--pos", v + "%"); rng.value = v; };
+    var at = function (e) { var b = stage.getBoundingClientRect(); setPos((e.clientX - b.left) / b.width * 100); };
+    var drag = false;
+    stage.addEventListener("pointerdown", function (e) {
+      drag = true; at(e); e.preventDefault();
+      try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+      rng.focus({ preventScroll: true });
+    });
+    stage.addEventListener("pointermove", function (e) { if (drag) at(e); });
+    var stop = function (e) { if (!drag) return; drag = false; try { stage.releasePointerCapture(e.pointerId); } catch (err) {} };
+    stage.addEventListener("pointerup", stop); stage.addEventListener("pointercancel", stop);
     rng.addEventListener("input", function () { stage.style.setProperty("--pos", rng.value + "%"); });
-    if (fine) { stage.addEventListener("pointermove", function (e) { var b = stage.getBoundingClientRect(), x = (e.clientX - b.left) / b.width - .5, y = (e.clientY - b.top) / b.height - .5; stage.style.transform = "perspective(1100px) rotateX(" + (-y * 7) + "deg) rotateY(" + (x * 7) + "deg)"; }, { passive: true }); stage.addEventListener("pointerleave", function () { stage.style.transform = ""; }); }
     if (!reduce) {
       var seen = false;
       new IntersectionObserver(function (es, o) {
         if (!es[0].isIntersecting || seen) return; seen = true; o.disconnect();
-        var from = 62, to = 40, s0 = null;
+        var from = 62, to = 42, s0 = null;
         (function st(t) { if (s0 === null) s0 = t; var p = Math.min(1, (t - s0) / 1400); setPos(from + (to - from) * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(st); })(performance.now());
       }, { threshold: .5 }).observe(stage);
     }
