@@ -22,19 +22,7 @@
   var io = new IntersectionObserver(function (es) { es.forEach(function (x) { if (x.isIntersecting) { x.target.classList.add("in"); io.unobserve(x.target); } }); }, { threshold: 0.1, rootMargin: "0px 0px -6% 0px" });
   $$(".rv").forEach(function (el) { io.observe(el); });
 
-  /* cursor */
-  var cur = $(".cur"), lbl = $(".cur-lbl");
-  if (fine && cur) {
-    var mx = innerWidth / 2, my = innerHeight / 2, cx = mx, cy = my;
-    addEventListener("pointermove", function (e) { mx = e.clientX; my = e.clientY; }, { passive: true });
-    (function loop() { cx += (mx - cx) * .22; cy += (my - cy) * .22; var t = "translate(" + cx + "px," + cy + "px) translate(-50%,-50%)"; cur.style.transform = t; if (lbl) lbl.style.transform = t; requestAnimationFrame(loop); })();
-    $$("a,button,summary,.card,.piece,.svc li,.stage").forEach(function (el) {
-      el.addEventListener("pointerenter", function () { cur.classList.add("big"); if (lbl && (el.classList.contains("card") || el.classList.contains("piece"))) { lbl.textContent = el.classList.contains("flip") ? "Before" : "View"; lbl.classList.add("on"); } });
-      el.addEventListener("pointerleave", function () { cur.classList.remove("big"); if (lbl) lbl.classList.remove("on"); });
-    });
-  }
-
-  /* smooth scroll + 3D spark: desktop only */
+  /* smooth scroll on desktop */
   var lenis = null;
   if (desk && !reduce) {
     load("https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js", function () {
@@ -43,7 +31,6 @@
       (function raf(t) { lenis.raf(t); requestAnimationFrame(raf); })(0);
       $$('a[href^="#"]').forEach(function (a) { a.addEventListener("click", function (e) { var el = $(a.getAttribute("href")); if (el) { e.preventDefault(); lenis.scrollTo(el, { offset: -10 }); } }); });
     });
-    if ($("#gl")) load("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js", spark);
   }
 
   /* hero spotlight */
@@ -62,36 +49,24 @@
     })();
   }
 
-  function spark() {
-    if (!window.THREE) return;
-    var cv = $("#gl"), r = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true }); r.setPixelRatio(Math.min(devicePixelRatio, 2));
-    var sc = new THREE.Scene(), cam = new THREE.PerspectiveCamera(32, 1, .1, 50); cam.position.set(0, 0, 7);
-    var k = 1 / 52, sh = new THREE.Shape(); sh.moveTo(0, 52 * k); sh.bezierCurveTo(5 * k, 16 * k, 16 * k, 5 * k, 52 * k, 0); sh.bezierCurveTo(16 * k, -5 * k, 5 * k, -16 * k, 0, -52 * k); sh.bezierCurveTo(-5 * k, -16 * k, -16 * k, -5 * k, -52 * k, 0); sh.bezierCurveTo(-16 * k, 5 * k, -5 * k, 16 * k, 0, 52 * k);
-    var geo = new THREE.ExtrudeGeometry(sh, { depth: .32, bevelEnabled: true, bevelThickness: .1, bevelSize: .08, bevelSegments: 6, curveSegments: 48 }); geo.center();
-    var c = document.createElement("canvas"); c.width = c.height = 256; var g = c.getContext("2d");
-    var rg = g.createRadialGradient(96, 84, 10, 128, 128, 150); rg.addColorStop(0, "#fff4cf"); rg.addColorStop(.28, "#f0c469"); rg.addColorStop(.55, "#9a6a1f"); rg.addColorStop(.8, "#3a2a12"); rg.addColorStop(1, "#120d06"); g.fillStyle = rg; g.fillRect(0, 0, 256, 256);
-    g.globalAlpha = .55; var rg2 = g.createRadialGradient(170, 190, 4, 170, 190, 70); rg2.addColorStop(0, "#fff8e6"); rg2.addColorStop(1, "rgba(255,248,230,0)"); g.fillStyle = rg2; g.fillRect(0, 0, 256, 256);
-    var mat = new THREE.MeshMatcapMaterial({ matcap: new THREE.CanvasTexture(c) });
-    var mesh = new THREE.Mesh(geo, mat); mesh.scale.setScalar(2.2); sc.add(mesh);
-    var small = new THREE.Mesh(geo, mat); small.scale.setScalar(.55); small.position.set(2.1, -1.6, -1); sc.add(small);
-    function size() { var w = cv.clientWidth, h = cv.clientHeight; r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); } size(); addEventListener("resize", size);
-    var rx = 0, ry = 0; addEventListener("pointermove", function (e) { ry = (e.clientX / innerWidth - .5) * .9; rx = (e.clientY / innerHeight - .5) * .6; }, { passive: true });
-    var on = true; new IntersectionObserver(function (es) { on = es[0].isIntersecting; }).observe(cv);
-    var t = 0; (function anim() { if (on) { t += .008; mesh.rotation.y += (ry + t * .6 - mesh.rotation.y) * .05; mesh.rotation.x += (rx + Math.sin(t * 1.3) * .25 - mesh.rotation.x) * .05; mesh.rotation.z = Math.sin(t * .7) * .15; mesh.position.y = Math.sin(t * 1.1) * .18; small.rotation.y -= .01; small.rotation.x += .006; small.position.y = -1.6 + Math.cos(t * .9) * .12; r.render(sc, cam); } requestAnimationFrame(anim); })();
-  }
-
-  /* horizontal strip: sticky wrapper, translate on scroll (desktop) */
-  var strip = $("#strip"), pin = $(".strip-pin"), spacer = $(".strip-space");
-  if (strip && pin && spacer && desk && !reduce) {
-    var dist = 0;
-    var measure = function () { dist = Math.max(0, strip.scrollWidth - innerWidth); spacer.style.height = dist + "px"; };
-    measure(); addEventListener("resize", measure);
-    var track = spacer.parentNode;
-    var stripTick = function () {
-      var p = Math.min(1, Math.max(0, -(track.getBoundingClientRect().top - innerHeight * .12) / (dist || 1)));
-      strip.style.transform = "translate3d(" + (-p * dist) + "px,0,0)";
-    };
-    addEventListener("scroll", stripTick, { passive: true }); stripTick();
+  /* the work strip: drag it sideways with a mouse, swipe it on touch.
+     The page keeps scrolling normally either way. */
+  var strip = $("#strip"), swrap = strip && strip.parentNode;
+  if (strip && swrap && fine) {
+    var down = false, x0 = 0, left0 = 0, moved = 0;
+    swrap.addEventListener("pointerdown", function (e) {
+      down = true; moved = 0; x0 = e.clientX; left0 = swrap.scrollLeft; swrap.style.cursor = "grabbing";
+    });
+    swrap.addEventListener("pointermove", function (e) {
+      if (!down) return;
+      var d = e.clientX - x0; moved = Math.max(moved, Math.abs(d));
+      swrap.scrollLeft = left0 - d;
+      if (moved > 4) e.preventDefault();
+    });
+    var up = function () { down = false; swrap.style.cursor = ""; };
+    swrap.addEventListener("pointerup", up); swrap.addEventListener("pointerleave", up);
+    swrap.addEventListener("click", function (e) { if (moved > 6) { e.preventDefault(); e.stopPropagation(); } }, true);
+    swrap.style.cursor = "grab";
   }
 
   /* the light slider */
@@ -157,14 +132,6 @@
       snd.setAttribute("aria-pressed", String(!v.muted));
     });
   });
-
-  /* service hover previews */
-  var fl = $(".float"), fi = $("#floatimg");
-  if (fine && fl) {
-    $$(".svc li").forEach(function (li) { li.addEventListener("pointerenter", function () { fi.src = li.dataset.img; fl.classList.add("on"); }); li.addEventListener("pointerleave", function () { fl.classList.remove("on"); }); });
-    var fx = 0, fy = 0, fcx = 0, fcy = 0; addEventListener("pointermove", function (e) { fx = e.clientX + 140; fy = e.clientY; }, { passive: true });
-    (function fm() { fcx += (fx - fcx) * .12; fcy += (fy - fcy) * .12; fl.style.left = fcx + "px"; fl.style.top = fcy + "px"; requestAnimationFrame(fm); })();
-  }
 
   /* count-up */
   if (!reduce) $$("[data-to]").forEach(function (el) {

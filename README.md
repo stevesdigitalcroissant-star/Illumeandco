@@ -9,7 +9,7 @@ framework, no dependencies. Open `index.html` in a browser and it works.
 
 | File | What it is |
 |---|---|
-| `index.html` | Home — spotlight hero (mosaic of the best pieces, light follows the cursor, 3D brass spark on desktop), the film slot, horizontal work strip, the light slider (what the client sent → the finished creative), the reel, five disciplines, numbers, what a plan can include, FAQ, CTA |
+| `index.html` | Home — spotlight hero (mosaic of the best pieces, the light follows the cursor), the film slot, the work strip (scrolls sideways on its own, never holds the page), the light slider (what the client sent → the finished creative), the reel, five disciplines, numbers, the Studio Plan, FAQ, CTA |
 | `portfolio.html` | Our Work — pieces grouped by what they were made to do (sell a product, fill the chairs, fill the tables, move people to act, film). Every picture is shown whole at its own aspect ratio, never cropped. Pieces marked B reveal the client's original picture on hover or tap |
 | `start.html` | Enquiry form ("Start your project") — applying for the Studio Plan |
 | `thanks.html` | Confirmation page the form redirects to after submitting |
@@ -26,6 +26,7 @@ no trial, no one-off package, and no client cap or spots count anywhere on the s
 - Dark studio look: warm black `#0F0D0B`, cream type, brass accent `#E8B54B`. Tokens live at the top of `ind.css`.
 - **Pictures are always shown whole.** Every frame takes the picture's own aspect ratio. Never crop a piece to fit a layout.
 - The copy never says "phone photo". Clients send *the pictures or video they already have*; we create original content from it.
+- Restraint over interactivity: the browser's own cursor, no spinning 3D marks, no pictures that follow the pointer. Motion is limited to the hero spotlight, the light slider, the reel and gentle reveals.
 - No phone number or WhatsApp contact anywhere on the site — contact is email and Instagram only.
 - No fake testimonials, no timers, no spots counters.
 
@@ -55,7 +56,7 @@ python3 build.py /tmp/one-file.html  # also writes a single-file copy with image
 | File | What it is |
 |---|---|
 | `ind.css` | All shared styling — tokens, fonts, cursor, hero, strip, slider, cinema, plan, FAQ, footer, work page, form pages |
-| `ind.js` | Reveal, custom cursor, hero spotlight, light slider, video autoplay, count-up, magnetic buttons, work-page flips. Desktops with a mouse also load Three.js (spark) and Lenis (smooth scroll) from a CDN; phones load nothing extra |
+| `ind.js` | Reveal, hero spotlight, work-strip dragging, light slider, video playback, count-up, magnetic buttons, work-page flips. Desktops with a mouse also load Lenis (smooth scroll) from a CDN; phones load nothing extra |
 | `logo.svg`, `logo-light.svg` | The Illume wordmark; the light version is the one the dark site uses |
 | `fonts/` | Self-hosted, latin-subset woff2 files for Fraunces (upright and italic), DM Sans and DM Mono |
 | `og.png` | 1200×630 Open Graph image used when links are shared |
@@ -87,14 +88,11 @@ muted in view with a "Sound on" button.
 
 ## The reel
 
-The homepage work teaser has a self-hosted reel slot: `media/reel.mp4` with the poster
-`media/reel-poster.webp`. The video is `muted`, `playsinline`, `loop`, `preload="none"`,
-and only plays while it is scrolled into view. Until `media/reel.mp4` exists the slot shows
-the poster with a "coming soon" label.
+`media/reel.mp4` is the Chunk'd cookie reel: 10 s, 720×1280 H.264 with an AAC
+audio track, faststart. It autoplays muted in view (browsers require that), and
+the "Sound on" button unmutes and restarts it from the top. If a phone refuses
+to autoplay, a brass play badge appears over the frame and a tap starts it.
 
-To add the reel: export an H.264 MP4, 1080×1920 or 720×1280, ideally under 3 MB, and save
-it as `media/reel.mp4`. Replace `media/reel-poster.webp` with a real frame from it
-(720×1280) so the poster matches.
 
 ## The enquiry form
 
