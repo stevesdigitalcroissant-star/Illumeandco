@@ -88,8 +88,8 @@ muted in view with a "Sound on" button.
 
 ## The reel
 
-`media/reel.mp4` is the Chunk'd cookie reel: 10 s, 720×1280 H.264 with an AAC
-audio track, faststart. It autoplays muted in view (browsers require that), and
+`media/reel.mp4` is the Crèmeberry croissant reel: 7 s, 720×1280 H.264 with an AAC
+audio track, faststart, made from a single picture of the product. It autoplays muted in view (browsers require that), and
 the "Sound on" button unmutes and restarts it from the top. If a phone refuses
 to autoplay, a brass play badge appears over the frame and a tap starts it.
 
