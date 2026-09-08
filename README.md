@@ -79,7 +79,7 @@ add or replace an image, make a WebP at roughly 800–960px wide and point the p
 
 ## The film (16:9)
 
-`media/ad.mp4` is the Illume film: 29 s, three clips joined, 1280×720 H.264 (CRF 17, near-lossless) with an AAC audio
+`media/ad.mp4` is the Illume film: 29 s, three clips joined and their sound levelled to -18.5 LUFS, 1280×720 H.264 (CRF 17, near-lossless) with an AAC audio
 track, faststart, 8.2 MB. It sits right under the home hero and beside the Chunk'd reel on the
 work page, autoplays muted while in view, and has a "Sound on" button. `media/ad-poster.webp` is
 the frame at 1 s, shown until the video loads. To swap the film, replace both files and keep the
