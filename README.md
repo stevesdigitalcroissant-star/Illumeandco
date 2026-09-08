@@ -79,12 +79,11 @@ add or replace an image, make a WebP at roughly 800–960px wide and point the p
 
 ## The film (16:9)
 
-A 16:9 slot sits right under the home hero, and beside the reel on the work page. Until the file
-exists it shows "In the edit." over a blurred poster. When the film is ready: save it as
-`media/ad.mp4` (H.264, 1920×1080 or 1280×720, ideally under 5 MB) with a 1280×720 still as
-`media/ad-poster.webp`, then add `<source src="media/ad.mp4" type="video/mp4">` inside the two
-`<video>` tags marked with a comment in `index.html` and `portfolio.html`. It then autoplays
-muted in view with a "Sound on" button.
+`media/ad.mp4` is the Illume film: 9 s, 1280×720 H.264 (CRF 17, near-lossless) with an AAC audio
+track, faststart, 2.4 MB. It sits right under the home hero and beside the Chunk'd reel on the
+work page, autoplays muted while in view, and has a "Sound on" button. `media/ad-poster.webp` is
+the frame at 1 s, shown until the video loads. To swap the film, replace both files and keep the
+same names; nothing in the HTML needs to change.
 
 ## The reel
 
