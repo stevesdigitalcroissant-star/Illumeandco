@@ -1,14 +1,10 @@
-/* Illume — shared behaviour. No build step.
-   Phones and tablets get CSS + IntersectionObserver only. Desktops with a mouse
-   also load Three.js (the brass spark) and Lenis (smooth scroll) from a CDN.
-   Everything respects prefers-reduced-motion. */
+/* Illume — shared behaviour. No build step, no libraries.
+   Scrolling is the browser's own. Everything respects prefers-reduced-motion. */
 (function () {
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   var fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
-  var desk = fine && innerWidth > 900;
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
-  var load = function (src, cb) { var s = document.createElement("script"); s.src = src; s.async = true; s.onload = cb; document.head.appendChild(s); };
 
   /* intro sweep: once per visit */
   var intro = $(".intro");
@@ -22,31 +18,26 @@
   var io = new IntersectionObserver(function (es) { es.forEach(function (x) { if (x.isIntersecting) { x.target.classList.add("in"); io.unobserve(x.target); } }); }, { threshold: 0.1, rootMargin: "0px 0px -6% 0px" });
   $$(".rv").forEach(function (el) { io.observe(el); });
 
-  /* smooth scroll on desktop */
-  var lenis = null;
-  if (desk && !reduce) {
-    load("https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js", function () {
-      if (!window.Lenis) return;
-      lenis = new Lenis({ lerp: .09, smoothWheel: true });
-      (function raf(t) { lenis.raf(t); requestAnimationFrame(raf); })(0);
-      $$('a[href^="#"]').forEach(function (a) { a.addEventListener("click", function (e) { var el = $(a.getAttribute("href")); if (el) { e.preventDefault(); lenis.scrollTo(el, { offset: -10 }); } }); });
-    });
-  }
-
   /* hero spotlight */
   var lit = $(".mosaic-lit"), hero = $(".hero");
   if (lit && hero) {
     var sx = innerWidth * .62, sy = innerHeight * .42, tx = sx, ty = sy, auto = !fine, t0 = performance.now();
     if (fine) { hero.addEventListener("pointermove", function (e) { tx = e.clientX; ty = e.clientY; auto = false; }, { passive: true }); hero.addEventListener("pointerleave", function () { auto = true; }); }
-    var spotOn = true;
-    new IntersectionObserver(function (es) { spotOn = es[0].isIntersecting; }).observe(hero);
-    (function spot() {
-      if (spotOn) {
-        if (auto) { var t = (performance.now() - t0) / 1000; tx = innerWidth * (.5 + .32 * Math.sin(t * .35)); ty = innerHeight * (.42 + .22 * Math.sin(t * .53 + 1)); }
-        sx += (tx - sx) * .08; sy += (ty - sy) * .08; lit.style.setProperty("--mx", sx + "px"); lit.style.setProperty("--my", sy + "px");
-      }
+    /* The mask is repainted every frame it moves, so the loop only runs while
+       the hero is on screen and the light is still travelling. With a mouse the
+       light rests where you leave it; on touch it drifts on its own. */
+    var spotOn = true, running = false;
+    var spot = function () {
+      if (!spotOn) { running = false; return; }
+      if (auto) { var t = (performance.now() - t0) / 1000; tx = innerWidth * (.5 + .32 * Math.sin(t * .35)); ty = innerHeight * (.42 + .22 * Math.sin(t * .53 + 1)); }
+      sx += (tx - sx) * .08; sy += (ty - sy) * .08; lit.style.setProperty("--mx", sx + "px"); lit.style.setProperty("--my", sy + "px");
+      if (!auto && Math.abs(tx - sx) < .3 && Math.abs(ty - sy) < .3) { running = false; return; }
       requestAnimationFrame(spot);
-    })();
+    };
+    var wake = function () { if (!running) { running = true; requestAnimationFrame(spot); } };
+    if (fine) hero.addEventListener("pointermove", wake, { passive: true });
+    new IntersectionObserver(function (es) { spotOn = es[0].isIntersecting; if (spotOn) wake(); }).observe(hero);
+    wake();
   }
 
   /* the work strip: drag it sideways with a mouse, swipe it on touch.
