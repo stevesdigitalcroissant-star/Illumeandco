@@ -299,3 +299,7 @@ h1.giant .w:nth-child(2) span{animation-delay:.08s}h1.giant .w:nth-child(3) span
   html.js .rv{opacity:1;transform:none}
   .piece img,.card img{transform:none!important}
 }
+
+/* Legal note under the Illume film — concept work, not a commissioned campaign. */
+.film .disclaimer{width:min(840px,92vw);margin:16px auto 0;font-size:12px;line-height:1.6;color:var(--mute);text-align:left}
+@media (max-width:640px){.film .disclaimer{font-size:11.5px;margin-top:14px}}
