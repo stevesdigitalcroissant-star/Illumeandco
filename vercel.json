@@ -1,0 +1,7 @@
+{
+  "functions": { "api/*.js": { "maxDuration": 30 } },
+  "rewrites": [
+    { "source": "/generation", "destination": "/Generation/index.html" },
+    { "source": "/Generation", "destination": "/Generation/index.html" }
+  ]
+}

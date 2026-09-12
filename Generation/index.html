@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EDF0F5">
+<meta name="robots" content="noindex">
+<title>Illume Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Fraunces:opsz,wght,SOFT@9..144,300;9..144,400;9..144,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0F5; --panel:#FFFFFF; --raised:#F3F5F9; --line:#D6DCE6; --line-soft:#E3E8F0;
+  --text:#1F2430; --muted:#6B7385; --faint:#9AA2B2;
+  --amber:#2F3BFF; --amber-ink:#FFFFFF; --amber-soft:rgba(47,59,255,.08);
+  --danger:#C8322B; --ok:#1F8A5A;
+  --r:10px; --r-lg:14px;
+  --ui:"DM Sans",system-ui,sans-serif; --display:"Fraunces",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg)}
+body{background:var(--bg);color:var(--text);font:15px/1.45 var(--ui);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--amber)}
+::selection{background:var(--amber);color:#fff}
+.hidden{display:none!important}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:236px 380px minmax(0,1fr);min-height:100vh}
+@media (max-width:1120px){.app{grid-template-columns:1fr}}
+
+/* ---------- projects rail ---------- */
+.rail{background:var(--panel);border-right:1px solid var(--line);padding:22px 16px;display:flex;flex-direction:column;gap:14px}
+.wordmark{font-family:var(--display);font-size:22px;font-weight:400;letter-spacing:-.01em;padding:0 6px;display:flex;align-items:baseline;gap:8px}
+.wordmark i{font-style:normal;display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber)}
+.rail h2{font-size:12px;font-weight:500;color:var(--muted);margin:10px 6px 0;letter-spacing:.02em}
+.projects{display:flex;flex-direction:column;gap:2px}
+.projects button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:9px 10px;color:var(--muted);cursor:pointer}
+.projects button:hover{background:var(--raised);color:var(--text)}
+.projects button.on{background:var(--amber-soft);color:var(--text);font-weight:500}
+.projects button.on::before{content:"";width:3px;height:16px;border-radius:2px;background:var(--amber);margin-right:2px}
+.projects button span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.projects button small{color:var(--faint);font-size:12px}
+.newproj{background:transparent;border:1px dashed var(--line);border-radius:8px;padding:9px;color:var(--muted);cursor:pointer;text-align:left}
+.newproj:hover{border-color:var(--muted);color:var(--text)}
+@media (max-width:1120px){
+  .rail{border-right:0;border-bottom:1px solid var(--line);padding:16px}
+  .projects{flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:2px}
+  .projects button{width:auto;white-space:nowrap;background:var(--raised)}
+  .projects button small{display:none}
+  .rail h2{display:none}
+  .newproj{white-space:nowrap}
+  .railrow{display:flex;gap:6px;align-items:center}
+}
+
+/* ---------- controls ---------- */
+.controls{background:var(--panel);border-right:1px solid var(--line);padding:22px 22px 36px;display:flex;flex-direction:column;gap:16px}
+@media (max-width:1120px){.controls{border-right:0;border-bottom:1px solid var(--line)} .main{padding:18px 16px 32px} .head h1{font-size:26px}}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line)}
+.tabs button{background:transparent;border:0;padding:8px 12px 10px;color:var(--muted);cursor:pointer;font-weight:500;position:relative}
+.tabs button[aria-selected="true"]{color:var(--text)}
+.tabs button[aria-selected="true"]::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:var(--amber)}
+
+.f{display:flex;flex-direction:column;gap:6px}
+.f > label{font-size:13px;font-weight:500;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.f > label b{color:var(--text);font-weight:500}
+.f .hint{font-size:12px;color:var(--faint)}
+input[type=text],input[type=number],input[type=password],textarea,select{
+  width:100%;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;color:var(--text)
+}
+input::placeholder,textarea::placeholder{color:var(--faint)}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+textarea{min-height:124px;resize:vertical;line-height:1.5}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:transparent;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px;color:var(--text);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip:hover{border-color:var(--amber);}
+.chip.on{background:var(--amber);border-color:var(--amber);color:var(--amber-ink);font-weight:600}
+.chip.on::before{content:"✓ ";}
+.chip.dim{border-style:dashed;color:var(--muted)}
+.chip.on,.chip.on.dim{background:var(--amber);border-style:solid;border-color:var(--amber);color:var(--amber-ink);font-weight:600}
+
+.drop{border:1px dashed var(--line);border-radius:var(--r);padding:12px;color:var(--muted);cursor:pointer;position:relative;min-height:72px;display:flex;align-items:center;gap:12px}
+.drop:hover{border-color:var(--muted)}
+.drop.has{border-style:solid;border-color:var(--line);background:#fff;color:var(--text)}
+.drop img{width:48px;height:48px;object-fit:cover;border-radius:6px}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:1}
+.drop .x{margin-left:auto;background:transparent;border:0;color:var(--muted);cursor:pointer;padding:6px;z-index:2;position:relative}
+.drop .x:hover{color:var(--text)}
+
+.btn{background:transparent;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;text-decoration:none;display:inline-block}
+.btn:hover{border-color:var(--muted);color:var(--text)}
+.sel{display:flex;align-items:center;gap:10px;background:var(--amber-soft);border:1px solid var(--amber);border-radius:var(--r);padding:10px 12px;color:var(--text)}
+.sel .k{font-size:12px;color:var(--muted);white-space:nowrap}
+.sel .v{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.sel .id{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sel.none{background:transparent;border-color:var(--danger);color:var(--text)}
+.sel.none .v{color:var(--danger)}
+.go{background:var(--amber);color:var(--amber-ink);border:0;border-radius:var(--r);padding:14px;font-weight:600;font-size:16px;cursor:pointer;width:100%;margin-top:4px}
+.go:hover{filter:brightness(1.06)}
+.go:disabled{opacity:.5;cursor:default;filter:none}
+
+details{border-top:1px solid var(--line);padding-top:12px}
+summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;list-style:none;display:flex;justify-content:space-between}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--faint)}
+details[open] summary::after{content:"–"}
+details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.msg{font-size:13px;color:var(--muted);min-height:1.2em}
+.msg.err{color:var(--danger)}
+
+/* ---------- stage ---------- */
+.main{background:var(--bg);padding:22px 24px 40px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.head h1{font-family:var(--display);font-weight:300;font-size:30px;margin:0;letter-spacing:-.01em;line-height:1.1}
+.head h1 input{font:inherit;color:inherit;background:transparent;border:0;border-bottom:1px solid transparent;padding:0;width:min(100%,520px)}
+.head h1 input:hover,.head h1 input:focus{border-bottom-color:var(--line);outline:0}
+.head .count{color:var(--faint);font-size:13px}
+
+.stage{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#141826;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 1px var(--line),0 30px 60px -30px rgba(31,36,48,.35)}
+.stage::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 12% 0%,rgba(47,59,255,.22),transparent 55%)}
+.stage.live::before{opacity:0}
+.stage img,.stage video{max-width:100%;max-height:100%;display:block;position:relative}
+.stage audio{position:relative;width:min(560px,90%)}
+.empty{position:relative;text-align:center;max-width:40ch;padding:24px;color:#9AA3BE}
+.empty b{display:block;font-family:var(--display);font-weight:300;font-size:26px;color:#fff;margin-bottom:8px}
+.bar{position:absolute;left:0;top:0;height:2px;width:0;background:var(--amber);z-index:2}
+.bar.run{animation:sweep 2.6s ease-in-out infinite}
+@keyframes sweep{0%{width:0;left:0}50%{width:55%;left:22%}100%{width:0;left:100%}}
+@media (prefers-reduced-motion:reduce){.bar.run{animation:none;width:100%;opacity:.6}}
+.readout{position:absolute;left:16px;bottom:14px;z-index:2;display:flex;gap:10px;align-items:center;font-size:13px;color:#fff;background:rgba(20,24,38,.72);padding:6px 10px;border-radius:8px;backdrop-filter:blur(8px)}
+.readout .tc{font-variant-numeric:tabular-nums;color:#8C95FF;letter-spacing:.04em}
+.readout .dot{width:7px;height:7px;border-radius:50%;background:#8C95FF;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.readout .dot{animation:none}}
+
+.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.meta .p{flex:1 1 240px;min-width:0;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta .p b{color:var(--text);font-weight:500}
+
+.strip h2{font-size:13px;font-weight:500;color:var(--muted);margin:6px 0 10px;display:flex;justify-content:space-between;align-items:baseline}
+.strip h2 button{background:none;border:0;color:var(--faint);cursor:pointer;font-size:12px;padding:0}
+.strip h2 button:hover{color:var(--text)}
+.hist{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+.hist button{border:1px solid var(--line);border-radius:10px;overflow:hidden;padding:0;background:#141826;aspect-ratio:4/3;cursor:pointer;position:relative}
+.hist button.on{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.hist img,.hist video{width:100%;height:100%;object-fit:cover;display:block}
+.hist .aud{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--amber);font-family:var(--display);font-size:22px}
+.hist .tag{position:absolute;left:6px;top:6px;font-size:11px;background:rgba(255,255,255,.9);color:var(--text);padding:2px 6px;border-radius:5px}
+.hist .none{grid-column:1/-1;color:var(--faint);font-size:14px}
+
+/* ---------- gate ---------- */
+.gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;z-index:9}
+.gate form{background:var(--panel);border:1px solid var(--line);padding:28px;border-radius:var(--r-lg);width:min(360px,100%);display:flex;flex-direction:column;gap:12px}
+.gate h1{font-family:var(--display);font-weight:300;font-size:26px;margin:0}
+.gate p{margin:0;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="gate hidden" id="gate">
+  <form id="gateForm">
+    <h1>Illume Studio</h1>
+    <p>Connect your Atlas Cloud account. The key is kept only on this device and sent straight to Atlas through the site.</p>
+    <div class="f"><label>Atlas Cloud API key <span class="hint"><a href="https://www.atlascloud.ai/console/api-keys" target="_blank" rel="noopener">get one</a></span></label>
+      <input type="password" id="atlasKey" placeholder="apikey-…" autocomplete="off"></div>
+    <div class="f" id="codeWrap"><label>Site access code <span class="hint">only if one was set on Vercel</span></label>
+      <input type="password" id="gateInput" placeholder="Optional" autocomplete="current-password"></div>
+    <button class="go" type="submit">Save and enter</button>
+    <button class="btn hidden" type="button" id="gateCancel">Cancel</button>
+    <div class="msg err" id="gateMsg"></div>
+  </form>
+</div>
+
+<div class="app">
+  <!-- projects -->
+  <aside class="rail">
+    <div class="wordmark"><i></i>Illume Studio</div>
+    <h2>Projects</h2>
+    <div class="railrow">
+      <div class="projects" id="projects"></div>
+      <button class="newproj" id="newProj">+ New project</button>
+      <button class="newproj" id="settings">Settings</button>
+    </div>
+  </aside>
+
+  <!-- controls -->
+  <aside class="controls">
+    <div class="tabs" role="tablist" aria-label="Output type">
+      <button role="tab" data-mode="image" aria-selected="true">Image</button>
+      <button role="tab" data-mode="video" aria-selected="false">Video</button>
+      <button role="tab" data-mode="audio" aria-selected="false">Voice</button>
+    </div>
+
+    <div class="f">
+      <label><b>Model</b> <span class="hint" id="modelHint">Loading catalogue…</span></label>
+      <div class="chips" id="favs"></div>
+      <input type="text" id="model" list="modelList" placeholder="Search all Atlas models, or paste a model ID…" autocomplete="off">
+      <datalist id="modelList"></datalist>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="favAdd">Pin model</button>
+        <button class="btn" id="modelsRefresh">Refresh catalogue</button>
+        <a class="btn" href="https://www.atlascloud.ai/models" target="_blank" rel="noopener">Prices</a>
+      </div>
+    </div>
+
+    <div class="f">
+      <label><span id="promptLabel">Prompt</span> <span class="hint"><label style="display:inline-flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="useBrief" style="width:auto;margin:0"> prefix with project brief</label></span></label>
+      <textarea id="prompt" placeholder="Describe the shot: subject, lens, light, mood. For video, describe the motion and the camera."></textarea>
+      <div class="chips" id="presets"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="savePreset">Save prompt</button>
+        <button class="btn" id="clearPrompt">Clear</button>
+      </div>
+    </div>
+
+    <div class="f" id="refBlock">
+      <label>Reference image <span class="hint" id="refHint">Optional</span></label>
+      <div class="drop" id="drop">
+        <input type="file" id="file" accept="image/png,image/jpeg,image/webp">
+        <img id="dropImg" class="hidden" alt="">
+        <span id="dropText">Drop an image or tap to choose</span>
+        <button class="x hidden" id="clearRef" aria-label="Remove image">✕</button>
+      </div>
+    </div>
+
+    <details>
+      <summary>Options</summary>
+      <div>
+        <div class="row">
+          <div class="f" id="aspectWrap"><label>Aspect ratio</label>
+            <select id="aspect"><option value="">Model default</option><option>16:9</option><option>9:16</option><option>1:1</option><option>4:5</option><option>4:3</option><option>3:4</option><option>21:9</option></select>
+          </div>
+          <div class="f" id="durWrap"><label>Duration (s)</label><input type="number" id="duration" min="1" max="15" placeholder="Default"></div>
+        </div>
+        <div class="f"><label>Seed <span class="hint">same seed + prompt = same result</span></label><input type="number" id="seed" placeholder="Random"></div>
+        <div class="f"><label>Extra parameters (JSON) <span class="hint">from the model's page</span></label><input type="text" id="extra" placeholder='{"resolution":"1080p"}'></div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Project brief</summary>
+      <div>
+        <div class="f"><label>Style notes <span class="hint">e.g. palette, lens, brand tone</span></label>
+          <textarea id="brief" placeholder="Warm tungsten light, 35mm, muted olive and cream palette, no text overlays."></textarea></div>
+      </div>
+    </details>
+
+    <div class="sel none" id="sel"><span class="k">Will use</span><span class="v" id="selName">No model chosen</span><span class="id" id="selId"></span></div>
+    <button class="go" id="go">Generate image</button>
+    <div class="msg" id="msg"></div>
+  </aside>
+
+  <!-- stage -->
+  <main class="main">
+    <div class="head">
+      <h1><input id="projName" value="Untitled project" aria-label="Project name"></h1>
+      <span class="count" id="count"></span>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="bar" id="bar"></div>
+      <div class="empty" id="stageEmpty"><b>Roll camera.</b>Choose a model, write the shot, and generate. Everything lands here and in this project's reel.</div>
+      <div class="readout hidden" id="readout"><span class="dot"></span><span id="readState">rendering</span><span class="tc" id="tc">00:00</span></div>
+    </div>
+
+    <div class="meta">
+      <div class="p" id="metaText"></div>
+      <a class="btn hidden" id="dl" download target="_blank" rel="noopener">Download</a>
+      <button class="btn hidden" id="animate">Animate</button>
+      <button class="btn hidden" id="asRef">Use as reference</button>
+      <button class="btn hidden" id="reuse">Reuse prompt</button>
+    </div>
+
+    <section class="strip">
+      <h2><span>Reel</span><button id="clearHist">Clear reel</button></h2>
+      <div class="hist" id="hist"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------- config ---------- */
+const DEFAULT_FAVS = {
+  image: ["nano banana pro", "nano banana 2", "gpt image 2.5", "gpt image 2", "seedream 5.0 pro", "seedream 5 pro", "seedream 5.0", "flux 2"],
+  video: ["seedance 2.5", "seedance 2.0", "seedance 2.5 edit", "seedance 2.0 edit", "kling 3.0", "kling 4.0", "veo 3.1", "sora 2", "wan 3.0", "minimax h3"],
+  audio: ["elevenlabs v3", "seed audio", "minimax speech 2.6 hd", "suno"],
+};
+const LS = { key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist", model:"il.model.", favs:"il.favs2.", models:"il.models", projects:"il.projects", proj:"il.proj" };
+
+/* ---------- state ---------- */
+let mode = "image", refUrl = null, current = null, polling = null, tcTimer = null;
+let catalogue = [];
+let projects = [], projId = null;
+
+const $ = id => document.getElementById(id);
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const note = (t, err=false) => { $("msg").textContent = t; $("msg").classList.toggle("err", err); };
+
+/* ---------- access ---------- */
+function headers() {
+  const h = { "Content-Type":"application/json" };
+  const k = localStorage.getItem(LS.key); if (k) h["x-studio-key"] = k;
+  const a = localStorage.getItem(LS.atlas); if (a) h["x-atlas-key"] = a;
+  return h;
+}
+async function api(path, opts={}) {
+  const r = await fetch(path, { ...opts, headers: headers() });
+  const j = await r.json().catch(() => ({ error:"Bad response from server." }));
+  if (r.status === 401 || r.status === 428) { showGate(j.error); throw new Error(j.error || "Access denied"); }
+  if (!r.ok) throw new Error(j.error || `Error ${r.status}`);
+  return j;
+}
+function showGate(m="", cancellable=false) {
+  $("gate").classList.remove("hidden"); $("gateMsg").textContent = m;
+  $("atlasKey").value = localStorage.getItem(LS.atlas) || ""; $("gateInput").value = localStorage.getItem(LS.key) || "";
+  $("gateCancel").classList.toggle("hidden", !cancellable); $("atlasKey").focus();
+}
+$("gateForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const a = $("atlasKey").value.trim(), k = $("gateInput").value.trim();
+  if (a) localStorage.setItem(LS.atlas, a); else localStorage.removeItem(LS.atlas);
+  if (k) localStorage.setItem(LS.key, k); else localStorage.removeItem(LS.key);
+  $("gate").classList.add("hidden"); loadModels(true);
+});
+$("gateCancel").onclick = () => $("gate").classList.add("hidden");
+$("settings").onclick = () => showGate("", true);
+
+/* ---------- projects ---------- */
+function proj() { return projects.find(p => p.id === projId); }
+function saveProjects() { save(LS.projects, projects); localStorage.setItem(LS.proj, projId); }
+function renderProjects() {
+  const box = $("projects"); box.innerHTML = "";
+  projects.forEach(p => {
+    const n = load(LS.hist, []).filter(h => h.proj === p.id).length;
+    const b = document.createElement("button"); b.className = p.id===projId ? "on" : "";
+    b.innerHTML = `<span>${esc(p.name)}</span><small>${n||""}</small>`;
+    b.onclick = () => selectProject(p.id);
+    b.oncontextmenu = e => { e.preventDefault(); if (projects.length>1 && confirm(`Delete “${p.name}” and its reel?`)) { projects = projects.filter(x => x.id!==p.id); save(LS.hist, load(LS.hist, []).filter(h => h.proj!==p.id)); selectProject(projects[0].id); } };
+    box.appendChild(b);
+  });
+}
+function selectProject(id) {
+  projId = id; const p = proj(); saveProjects();
+  $("projName").value = p.name; $("brief").value = p.brief || "";
+  current = null; setStage(null); $("metaText").textContent = "";
+  ["dl","animate","asRef","reuse"].forEach(i => $(i).classList.add("hidden"));
+  renderProjects(); renderHistory();
+}
+$("newProj").onclick = () => {
+  const name = prompt("Project name (client or job):"); if (!name) return;
+  const p = { id: "p"+Date.now(), name: name.trim(), brief:"", created: Date.now() };
+  projects.unshift(p); selectProject(p.id);
+};
+$("projName").onchange = () => { const p = proj(); p.name = $("projName").value.trim() || "Untitled project"; $("projName").value = p.name; saveProjects(); renderProjects(); };
+$("brief").oninput = () => { proj().brief = $("brief").value; saveProjects(); };
+
+/* ---------- models ---------- */
+const kindOf = m => {
+  const s = (m.type+" "+m.id+" "+m.name).toLowerCase();
+  if (/speech|tts|audio|voice|music|suno|elevenlabs|asr|stt/.test(s)) return "audio";
+  if (/video|seedance|kling|veo|sora|wan|vidu|pixverse|hailuo|ltx|minimax h|happyhorse|grok imagine/.test(s)) return "video";
+  if (/chat|llm|3d|embedding/.test(s)) return "other";
+  return "image";
+};
+const modelsFor = m => catalogue.filter(x => kindOf(x)===m);
+function fillDatalist() {
+  const dl = $("modelList"); dl.innerHTML = "";
+  const list = modelsFor(mode).length ? modelsFor(mode) : catalogue;
+  list.forEach(x => { const o = document.createElement("option"); o.value = x.id; o.label = x.name; dl.appendChild(o); });
+  $("modelHint").textContent = catalogue.length ? `${modelsFor(mode).length} in catalogue` : "Catalogue not loaded — paste an ID from atlascloud.ai/models";
+}
+async function loadModels(force=false) {
+  catalogue = load(LS.models, []);
+  if (!catalogue.length || force) {
+    $("modelHint").textContent = "Loading catalogue…";
+    try { const { models } = await api("/api/models"); catalogue = models; save(LS.models, catalogue); }
+    catch (e) { $("modelHint").textContent = "Catalogue unavailable: " + e.message; }
+  }
+  seedFavs();
+  const cur = $("model").value.trim();
+  if (cur && !catalogue.some(x => x.id===cur)) { const hit = findModel(cur); if (hit) { $("model").value = hit.id; localStorage.setItem(LS.model+mode, hit.id); } }
+  if (!$("model").value.trim()) { const first = load(LS.favs+mode, []).find(f => f.id); if (first) { $("model").value = first.id; localStorage.setItem(LS.model+mode, first.id); } }
+  fillDatalist(); renderFavs();
+}
+function findModel(want) {
+  const norm = s => s.toLowerCase().replace(/[-_/.]/g, " ").replace(/\s+/g, " ").trim();
+  const w = norm(want), wantsEdit = /edit|reference|i2i/.test(w);
+  const isEdit = x => /edit|reference|i2i|image to image|inpaint|outpaint/.test(norm(x.name+" "+x.id));
+  const hits = catalogue.filter(x => norm(x.name+" "+x.id).includes(w) && (wantsEdit || !isEdit(x)));
+  if (!hits.length) return null;
+  const score = x => (norm(x.name)===w ? 0 : 1) * 1000 + (isEdit(x) === wantsEdit ? 0 : 500) + x.id.length;
+  return hits.sort((a,b) => score(a) - score(b))[0];
+}
+function seedFavs() {
+  for (const m of Object.keys(DEFAULT_FAVS)) {
+    const existing = load(LS.favs+m, null);
+    if (existing && existing.some(f => f.id)) continue;
+    const favs = DEFAULT_FAVS[m].map(want => { const hit = findModel(want); return hit ? { id:hit.id, name:hit.name } : { id:null, name:want }; });
+    save(LS.favs+m, favs.filter((f,i,a) => f.id===null || a.findIndex(x => x.id===f.id)===i));
+  }
+}
+function updateSel() {
+  const id = $("model").value.trim();
+  const hit = catalogue.find(x => x.id===id);
+  $("sel").classList.toggle("none", !id);
+  $("selName").textContent = id ? (hit ? hit.name : id) : "No model chosen";
+  $("selId").textContent = hit ? id : "";
+  $("go").textContent = ({ image:"Generate image", video:"Generate video", audio:"Generate voice" })[mode] + (id ? " with " + (hit ? hit.name : id) : "");
+}
+function renderFavs() {
+  updateSel();
+  const favs = load(LS.favs+mode, []); const box = $("favs"); box.innerHTML = "";
+  favs.forEach((f, i) => {
+    const val = f.id || f.name, cur = $("model").value.trim();
+    const b = document.createElement("button"); b.className = "chip" + (cur===val ? " on" : "") + (f.id ? "" : " dim");
+    b.textContent = f.name; b.title = f.id || "Will match the catalogue once loaded";
+    b.onclick = () => { $("model").value = val; localStorage.setItem(LS.model+mode, val); renderFavs(); };
+    b.oncontextmenu = e => { e.preventDefault(); favs.splice(i,1); save(LS.favs+mode, favs); renderFavs(); };
+    box.appendChild(b);
+  });
+}
+$("favAdd").onclick = () => {
+  const id = $("model").value.trim(); if (!id) return;
+  const favs = load(LS.favs+mode, []); if (favs.some(f => f.id===id)) return;
+  const hit = catalogue.find(x => x.id===id); favs.push({ id, name: hit ? hit.name : id }); save(LS.favs+mode, favs); renderFavs();
+};
+$("modelsRefresh").onclick = () => { for (const m of Object.keys(DEFAULT_FAVS)) localStorage.removeItem(LS.favs+m); loadModels(true); };
+$("model").onchange = $("model").oninput = () => { localStorage.setItem(LS.model+mode, $("model").value.trim()); renderFavs(); };
+
+/* ---------- mode ---------- */
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.tabs [role=tab]').forEach(t => t.setAttribute("aria-selected", t.dataset.mode===m));
+  $("go").textContent = { image:"Generate image", video:"Generate video", audio:"Generate voice" }[m];
+  $("promptLabel").textContent = m==="audio" ? "Script" : "Prompt";
+  $("prompt").placeholder = m==="audio" ? "The words to be spoken. Add tone or pacing notes if the model supports them."
+    : m==="video" ? "Describe the motion and the camera: what moves, how fast, where the lens goes." : "Describe the shot: subject, lens, light, mood.";
+  $("refBlock").classList.toggle("hidden", m==="audio");
+  $("refHint").textContent = m==="video" ? "The image that gets animated. Empty = text-to-video." : "Optional, for edit models";
+  $("durWrap").classList.toggle("hidden", m!=="video");
+  $("aspectWrap").classList.toggle("hidden", m==="audio");
+  const favs = load(LS.favs+m, []);
+  $("model").value = localStorage.getItem(LS.model+m) || (favs.find(f => f.id)||{}).id || "";
+  fillDatalist(); renderFavs();
+}
+document.querySelectorAll('.tabs [role=tab]').forEach(t => t.onclick = () => setMode(t.dataset.mode));
+
+/* ---------- prompts ---------- */
+function renderPresets() {
+  const list = load(LS.presets, []); const box = $("presets"); box.innerHTML = "";
+  list.forEach((p, i) => {
+    const b = document.createElement("button"); b.className = "chip"; b.textContent = p; b.title = p + "  (right-click / long-press to delete)";
+    b.onclick = () => { $("prompt").value = p; };
+    b.oncontextmenu = e => { e.preventDefault(); if (confirm("Delete this saved prompt?")) { list.splice(i,1); save(LS.presets, list); renderPresets(); } };
+    box.appendChild(b);
+  });
+}
+$("savePreset").onclick = () => { const p = $("prompt").value.trim(); if (!p) return; const l = load(LS.presets, []); if (!l.includes(p)) l.unshift(p); save(LS.presets, l.slice(0,40)); renderPresets(); };
+$("clearPrompt").onclick = () => { $("prompt").value = ""; };
+
+/* ---------- reference ---------- */
+function setDrop(src, text) {
+  const has = !!src;
+  $("drop").classList.toggle("has", has); $("dropImg").classList.toggle("hidden", !has); $("clearRef").classList.toggle("hidden", !has);
+  if (has) $("dropImg").src = src;
+  $("dropText").textContent = has ? text : "Drop an image or tap to choose";
+  if (!has) { refUrl = null; $("file").value = ""; }
+}
+$("clearRef").onclick = e => { e.preventDefault(); e.stopPropagation(); setDrop(null); };
+$("file").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  const dataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
+  setDrop(dataUrl, "Uploading…");
+  try { const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:f.name, type:f.type, data:dataUrl.split(",")[1] }) }); refUrl = out.url; setDrop(dataUrl, f.name); }
+  catch (err) { setDrop(null); note(err.message, true); }
+};
+
+/* ---------- generate ---------- */
+$("go").onclick = async () => {
+  let prompt = $("prompt").value.trim();
+  const model = $("model").value.trim();
+  if (!model) return note("Choose a model.", true);
+  if (!prompt) return note(mode==="audio" ? "Write the script first." : "Write a prompt first.", true);
+  if ($("useBrief").checked && proj().brief.trim() && mode!=="audio") prompt = proj().brief.trim() + ". " + prompt;
+
+  const params = {};
+  if (mode!=="audio" && $("aspect").value) params.aspect_ratio = $("aspect").value;
+  if (mode==="video" && $("duration").value) params.duration = Number($("duration").value);
+  if ($("seed").value) params.seed = Number($("seed").value);
+  if ($("extra").value.trim()) { try { Object.assign(params, JSON.parse($("extra").value)); } catch { return note("Extra parameters must be valid JSON.", true); } }
+
+  $("go").disabled = true; note("Sent to Atlas Cloud.");
+  setStage(null, "queued"); $("stage").scrollIntoView({ behavior:"smooth", block:"center" });
+  try {
+    const { id } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: mode==="audio" ? null : refUrl, params }) });
+    poll(id, { mode, model, prompt, ref:refUrl, proj:projId, started:Date.now() });
+  } catch (err) { note(err.message, true); setStage(null); $("go").disabled = false; }
+};
+function poll(id, item) {
+  clearInterval(polling);
+  const every = item.mode==="image" ? 2000 : 5000;
+  const tick = async () => {
+    try {
+      const s = await api(`/api/status?id=${encodeURIComponent(id)}`);
+      if ((s.status==="completed" || s.status==="succeeded") && s.outputs.length) {
+        clearInterval(polling); $("go").disabled = false;
+        const done = { ...item, id, url:s.outputs[0], at:Date.now() };
+        addHistory(done); show(done); note(`Done in ${Math.round((Date.now()-item.started)/1000)}s.`);
+        $("stage").scrollIntoView({ behavior:"smooth", block:"center" });
+      } else if (s.status==="failed" || s.status==="canceled") {
+        clearInterval(polling); $("go").disabled = false; setStage(null); note("Failed: " + (s.error || "unknown error"), true);
+      } else { $("readState").textContent = s.status || "rendering"; }
+    } catch (err) { clearInterval(polling); $("go").disabled = false; setStage(null); note(err.message, true); }
+  };
+  tick(); polling = setInterval(tick, every);
+}
+
+/* ---------- stage ---------- */
+function setStage(item, status) {
+  const st = $("stage"); st.querySelectorAll("img,video,audio").forEach(n => n.remove());
+  st.classList.toggle("live", !!item);
+  $("stageEmpty").classList.toggle("hidden", !!(item || status));
+  $("bar").classList.toggle("run", !!status && !item);
+  $("readout").classList.toggle("hidden", !status || !!item);
+  clearInterval(tcTimer);
+  if (status && !item) {
+    $("readState").textContent = status; const t0 = Date.now();
+    const tc = () => { const s = Math.floor((Date.now()-t0)/1000); $("tc").textContent = String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); };
+    tc(); tcTimer = setInterval(tc, 1000);
+  }
+  if (item) {
+    let el;
+    if (item.mode==="video") el = Object.assign(document.createElement("video"), { src:item.url, controls:true, autoplay:true, loop:true, playsInline:true });
+    else if (item.mode==="audio") el = Object.assign(document.createElement("audio"), { src:item.url, controls:true, autoplay:true });
+    else el = Object.assign(document.createElement("img"), { src:item.url, alt:item.prompt });
+    st.appendChild(el);
+  }
+}
+function show(item) {
+  current = item; setStage(item);
+  $("metaText").innerHTML = `<b>${{image:"Image",video:"Video",audio:"Voice"}[item.mode]} · ${esc(item.model)}</b> — ${esc(item.prompt)}`;
+  $("dl").href = item.url; $("dl").classList.remove("hidden");
+  $("reuse").classList.remove("hidden");
+  $("animate").classList.toggle("hidden", item.mode!=="image");
+  $("asRef").classList.toggle("hidden", item.mode!=="image");
+  renderHistory();
+}
+$("reuse").onclick = () => { if (current) $("prompt").value = current.prompt; };
+$("asRef").onclick = () => { if (current) { refUrl = current.url; setDrop(current.url, "From reel"); } };
+$("animate").onclick = () => { if (!current) return; setMode("video"); refUrl = current.url; setDrop(current.url, "From reel"); $("prompt").value = ""; $("prompt").focus(); };
+
+/* ---------- reel ---------- */
+function addHistory(item) { const h = load(LS.hist, []); h.unshift(item); save(LS.hist, h.slice(0,150)); renderProjects(); }
+function renderHistory() {
+  const h = load(LS.hist, []).filter(x => x.proj===projId); const box = $("hist"); box.innerHTML = "";
+  $("count").textContent = h.length ? `${h.length} generation${h.length>1?"s":""}` : "";
+  if (!h.length) { box.innerHTML = '<div class="none">This project\'s generations will collect here, on this device.</div>'; return; }
+  h.forEach(item => {
+    const b = document.createElement("button"); b.className = current && current.id===item.id ? "on" : "";
+    const inner = item.mode==="video" ? `<video src="${item.url}" muted playsinline preload="metadata"></video>`
+      : item.mode==="audio" ? `<div class="aud">♪</div>` : `<img src="${item.url}" alt="">`;
+    b.innerHTML = inner + `<span class="tag">${{image:"Image",video:"Video",audio:"Voice"}[item.mode]}</span>`;
+    b.title = item.prompt; b.onclick = () => show(item); box.appendChild(b);
+  });
+}
+$("clearHist").onclick = () => { if (confirm("Clear this project's reel on this device?")) { save(LS.hist, load(LS.hist, []).filter(x => x.proj!==projId)); renderHistory(); renderProjects(); } };
+
+/* ---------- init ---------- */
+projects = load(LS.projects, []);
+if (!projects.length) projects = [{ id:"p0", name:"Untitled project", brief:"", created:Date.now() }];
+projId = localStorage.getItem(LS.proj); if (!projects.some(p => p.id===projId)) projId = projects[0].id;
+selectProject(projId); renderPresets(); setMode("image");
+if (localStorage.getItem(LS.atlas)) loadModels(); else showGate();
+</script>
+</body>
+</html>
