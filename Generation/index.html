@@ -326,6 +326,10 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
       </div>
     </details>
 
+    <div class="f" id="countWrap">
+      <label>How many at once <span class="hint">each is a separate variation — all land in the reel</span></label>
+      <div class="chips" id="countChips"></div>
+    </div>
     <div class="sel none" id="sel"><span class="k">Will use</span><span class="v" id="selName">No model chosen</span><span class="id" id="selId"></span></div>
     <button class="go" id="go"><span id="goLabel">Generate image</span><span class="goCost" id="goCost"></span></button>
     <div class="msg" id="msg"></div>
@@ -417,6 +421,8 @@ const looksLikeId = v => !!v && !/\s/.test(v);
 /* ---------- state ---------- */
 let mode = "image", refUrls = [], current = null, tcTimer = null;
 let viewingPendingId = null; // the in-flight generation currently shown on the stage (null once the user navigates away)
+let genCount = 1;            // how many variations to fire off per Generate click
+const MAX_COUNT = 6;
 const MAX_REFS = 10; // Seedream 5.0 Pro's real, confirmed limit — the most restrictive of the pinned image models
 // Resolution options genuinely differ by mode — video models speak in 720p/1080p,
 // image models in 1k/2k/4k. One shared <select>, rebuilt whenever the mode changes.
@@ -502,7 +508,7 @@ function saveDraft() {
   if (restoringDraft || !projId) return;
   clearTimeout(draftTimer);
   draftTimer = setTimeout(() => {
-    const d = { mode, model: $("model").value.trim(), useBrief: $("useBrief").checked, genAudio: $("genAudio").checked,
+    const d = { mode, model: $("model").value.trim(), useBrief: $("useBrief").checked, genAudio: $("genAudio").checked, count: genCount,
       refs: refUrls.filter(r => r.status === "ok").map(r => ({ url:r.url, name:r.name })) };
     DRAFT_FIELDS.forEach(f => d[f] = $(f).value);
     save(LS.draft + projId, d);
@@ -517,10 +523,12 @@ function restoreDraft() {
     if (looksLikeId(d.model)) $("model").value = d.model;
     $("useBrief").checked = !!d.useBrief;
     $("genAudio").checked = d.genAudio !== false;
+    genCount = Math.max(1, Math.min(MAX_COUNT, d.count || 1));
     refUrls = Array.isArray(d.refs) ? d.refs.map(r => ({ preview:r.url, url:r.url, name:r.name, status:"ok" })) : [];
   } else {                            // a project with no draft: empty working boxes, mode defaults intact
-    $("prompt").value = ""; refUrls = [];
+    $("prompt").value = ""; refUrls = []; genCount = 1;
   }
+  renderCountChips();
   renderRefPicked();
   restoringDraft = false;
   renderFavs(); // refresh the model label, cost estimate and pills for the restored values
@@ -602,6 +610,16 @@ function seedFavs() {
     save(LS.favs+m, favs);
   }
 }
+function renderCountChips() {
+  const box = $("countChips"); if (!box) return; box.innerHTML = "";
+  for (let n = 1; n <= MAX_COUNT; n++) {
+    const b = document.createElement("button");
+    b.className = "chip" + (n === genCount ? " on" : "");
+    b.textContent = String(n);
+    b.onclick = () => { genCount = n; renderCountChips(); updateEstimate(); saveDraft(); };
+    box.appendChild(b);
+  }
+}
 function updateSel() {
   const id = $("model").value.trim();
   const hit = catalogue.find(x => x.id===id);
@@ -638,9 +656,10 @@ async function updateEstimate() {
       }) });
       const price = Number(out.price);
       if (!Number.isFinite(price)) { costEl.textContent = ""; return; }
-      const txt = price.toLocaleString(undefined, { style:"currency", currency:"usd", minimumFractionDigits:2, maximumFractionDigits:4 });
-      costEl.textContent = (out.estimated ? "~" : "") + txt;
-      costEl.title = "Estimated cost";
+      const total = price * genCount;
+      const txt = total.toLocaleString(undefined, { style:"currency", currency:"usd", minimumFractionDigits:2, maximumFractionDigits:4 });
+      costEl.textContent = (out.estimated ? "~" : "") + txt + (genCount > 1 ? ` (${genCount})` : "");
+      costEl.title = genCount > 1 ? `Estimated cost for ${genCount} images` : "Estimated cost";
     } catch {
       // The price preview failed — but that never blocks generating. Say so,
       // instead of a blank that looks broken. You can still hit Generate.
@@ -888,15 +907,28 @@ $("go").onclick = async () => {
   const failed = refUrls.some(r => r.status === "failed");
   if (failed) return note("A reference image failed to upload — remove it or tap it to retry before generating.", true);
 
-  $("go").disabled = true; note("Sent to Atlas Cloud.");
+  const count = Math.max(1, Math.min(MAX_COUNT, genCount));
+  $("go").disabled = true; note(count > 1 ? `Sending ${count} to Atlas Cloud…` : "Sent to Atlas Cloud.");
   setStage(null, "queued"); $("stage").scrollIntoView({ behavior:"smooth", block:"center" });
-  try {
-    const imageUrls = refsForRequest();
-    const { id } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: imageUrls, params }) });
-    const item = { mode, model, prompt, ref:imageUrls, proj:projId, started:Date.now() };
-    addPending(id, item);
-    poll(id, item, true); // true = this is the generation currently on the stage
-  } catch (err) { note(friendlyErr(err.message), true); setStage(null); $("go").disabled = false; }
+  const imageUrls = refsForRequest();
+  // Fire each variation as its own generation. They poll independently (the
+  // durable poller handles many at once) and each lands in the reel as it
+  // finishes; the first is the one shown on the stage. A seed, if set, is
+  // nudged per variation so they don't all come back identical.
+  let submitted = 0, firstErr = null;
+  await Promise.all(Array.from({ length: count }, async (_, i) => {
+    const p = { ...params };
+    if (p.seed != null) p.seed = Number(p.seed) + i;
+    try {
+      const { id } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: imageUrls, params: p }) });
+      const item = { mode, model, prompt, ref:imageUrls, proj:projId, started:Date.now() };
+      addPending(id, item);
+      poll(id, item, i === 0); // the first variation is the one on the stage
+      submitted++;
+    } catch (err) { firstErr = firstErr || err; }
+  }));
+  if (!submitted) { note(friendlyErr((firstErr && firstErr.message) || "Generation failed"), true); setStage(null); $("go").disabled = false; }
+  else { $("go").disabled = false; if (firstErr) note(`${submitted} of ${count} started — ${friendlyErr(firstErr.message)}`, true); }
 };
 // Turn a raw upstream error into something that points at the real cause.
 function friendlyErr(msg) {
