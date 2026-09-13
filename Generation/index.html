@@ -612,6 +612,20 @@ $("savePreset").onclick = () => { const p = $("prompt").value.trim(); if (!p) re
 $("clearPrompt").onclick = () => { $("prompt").value = ""; };
 
 /* ---------- reference ---------- */
+// A real phone photo, base64-encoded, can easily pass Vercel's 4.5MB request-body
+// limit — that upload fails outright, and used to just quietly clear the dropzone
+// with no visible reason. Shrink anything large before it's ever sent.
+async function shrinkForUpload(file, maxDim = 2048, quality = 0.85) {
+  const dataUrl = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); });
+  if (file.size < 3 * 1024 * 1024) return dataUrl; // already comfortably small — leave it alone
+  const img = new Image();
+  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataUrl; });
+  const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.round(img.naturalWidth * scale), h = Math.round(img.naturalHeight * scale);
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  c.getContext("2d").drawImage(img, 0, 0, w, h);
+  return c.toDataURL("image/jpeg", quality);
+}
 function setDrop(src, text) {
   const has = !!src;
   $("drop").classList.toggle("has", has); $("dropImg").classList.toggle("hidden", !has); $("clearRef").classList.toggle("hidden", !has);
@@ -624,9 +638,14 @@ $("clearRef").onclick = e => { e.preventDefault(); e.stopPropagation(); setDrop(
 $("file").onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   const dataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
-  setDrop(dataUrl, "Uploading…");
-  try { const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:f.name, type:f.type, data:dataUrl.split(",")[1] }) }); refUrl = out.url; setDrop(dataUrl, f.name); }
-  catch (err) { setDrop(null); note(err.message, true); }
+  setDrop(dataUrl, "Preparing…");
+  try {
+    const small = await shrinkForUpload(f);
+    const mime = small.slice(5, small.indexOf(";"));
+    setDrop(dataUrl, "Uploading…");
+    const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:f.name, type:mime, data:small.slice(small.indexOf(",")+1) }) });
+    refUrl = out.url; setDrop(dataUrl, f.name);
+  } catch (err) { setDrop(null); note(err.message + " — try a smaller image.", true); }
 };
 
 /* ---------- brand references (persist per project, for brief context and reuse) ---------- */
@@ -651,10 +670,12 @@ $("refsFile").onchange = async e => {
     const entry = { url: dataUrl, name: f.name };
     projRefs().push(entry); renderRefGrid();
     try {
-      const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:f.name, type:f.type, data:dataUrl.split(",")[1] }) });
+      const small = await shrinkForUpload(f);
+      const mime = small.slice(5, small.indexOf(";"));
+      const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:f.name, type:mime, data:small.slice(small.indexOf(",")+1) }) });
       entry.url = out.url; saveProjects(); renderRefGrid();
     } catch (err) {
-      projRefs().splice(projRefs().indexOf(entry), 1); renderRefGrid(); note(err.message, true);
+      projRefs().splice(projRefs().indexOf(entry), 1); renderRefGrid(); note(err.message + " — try a smaller image.", true);
     }
   }
   $("refsFile").value = "";
