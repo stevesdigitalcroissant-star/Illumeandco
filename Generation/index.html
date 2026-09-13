@@ -80,6 +80,8 @@ a{color:var(--amber)}
 .controls{background:var(--panel);border-right:1px solid var(--line);padding:22px 22px 36px;display:flex;flex-direction:column;gap:16px;box-shadow:2px 0 12px -8px rgba(31,36,48,.08)}
 @media (max-width:1120px){.controls{border-right:0;border-bottom:1px solid var(--line)} .main{padding:18px 16px 32px} .head h1{font-size:26px}}
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line)}
+.tabs .balance{margin-left:auto;align-self:center;font-size:12.5px;font-weight:600;color:var(--muted);background:var(--raised);border:1px solid var(--line);border-radius:999px;padding:4px 10px;white-space:nowrap}
+.tabs .balance:empty{display:none}
 .tabs button{background:transparent;border:0;padding:8px 12px 10px;color:var(--muted);cursor:pointer;font-weight:500;position:relative;transition:color var(--ease)}
 .tabs button:hover{color:var(--text)}
 .tabs button[aria-selected="true"]{color:var(--text)}
@@ -257,6 +259,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
       <button role="tab" data-mode="image" aria-selected="true">Image</button>
       <button role="tab" data-mode="video" aria-selected="false">Video</button>
       <button role="tab" data-mode="audio" aria-selected="false">Voice</button>
+      <span class="balance" id="balance" title="Atlas Cloud balance — refreshes after every generation"></span>
     </div>
 
     <div class="f">
@@ -349,7 +352,6 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
     <div class="head">
       <h1><input id="projName" value="Untitled project" aria-label="Project name"></h1>
       <div style="display:flex;align-items:center;gap:12px">
-        <span class="count" id="balance"></span>
         <span class="count" id="count"></span>
         <button class="btn iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark mode" title="Switch to dark mode">☾</button>
         <button class="btn" id="briefBtn">Brief</button>
@@ -511,11 +513,15 @@ function fillDatalist() {
 }
 async function refreshBalance() {
   try {
-    const { value, currency } = await api("/api/balance");
-    $("balance").textContent = Number.isFinite(value) ? value.toLocaleString(undefined, { style:"currency", currency: currency||"usd" }) : "";
-    $("balance").title = "Atlas Cloud balance";
+    const { value, currency } = await api("/api/balance", { cache: "no-store" }); // never a cached number — it changes with every generation
+    const n = Number(value);
+    $("balance").textContent = Number.isFinite(n) ? "Atlas Cloud · " + n.toLocaleString(undefined, { style:"currency", currency: currency||"usd" }) : "";
   } catch { $("balance").textContent = ""; } // stay quiet — this is a nice-to-have, not worth an error message
 }
+// Keep it current while the tab is open: every minute in the foreground, and the
+// moment you come back to the tab. Completed generations also refresh it (see poll).
+setInterval(() => { if (!document.hidden && localStorage.getItem(LS.atlas)) refreshBalance(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && localStorage.getItem(LS.atlas)) refreshBalance(); });
 async function loadModels(force=false) {
   catalogue = load(LS.models, []);
   if (!catalogue.length || force) {
