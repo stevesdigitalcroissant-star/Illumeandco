@@ -15,7 +15,12 @@ module.exports = async (req, res) => {
     const form = new FormData();
     form.append("file", new Blob([buf], { type: type || "image/png" }), name || "upload.png");
     const out = await atlas("/model/uploadMedia", key, { method: "POST", body: form });
-    const url = out?.url || out?.data?.url;
+    // Atlas Cloud's own docs disagree with themselves on this response's shape
+    // (a flat {url} in one place, {data:{download_url}} in another) — check
+    // every field name either version claims, and log the raw shape either way
+    // so a future mismatch is a one-line log check, not another guess.
+    const url = out?.url || out?.data?.url || out?.download_url || out?.data?.download_url;
+    console.log("upload response shape:", JSON.stringify(out).slice(0, 500));
     if (!url) return res.status(502).json({ error: "Upload returned no URL.", detail: out });
     res.status(200).json({ url });
   } catch (e) {
