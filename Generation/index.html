@@ -794,7 +794,7 @@ function renderRefPicked() {
   refUrls.forEach((r, i) => {
     const b = document.createElement("div"); b.className = "refthumb" + (r.status==="uploading"?" busy":"") + (r.status==="failed"?" failed":"");
     b.title = r.status==="failed" ? (r.name||"reference")+" — upload failed, tap to retry" : (r.name || "reference");
-    b.innerHTML = `<img src="${r.preview}" alt="">`
+    b.innerHTML = `<img src="${r.preview}" alt="" onerror="mediaFallback(this)">`
       + (r.status==="uploading" ? `<span class="badge">…</span>` : "")
       + (r.status==="failed" ? `<span class="badge err">retry</span>` : "");
     if (r.status==="failed") b.onclick = () => retryRef(r);
