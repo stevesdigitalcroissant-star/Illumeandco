@@ -843,8 +843,8 @@ $("go").onclick = async () => {
 // Turn a raw upstream error into something that points at the real cause.
 function friendlyErr(msg) {
   msg = String(msg || "");
-  if (/returned 401|unauthor/i.test(msg))
-    return "Atlas Cloud rejected this (401). The account can't generate right now — most often the Atlas Cloud balance is empty or the API key is wrong. Check your key in Settings and your balance at atlascloud.ai.";
+  if (/invalid_api_key|apikey credential|returned 401|unauthor/i.test(msg))
+    return "Your Atlas Cloud API key on this device is invalid. Open Settings and paste your full key again from atlascloud.ai (copy the whole thing — a truncated paste is the usual cause).";
   if (/returned 40[23]|insufficient|balance|credit|quota/i.test(msg))
     return "Atlas Cloud says the account is out of credit or over quota — top up at atlascloud.ai, then try again.";
   if (/security policy|blocked|violat/i.test(msg))
