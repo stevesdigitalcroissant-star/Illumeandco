@@ -640,7 +640,13 @@ async function updateEstimate() {
       if (!Number.isFinite(price)) { costEl.textContent = ""; return; }
       const txt = price.toLocaleString(undefined, { style:"currency", currency:"usd", minimumFractionDigits:2, maximumFractionDigits:4 });
       costEl.textContent = (out.estimated ? "~" : "") + txt;
-    } catch { costEl.textContent = ""; } // quiet failure — this is a helper number, not core to generating
+      costEl.title = "Estimated cost";
+    } catch {
+      // The price preview failed — but that never blocks generating. Say so,
+      // instead of a blank that looks broken. You can still hit Generate.
+      costEl.textContent = "cost n/a";
+      costEl.title = "Couldn't get a price estimate for this model, but you can still generate — you'll be charged the model's normal rate.";
+    }
   }, 500);
 }
 function renderFavs() {
