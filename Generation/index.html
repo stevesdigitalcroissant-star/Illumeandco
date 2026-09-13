@@ -299,6 +299,11 @@ const $ = id => document.getElementById(id);
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// Drop the "Text-to-Image"/"Text-to-Video"/"Text-to-Speech" suffix a model's
+// display name carries when it's the same thing the current tab already says.
+// Anything else (e.g. "Image-to-Video", "Edit") stays, since that's real info.
+const REDUNDANT_SUFFIX = { image: /\s*[-–:]?\s*text[- ]to[- ]image\b\.?/i, video: /\s*[-–:]?\s*text[- ]to[- ]video\b\.?/i, audio: /\s*[-–:]?\s*text[- ]to[- ](?:audio|speech)\b\.?/i };
+const shortName = (name, m=mode) => { const re = REDUNDANT_SUFFIX[m]; return re ? String(name).replace(re, "").trim() || name : name; };
 const note = (t, err=false) => { $("msg").textContent = t; $("msg").classList.toggle("err", err); };
 
 /* ---------- access ---------- */
@@ -371,7 +376,7 @@ const modelsFor = m => catalogue.filter(x => kindOf(x)===m);
 function fillDatalist() {
   const dl = $("modelList"); dl.innerHTML = "";
   const list = modelsFor(mode).length ? modelsFor(mode) : catalogue;
-  list.forEach(x => { const o = document.createElement("option"); o.value = x.id; o.label = x.name; dl.appendChild(o); });
+  list.forEach(x => { const o = document.createElement("option"); o.value = x.id; o.label = shortName(x.name, kindOf(x)); dl.appendChild(o); });
   $("modelHint").textContent = catalogue.length ? `${modelsFor(mode).length} in catalogue` : "Catalogue not loaded — paste an ID from atlascloud.ai/models";
 }
 async function loadModels(force=false) {
@@ -408,9 +413,9 @@ function updateSel() {
   const id = $("model").value.trim();
   const hit = catalogue.find(x => x.id===id);
   $("sel").classList.toggle("none", !id);
-  $("selName").textContent = id ? (hit ? hit.name : id) : "No model chosen";
+  $("selName").textContent = id ? (hit ? shortName(hit.name) : id) : "No model chosen";
   $("selId").textContent = hit ? id : "";
-  $("go").textContent = ({ image:"Generate image", video:"Generate video", audio:"Generate voice" })[mode] + (id ? " with " + (hit ? hit.name : id) : "");
+  $("go").textContent = ({ image:"Generate image", video:"Generate video", audio:"Generate voice" })[mode] + (id ? " with " + (hit ? shortName(hit.name) : id) : "");
 }
 function renderFavs() {
   updateSel();
@@ -418,7 +423,7 @@ function renderFavs() {
   favs.forEach((f, i) => {
     const val = f.id || f.name, cur = $("model").value.trim();
     const b = document.createElement("button"); b.className = "chip" + (cur===val ? " on" : "") + (f.id ? "" : " dim");
-    b.textContent = f.name; b.title = f.id || "Will match the catalogue once loaded";
+    b.textContent = shortName(f.name); b.title = f.id || "Will match the catalogue once loaded";
     b.onclick = () => { $("model").value = val; localStorage.setItem(LS.model+mode, val); renderFavs(); };
     b.oncontextmenu = e => { e.preventDefault(); favs.splice(i,1); save(LS.favs+mode, favs); renderFavs(); };
     box.appendChild(b);
