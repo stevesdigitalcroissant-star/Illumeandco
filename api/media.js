@@ -9,12 +9,16 @@
 //     it downloads, with a real filename.
 //
 // No password check: an <img src> can't send custom headers. So this is
-// restricted to Atlas Cloud's own storage hosts, which keeps it from being an
-// open relay for arbitrary URLs. It streams rather than buffers, so a 4K image
-// or a video isn't capped by the 4.5MB limit on buffered function responses.
+// restricted to the public object-storage / CDN hosts that Atlas Cloud's
+// models actually deliver results from — keeping it from being an open relay
+// for arbitrary URLs, while covering every model's output host. Different
+// models use different storage: Atlas/Alibaba (aliyuncs.com), ByteDance
+// Volcano Engine for Seedream/Seedance (volces.com / byteimg.com), plus the
+// usual public clouds other models route through. It streams rather than
+// buffers, so a 4K image or a video isn't capped by the 4.5MB response limit.
 const { Readable } = require("stream");
 
-const ALLOWED_HOST = /(^|\.)aliyuncs\.com$|(^|\.)atlascloud\.ai$/i;
+const ALLOWED_HOST = /(^|\.)(aliyuncs\.com|volces\.com|byteimg\.com|atlascloud\.ai|amazonaws\.com|googleapis\.com|cloudfront\.net|r2\.dev|replicate\.delivery|fal\.media)$/i;
 
 module.exports = async (req, res) => {
   if (req.method !== "GET" && req.method !== "HEAD") return res.status(405).end();
@@ -22,7 +26,8 @@ module.exports = async (req, res) => {
   let target;
   try { target = new URL(String(raw || "")); } catch { return res.status(400).json({ error: "Bad url." }); }
   if (target.protocol !== "https:" || !ALLOWED_HOST.test(target.hostname)) {
-    return res.status(400).json({ error: "Only Atlas Cloud media URLs are served here." });
+    console.log("media rejected host:", target.hostname); // if a new model uses a new host, it shows here
+    return res.status(400).json({ error: "This media host isn't allowed: " + target.hostname });
   }
 
   let upstream;
