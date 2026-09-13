@@ -176,6 +176,17 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .gate form{background:var(--panel);border:1px solid var(--line);padding:28px;border-radius:var(--r-lg);width:min(360px,100%);display:flex;flex-direction:column;gap:12px}
 .gate h1{font-family:var(--display);font-weight:300;font-size:26px;margin:0}
 .gate p{margin:0;color:var(--muted)}
+
+/* ---------- brief modal ---------- */
+.modal{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:24px}
+.modal-backdrop{position:absolute;inset:0;background:rgba(20,24,38,.45);cursor:pointer}
+.modal-panel{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);width:min(560px,100%);max-height:min(80vh,720px);
+  display:flex;flex-direction:column;box-shadow:0 40px 80px -30px rgba(20,24,38,.35)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
+.modal-head b{font-family:var(--display);font-weight:300;font-size:22px}
+.modal-x{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:16px;padding:6px;line-height:1}
+.modal-x:hover{color:var(--text)}
+.modal-body{padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
 </style>
 </head>
 <body>
@@ -275,9 +286,17 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
       </div>
     </details>
 
-    <details open>
-      <summary><b>Project brief</b> <span class="hint">style notes and brand references for this project</span></summary>
-      <div>
+    <div class="sel none" id="sel"><span class="k">Will use</span><span class="v" id="selName">No model chosen</span><span class="id" id="selId"></span></div>
+    <button class="go" id="go">Generate image</button>
+    <div class="msg" id="msg"></div>
+  </aside>
+
+  <!-- Everything about this client, out of the way until you click Brief. -->
+  <div class="modal hidden" id="briefModal">
+    <div class="modal-backdrop" id="briefBackdrop"></div>
+    <div class="modal-panel">
+      <div class="modal-head"><b>Project brief</b><button class="modal-x" id="briefClose" aria-label="Close">✕</button></div>
+      <div class="modal-body">
         <div class="f"><label>Style notes <span class="hint">e.g. palette, lens, brand tone</span></label>
           <textarea id="brief" placeholder="Warm tungsten light, 35mm, muted olive and cream palette, no text overlays."></textarea></div>
         <div class="f">
@@ -289,18 +308,17 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
           <div class="refgrid" id="refGrid"></div>
         </div>
       </div>
-    </details>
-
-    <div class="sel none" id="sel"><span class="k">Will use</span><span class="v" id="selName">No model chosen</span><span class="id" id="selId"></span></div>
-    <button class="go" id="go">Generate image</button>
-    <div class="msg" id="msg"></div>
-  </aside>
+    </div>
+  </div>
 
   <!-- stage -->
   <main class="main">
     <div class="head">
       <h1><input id="projName" value="Untitled project" aria-label="Project name"></h1>
-      <span class="count" id="count"></span>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="count" id="count"></span>
+        <button class="btn" id="briefBtn">Brief</button>
+      </div>
     </div>
 
     <div class="stage" id="stage">
@@ -682,6 +700,14 @@ function renderHistory() {
   });
 }
 $("clearHist").onclick = () => { if (confirm("Clear this project's reel on this device?")) { save(LS.hist, load(LS.hist, []).filter(x => x.proj!==projId)); renderHistory(); renderProjects(); } };
+
+/* ---------- brief modal ---------- */
+function openBrief() { $("briefModal").classList.remove("hidden"); }
+function closeBrief() { $("briefModal").classList.add("hidden"); }
+$("briefBtn").onclick = openBrief;
+$("briefClose").onclick = closeBrief;
+$("briefBackdrop").onclick = closeBrief;
+document.addEventListener("keydown", e => { if (e.key==="Escape" && !$("briefModal").classList.contains("hidden")) closeBrief(); });
 
 /* ---------- init ---------- */
 projects = load(LS.projects, []);
