@@ -37,6 +37,7 @@ a{color:var(--amber)}
 .rail{background:var(--panel);border-right:1px solid var(--line);padding:22px 16px;display:flex;flex-direction:column;gap:14px;box-shadow:2px 0 12px -8px rgba(31,36,48,.08)}
 .wordmark{font-family:var(--display);font-size:22px;font-weight:400;letter-spacing:-.01em;padding:0 6px;display:flex;align-items:baseline;gap:8px}
 .wordmark i{font-style:normal;display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber)}
+.railart{height:104px;border-radius:var(--r);background-size:cover;background-position:center 25%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),var(--sh-sm)}
 .rail h2{font-size:12px;font-weight:500;color:var(--muted);margin:10px 6px 0;letter-spacing:.02em}
 .projects{display:flex;flex-direction:column;gap:2px}
 .projects button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:9px 10px;color:var(--muted);cursor:pointer;transition:background var(--ease),box-shadow var(--ease),color var(--ease)}
@@ -146,7 +147,8 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .stage{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#141826;display:flex;align-items:center;justify-content:center;
   box-shadow:0 0 0 1px var(--line),0 30px 60px -30px rgba(31,36,48,.35)}
 /* Idle or generating: a compact strip, not a full 16:9 void with nothing in it. */
-.stage:not(.live){aspect-ratio:21/9;max-height:220px}
+.stage:not(.live){aspect-ratio:21/9;max-height:220px;
+  background:linear-gradient(180deg,rgba(10,12,20,.55),rgba(10,12,20,.78)),url(images/brand-texture-2.webp) center 65%/cover}
 /* A finished result: size to the media itself (a vertical video stays vertical,
    it doesn't sit in a wide letterboxed box) rather than forcing 16:9 on everything. */
 .stage.live{aspect-ratio:auto}
@@ -179,7 +181,8 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .hist img,.hist video{width:100%;height:100%;object-fit:cover;display:block}
 .hist .aud{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--amber);font-family:var(--display);font-size:22px}
 .hist .tag{position:absolute;left:6px;top:6px;font-size:11px;background:rgba(255,255,255,.9);color:var(--text);padding:2px 6px;border-radius:5px}
-.hist .none{grid-column:1/-1;color:var(--faint);font-size:14px}
+.hist .none{grid-column:1/-1;color:var(--faint);font-size:14px;display:flex;align-items:center;gap:12px}
+.hist .none .noneArt{width:44px!important;height:44px!important;border-radius:8px;object-fit:cover;box-shadow:var(--sh-sm);flex-shrink:0}
 
 /* ---------- gate ---------- */
 .gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;z-index:9}
@@ -219,6 +222,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
   <!-- projects -->
   <aside class="rail">
     <div class="wordmark"><i></i>Illume Studio</div>
+    <div class="railart" style="background-image:url(images/brand-texture-1.webp)"></div>
     <h2>Projects</h2>
     <div class="railrow">
       <div class="projects" id="projects"></div>
@@ -700,7 +704,7 @@ function addHistory(item) { const h = load(LS.hist, []); h.unshift(item); save(L
 function renderHistory() {
   const h = load(LS.hist, []).filter(x => x.proj===projId); const box = $("hist"); box.innerHTML = "";
   $("count").textContent = h.length ? `${h.length} generation${h.length>1?"s":""}` : "";
-  if (!h.length) { box.innerHTML = '<div class="none">This project\'s generations will collect here, on this device.</div>'; return; }
+  if (!h.length) { box.innerHTML = '<div class="none"><img src="images/brand-texture-3.webp" alt="" class="noneArt">This project\'s generations will collect here, on this device.</div>'; return; }
   h.forEach(item => {
     const b = document.createElement("button"); b.className = current && current.id===item.id ? "on" : "";
     const inner = item.mode==="video" ? `<video src="${item.url}" muted playsinline preload="metadata"></video>`
