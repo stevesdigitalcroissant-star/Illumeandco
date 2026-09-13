@@ -121,11 +121,15 @@ textarea{min-height:124px;resize:vertical;line-height:1.5}
 .sel .id{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sel.none{background:transparent;border-color:var(--danger);color:var(--text)}
 .sel.none .v{color:var(--danger)}
-.go{background:var(--amber);color:var(--amber-ink);border:0;border-radius:var(--r);padding:14px;font-weight:600;font-size:16px;cursor:pointer;width:100%;margin-top:4px;
+.go{background:var(--amber);color:var(--amber-ink);border:0;border-radius:var(--r);padding:14px 16px;font-weight:600;font-size:16px;cursor:pointer;width:100%;margin-top:4px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
   box-shadow:0 14px 28px -10px rgba(47,59,255,.45);transition:transform var(--ease),box-shadow var(--ease),filter var(--ease)}
 .go:hover{filter:brightness(1.06);transform:translateY(-1px);box-shadow:0 18px 34px -10px rgba(47,59,255,.55)}
 .go:active{transform:translateY(0);box-shadow:0 8px 18px -8px rgba(47,59,255,.4)}
 .go:disabled{opacity:.5;cursor:default;filter:none;box-shadow:none;transform:none}
+#goLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goCost{flex-shrink:0;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.22);padding:4px 10px;border-radius:999px}
+.goCost:empty{display:none}
 
 details{border-top:1px solid var(--line);padding-top:12px}
 summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;list-style:none;display:flex;justify-content:space-between}
@@ -288,10 +292,10 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
       <div>
         <div class="row">
           <div class="f" id="aspectWrap"><label>Aspect ratio</label>
-            <select id="aspect"><option value="">Model default</option><option>16:9</option><option>9:16</option><option>1:1</option><option>4:5</option><option>4:3</option><option>3:4</option><option>21:9</option></select>
+            <select id="aspect"><option>16:9</option><option>9:16</option><option>1:1</option><option>4:5</option><option>4:3</option><option>3:4</option><option>21:9</option><option value="">Model default</option></select>
           </div>
           <div class="f" id="resWrap"><label>Resolution</label>
-            <select id="resolution"><option value="">Model default</option><option value="720p">720p</option><option value="1080p">1080p</option><option value="2k">2k</option><option value="4k">4k</option></select>
+            <select id="resolution"><option value="720p">720p</option><option value="1080p" selected>1080p</option><option value="2k">2k</option><option value="4k">4k</option><option value="">Model default</option></select>
           </div>
           <div class="f" id="durWrap"><label>Duration (s)</label><input type="number" id="duration" min="1" max="15" placeholder="Default"></div>
         </div>
@@ -301,8 +305,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
     </details>
 
     <div class="sel none" id="sel"><span class="k">Will use</span><span class="v" id="selName">No model chosen</span><span class="id" id="selId"></span></div>
-    <div class="hint" id="costText" style="text-align:right;min-height:1.2em"></div>
-    <button class="go" id="go">Generate image</button>
+    <button class="go" id="go"><span id="goLabel">Generate image</span><span class="goCost" id="goCost"></span></button>
     <div class="msg" id="msg"></div>
   </aside>
 
@@ -519,7 +522,7 @@ function updateSel() {
   $("sel").classList.toggle("none", !id);
   $("selName").textContent = id ? (hit ? shortName(hit.name) : id) : "No model chosen";
   $("selId").textContent = hit ? id : "";
-  $("go").textContent = ({ image:"Generate image", video:"Generate video", audio:"Generate voice" })[mode] + (id ? " with " + (hit ? shortName(hit.name) : id) : "");
+  $("goLabel").textContent = ({ image:"Generate image", video:"Generate video", audio:"Generate voice" })[mode] + (id ? " with " + (hit ? shortName(hit.name) : id) : "");
   if (mode==="audio") {
     const song = isSongModel(id) || isSongModel(hit && hit.name);
     $("promptLabel").textContent = song ? "Song" : "Script";
@@ -531,22 +534,26 @@ function updateSel() {
 }
 let estTimer = null;
 async function updateEstimate() {
-  const costEl = $("costText"); if (!costEl) return;
+  const costEl = $("goCost"); if (!costEl) return;
   clearTimeout(estTimer);
   const model = $("model").value.trim();
   if (!model) { costEl.textContent = ""; return; }
   estTimer = setTimeout(async () => {
     let params;
     try { params = buildParams(); } catch { costEl.textContent = ""; return; }
-    costEl.textContent = "Estimating…";
+    costEl.textContent = "…";
     try {
+      // A placeholder stands in when nothing's typed yet — price should be visible the
+      // moment a model's picked, not only once there's a prompt. Never sent to Atlas Cloud
+      // for the real generation, only for pricing it.
+      const promptForPricing = $("prompt").value.trim() || "placeholder";
       const out = await api("/api/estimate", { method:"POST", body: JSON.stringify({
-        mode, model, prompt: $("prompt").value.trim(), image_url: mode==="audio" ? null : refUrl, params,
+        mode, model, prompt: promptForPricing, image_url: mode==="audio" ? null : refUrl, params,
       }) });
       const price = Number(out.price);
       if (!Number.isFinite(price)) { costEl.textContent = ""; return; }
       const txt = price.toLocaleString(undefined, { style:"currency", currency:"usd", minimumFractionDigits:2, maximumFractionDigits:4 });
-      costEl.textContent = `Estimated cost: ${txt}` + (out.estimated ? " (approx.)" : "");
+      costEl.textContent = (out.estimated ? "~" : "") + txt;
     } catch { costEl.textContent = ""; } // quiet failure — this is a helper number, not core to generating
   }, 500);
 }
@@ -575,7 +582,7 @@ $("model").onchange = $("model").oninput = () => { localStorage.setItem(LS.model
 function setMode(m) {
   mode = m;
   document.querySelectorAll('.tabs [role=tab]').forEach(t => t.setAttribute("aria-selected", t.dataset.mode===m));
-  $("go").textContent = { image:"Generate image", video:"Generate video", audio:"Generate voice" }[m];
+  $("goLabel").textContent = { image:"Generate image", video:"Generate video", audio:"Generate voice" }[m];
   $("promptLabel").textContent = m==="audio" ? "Script" : "Prompt";
   $("prompt").placeholder = m==="audio" ? "The words to be spoken. Add tone or pacing notes if the model supports them."
     : m==="video" ? "Describe the motion and the camera: what moves, how fast, where the lens goes." : "Describe the shot: subject, lens, light, mood.";
