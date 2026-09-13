@@ -299,10 +299,14 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 
 <script>
 /* ---------- config ---------- */
+// Trimmed to what Illume's actual work needs — product/food/beauty photography
+// and commercial-style video — rather than every model Atlas Cloud offers.
+// Nothing here is deleted from the catalogue: search still finds everything,
+// "Pin model" adds any of it back, and this list can be edited any time.
 const DEFAULT_FAVS = {
-  image: ["nano banana pro", "nano banana 2", "gpt image 2.5", "gpt image 2", "seedream 5.0 pro", "seedream 5 pro", "seedream 5.0", "flux 2"],
-  video: ["seedance 2.5", "seedance 2.0", "seedance 2.5 edit", "seedance 2.0 edit", "kling 3.0", "kling 4.0", "veo 3.1", "sora 2", "wan 3.0", "minimax h3"],
-  audio: ["elevenlabs v3", "seed audio", "minimax speech 2.6 hd", "suno"],
+  image: ["nano banana pro", "nano banana 2", "seedream 5.0 pro", "flux 2", "gpt image 2.5"],
+  video: ["seedance 2.5", "seedance 2.5 edit", "kling 3.0", "veo 3.1"],
+  audio: ["elevenlabs v3", "suno"],
 };
 const LS = { key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist", model:"il.model.", favs:"il.favs2.", models:"il.models", projects:"il.projects", proj:"il.proj" };
 
