@@ -17,6 +17,7 @@ module.exports = async (req, res) => {
     res.setHeader("Cache-Control", "no-store"); // this number changes with every generation — never let the browser cache it
     res.status(200).json({ value: raw == null ? null : Number(raw), currency: d.currency || out.currency || "usd" });
   } catch (e) {
+    console.log("balance failed:", e.message);
     res.status(502).json({ error: e.message });
   }
 };

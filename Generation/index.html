@@ -129,6 +129,10 @@ textarea{min-height:124px;resize:vertical;line-height:1.5}
 .refthumb.on{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-soft)}
 .refthumb .rm{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:18px;padding:0;cursor:pointer}
 .refthumb .rm:hover{background:rgba(0,0,0,.8)}
+.refthumb.busy{opacity:.6}
+.refthumb.failed{border-color:var(--danger)}
+.refthumb .badge{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.6);padding:2px 0}
+.refthumb .badge.err{background:var(--danger);cursor:pointer}
 
 .btn{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;text-decoration:none;display:inline-block;transition:border-color var(--ease),color var(--ease),box-shadow var(--ease)}
 .btn:hover{border-color:var(--muted);color:var(--text);box-shadow:var(--sh-sm)}
@@ -649,19 +653,36 @@ $("savePreset").onclick = () => { const p = $("prompt").value.trim(); if (!p) re
 $("clearPrompt").onclick = () => { $("prompt").value = ""; };
 
 /* ---------- reference ---------- */
-// A real phone photo, base64-encoded, can easily pass Vercel's 4.5MB request-body
-// limit — that upload fails outright, and used to just quietly clear the dropzone
-// with no visible reason. Shrink anything large before it's ever sent.
-async function shrinkForUpload(file, maxDim = 2048, quality = 0.85) {
-  const dataUrl = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); });
-  if (file.size < 3 * 1024 * 1024) return dataUrl; // already comfortably small — leave it alone
-  const img = new Image();
-  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataUrl; });
-  const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
-  const w = Math.round(img.naturalWidth * scale), h = Math.round(img.naturalHeight * scale);
-  const c = document.createElement("canvas"); c.width = w; c.height = h;
-  c.getContext("2d").drawImage(img, 0, 0, w, h);
-  return c.toDataURL("image/jpeg", quality);
+// Accept a photo of ANY size — marketing files are often huge. Vercel rejects
+// any request body over 4.5MB, and base64 inflates bytes ~33%, so we shrink in
+// the browser before uploading and GUARANTEE the result lands under a safe
+// target: shrink the longest edge, and if a dense image is still too big,
+// step the dimension and quality down until it fits. Returns a data URL.
+async function shrinkForUpload(file) {
+  const readAsDataUrl = f => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(new Error("Couldn't read that file.")); fr.readAsDataURL(f); });
+  const original = await readAsDataUrl(file);
+  if (!/^data:image\//i.test(original)) return original; // not an image we can re-encode; send as-is
+  let img;
+  try {
+    img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error("bad image")); img.src = original; });
+  } catch { return original; }
+  const TARGET = 3.4 * 1024 * 1024; // comfortably under Vercel's 4.5MB, leaving room for JSON overhead
+  let maxDim = 2048;      // plenty of detail for a reference; GPT Image itself caps near 1536
+  let quality = 0.85;
+  let out = original;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    c.getContext("2d").drawImage(img, 0, 0, w, h);
+    out = c.toDataURL("image/jpeg", quality);
+    if (out.length * 0.75 <= TARGET) return out;   // base64 length → byte estimate
+    if (attempt % 2 === 0) quality = Math.max(0.5, quality - 0.12); // try quality first
+    else maxDim = Math.round(maxDim * 0.8);          // then dimensions
+  }
+  return out; // best effort after 8 rounds — still far smaller than the original
 }
 // Results and uploads live on Atlas Cloud's storage host (*.aliyuncs.com).
 // Load them directly first — fast, no bytes through Vercel. If the browser
@@ -677,18 +698,28 @@ function mediaFallback(el) {
 // setDrop keeps its name for anything still calling it, but a single call now
 // just means "set the reference list to exactly this one" (Animate does that);
 // everything else adds to or removes from the list.
+// A reference entry is { preview (local data URL, shown instantly), url (the
+// hosted Atlas URL once uploaded, else null), name, status }. The thumbnail
+// always shows the local preview; only a hosted url is ever sent to Atlas.
 function setDrop(src, text) {
-  refUrls = src ? [{ url:src, name:text || "reference" }] : [];
+  refUrls = src ? [{ preview:src, url:src, name:text || "reference", status:"ok" }] : [];
   renderRefPicked();
 }
 function renderRefPicked() {
+  const ok = refUrls.filter(r => r.status === "ok").length;
+  const pending = refUrls.some(r => r.status === "uploading");
   $("drop").classList.toggle("has", refUrls.length>0);
-  $("dropText").textContent = refUrls.length ? `${refUrls.length} of ${MAX_REFS} attached — tap to add more` : "Drop images or tap to choose — up to 10";
+  $("dropText").textContent = refUrls.length
+    ? `${ok} of ${MAX_REFS} ready${pending ? " · preparing…" : ""} — tap to add more`
+    : "Drop images or tap to choose — up to 10, any size";
   const box = $("refPicked"); box.innerHTML = "";
   refUrls.forEach((r, i) => {
-    const b = document.createElement("div"); b.className = "refthumb";
-    b.title = r.name || "reference";
-    b.innerHTML = `<img src="${r.url}" alt="" onerror="mediaFallback(this)">`;
+    const b = document.createElement("div"); b.className = "refthumb" + (r.status==="uploading"?" busy":"") + (r.status==="failed"?" failed":"");
+    b.title = r.status==="failed" ? (r.name||"reference")+" — upload failed, tap to retry" : (r.name || "reference");
+    b.innerHTML = `<img src="${r.preview}" alt="">`
+      + (r.status==="uploading" ? `<span class="badge">…</span>` : "")
+      + (r.status==="failed" ? `<span class="badge err">retry</span>` : "");
+    if (r.status==="failed") b.onclick = () => retryRef(r);
     const rm = document.createElement("button"); rm.className = "rm"; rm.type = "button"; rm.textContent = "✕";
     rm.onclick = e => { e.stopPropagation(); refUrls.splice(i,1); renderRefPicked(); };
     b.appendChild(rm);
@@ -696,36 +727,43 @@ function renderRefPicked() {
   });
   updateEstimate();
 }
-// Video models here only take one starting frame — sending several would mean
-// silently sending an array field that model doesn't expect. Image edit models
-// are the ones that actually take multiple references.
+// Video models here only take one starting frame. Only send references that
+// actually finished uploading to a hosted URL — never a local data: URL (Atlas
+// can't fetch those, and they blow past the request-size limit → 413).
 function refsForRequest() {
   if (mode === "audio") return null;
-  const urls = refUrls.map(r => r.url);
+  const urls = refUrls.filter(r => r.status === "ok" && /^https?:/i.test(r.url)).map(r => r.url);
   return mode === "video" ? urls.slice(0, 1) : urls;
 }
+async function uploadEntry(entry, file) {
+  entry.status = "uploading"; renderRefPicked();
+  try {
+    const small = await shrinkForUpload(file);
+    const mime = small.slice(5, small.indexOf(";"));
+    const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:entry.name, type:mime, data:small.slice(small.indexOf(",")+1) }) });
+    if (!out.url) throw new Error("upload returned no URL");
+    entry.url = out.url; entry.status = "ok"; entry._file = null;
+  } catch (err) {
+    entry.status = "failed"; entry._file = file; note("Couldn't upload " + entry.name + ": " + friendlyErr(err.message), true);
+  }
+  renderRefPicked();
+}
+function retryRef(entry) { if (entry._file) uploadEntry(entry, entry._file); }
+// Add an already-hosted URL (from the brand-references gallery or the reel).
 function addRef(url, name) {
   if (refUrls.length >= MAX_REFS) { note(`Up to ${MAX_REFS} reference images.`, true); return; }
   if (refUrls.some(r => r.url === url)) return; // already attached
-  refUrls.push({ url, name: name || "reference" });
+  refUrls.push({ preview:url, url, name: name || "reference", status:"ok" });
   renderRefPicked();
 }
 $("file").onchange = async e => {
   const files = [...e.target.files]; if (!files.length) return;
   for (const f of files) {
     if (refUrls.length >= MAX_REFS) { note(`Up to ${MAX_REFS} reference images — the rest weren't added.`, true); break; }
-    const dataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
-    const entry = { url: dataUrl, name: f.name };
+    const preview = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
+    const entry = { preview, url:null, name:f.name, status:"uploading" };
     refUrls.push(entry); renderRefPicked();
-    try {
-      const small = await shrinkForUpload(f);
-      const mime = small.slice(5, small.indexOf(";"));
-      const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:f.name, type:mime, data:small.slice(small.indexOf(",")+1) }) });
-      entry.url = out.url; renderRefPicked();
-    } catch (err) {
-      refUrls.splice(refUrls.indexOf(entry), 1); renderRefPicked();
-      note(err.message + " — try a smaller image.", true);
-    }
+    uploadEntry(entry, f); // don't await — uploads run in parallel, thumbnails show immediately
   }
   $("file").value = "";
 };
@@ -755,9 +793,10 @@ $("refsFile").onchange = async e => {
       const small = await shrinkForUpload(f);
       const mime = small.slice(5, small.indexOf(";"));
       const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:f.name, type:mime, data:small.slice(small.indexOf(",")+1) }) });
+      if (!out.url) throw new Error("upload returned no URL");
       entry.url = out.url; saveProjects(); renderRefGrid();
     } catch (err) {
-      projRefs().splice(projRefs().indexOf(entry), 1); renderRefGrid(); note(err.message + " — try a smaller image.", true);
+      projRefs().splice(projRefs().indexOf(entry), 1); renderRefGrid(); note("Couldn't add " + f.name + ": " + err.message, true);
     }
   }
   $("refsFile").value = "";
@@ -788,14 +827,30 @@ $("go").onclick = async () => {
   let params;
   try { params = buildParams(); } catch { return note("Extra parameters must be valid JSON.", true); }
 
+  const pending = refUrls.some(r => r.status === "uploading");
+  if (pending) return note("Some reference images are still uploading — give them a second.", true);
+  const failed = refUrls.some(r => r.status === "failed");
+  if (failed) return note("A reference image failed to upload — remove it or tap it to retry before generating.", true);
+
   $("go").disabled = true; note("Sent to Atlas Cloud.");
   setStage(null, "queued"); $("stage").scrollIntoView({ behavior:"smooth", block:"center" });
   try {
     const imageUrls = refsForRequest();
     const { id } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: imageUrls, params }) });
     poll(id, { mode, model, prompt, ref:imageUrls, proj:projId, started:Date.now() });
-  } catch (err) { note(err.message, true); setStage(null); $("go").disabled = false; }
+  } catch (err) { note(friendlyErr(err.message), true); setStage(null); $("go").disabled = false; }
 };
+// Turn a raw upstream error into something that points at the real cause.
+function friendlyErr(msg) {
+  msg = String(msg || "");
+  if (/returned 401|unauthor/i.test(msg))
+    return "Atlas Cloud rejected this (401). The account can't generate right now — most often the Atlas Cloud balance is empty or the API key is wrong. Check your key in Settings and your balance at atlascloud.ai.";
+  if (/returned 40[23]|insufficient|balance|credit|quota/i.test(msg))
+    return "Atlas Cloud says the account is out of credit or over quota — top up at atlascloud.ai, then try again.";
+  if (/security policy|blocked|violat/i.test(msg))
+    return "Atlas Cloud blocked this prompt or reference under its content policy — adjust the wording or image and retry.";
+  return msg;
+}
 // Any setting that changes what a generation actually costs re-triggers the estimate.
 ["aspect","resolution","duration","seed","extra"].forEach(id => { $(id).oninput = updateEstimate; });
 $("genAudio").onchange = updateEstimate;
@@ -813,7 +868,7 @@ function poll(id, item) {
       } else if (s.status==="failed" || s.status==="canceled") {
         clearInterval(polling); $("go").disabled = false; setStage(null); note("Failed: " + (s.error || "unknown error"), true);
       } else { $("readState").textContent = s.status || "rendering"; }
-    } catch (err) { clearInterval(polling); $("go").disabled = false; setStage(null); note(err.message, true); }
+    } catch (err) { clearInterval(polling); $("go").disabled = false; setStage(null); note(friendlyErr(err.message), true); }
   };
   tick(); polling = setInterval(tick, every);
 }
