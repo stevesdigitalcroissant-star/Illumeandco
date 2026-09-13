@@ -291,7 +291,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
             <select id="aspect"><option>16:9</option><option>9:16</option><option>1:1</option><option>4:5</option><option>4:3</option><option>3:4</option><option>21:9</option><option value="">Model default</option></select>
           </div>
           <div class="f" id="resWrap"><label>Resolution</label>
-            <select id="resolution"><option value="720p">720p</option><option value="1080p" selected>1080p</option><option value="2k">2k</option><option value="4k">4k</option><option value="">Model default</option></select>
+            <select id="resolution"><option value="1k">1k</option><option value="2k" selected>2k</option><option value="4k">4k</option><option value="">Model default</option></select>
           </div>
           <div class="f" id="durWrap"><label>Duration (s)</label><input type="number" id="duration" min="1" max="15" placeholder="Default"></div>
         </div>
@@ -385,6 +385,19 @@ const LS = { key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist
 /* ---------- state ---------- */
 let mode = "image", refUrls = [], current = null, polling = null, tcTimer = null;
 const MAX_REFS = 10; // Seedream 5.0 Pro's real, confirmed limit — the most restrictive of the pinned image models
+// Resolution options genuinely differ by mode — video models speak in 720p/1080p,
+// image models in 1k/2k/4k. One shared <select>, rebuilt whenever the mode changes.
+const RESOLUTIONS = {
+  image: { options: ["1k","2k","4k"], fallback: "2k" },
+  video: { options: ["720p","1080p","2k","4k"], fallback: "1080p" },
+};
+function updateResolutionOptions() {
+  const cfg = RESOLUTIONS[mode]; const sel = $("resolution"); if (!cfg || !sel) return;
+  const prev = sel.value;
+  const keep = cfg.options.includes(prev) ? prev : cfg.fallback;
+  sel.innerHTML = cfg.options.map(v => `<option value="${v}"${v===keep?" selected":""}>${v}</option>`).join("")
+    + `<option value=""${keep===""?" selected":""}>Model default</option>`;
+}
 let catalogue = [];
 let projects = [], projId = null;
 
@@ -588,6 +601,7 @@ function setMode(m) {
   $("durWrap").classList.toggle("hidden", m!=="video");
   $("aspectWrap").classList.toggle("hidden", m==="audio");
   $("resWrap").classList.toggle("hidden", m==="audio");
+  updateResolutionOptions();
   $("soundWrap").classList.toggle("hidden", m!=="video");
   const favs = load(LS.favs+m, []);
   $("model").value = localStorage.getItem(LS.model+m) || (favs.find(f => f.id)||{}).id || "";
