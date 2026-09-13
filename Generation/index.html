@@ -363,6 +363,10 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":
 // Anything else (e.g. "Image-to-Video", "Edit") stays, since that's real info.
 const REDUNDANT_SUFFIX = { image: /\s*[-–:]?\s*text[- ]to[- ]image\b\.?/i, video: /\s*[-–:]?\s*text[- ]to[- ]video\b\.?/i, audio: /\s*[-–:]?\s*text[- ]to[- ](?:audio|speech)\b\.?/i };
 const shortName = (name, m=mode) => { const re = REDUNDANT_SUFFIX[m]; return re ? String(name).replace(re, "").trim() || name : name; };
+// A voice model (ElevenLabs) speaks words; a song model (Suno) writes and sings
+// a whole track from a style description. They need different prompt wording,
+// and — see api/generate.js — a different request body field entirely.
+const isSongModel = idOrName => /suno|chirp|music|udio/i.test(String(idOrName || ""));
 const note = (t, err=false) => { $("msg").textContent = t; $("msg").classList.toggle("err", err); };
 
 /* ---------- access ---------- */
@@ -475,6 +479,13 @@ function updateSel() {
   $("selName").textContent = id ? (hit ? shortName(hit.name) : id) : "No model chosen";
   $("selId").textContent = hit ? id : "";
   $("go").textContent = ({ image:"Generate image", video:"Generate video", audio:"Generate voice" })[mode] + (id ? " with " + (hit ? shortName(hit.name) : id) : "");
+  if (mode==="audio") {
+    const song = isSongModel(id) || isSongModel(hit && hit.name);
+    $("promptLabel").textContent = song ? "Song" : "Script";
+    $("prompt").placeholder = song
+      ? "Describe the song: genre, mood, instrumentation — or paste your own lyrics."
+      : "The words to be spoken. Add tone or pacing notes if the model supports them.";
+  }
 }
 function renderFavs() {
   updateSel();

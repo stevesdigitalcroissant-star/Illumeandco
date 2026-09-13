@@ -11,8 +11,12 @@ module.exports = async (req, res) => {
 
   const PATHS = { image: "/model/generateImage", video: "/model/generateVideo", audio: "/model/generateAudio" };
   const path = PATHS[mode] || PATHS.image;
-  // Audio models take `text`; image/video models take `prompt`.
-  const body = mode === "audio" ? { model, text: prompt, ...(params || {}) } : { model, prompt, ...(params || {}) };
+  // Voice models (ElevenLabs) take `text`; song models (Suno) take `prompt`,
+  // same as image/video. Sending `text` to a song model is silently ignored.
+  const isSongModel = /suno|chirp|music|udio/i.test(model);
+  const body = mode === "audio" && !isSongModel
+    ? { model, text: prompt, ...(params || {}) }
+    : { model, prompt, ...(params || {}) };
   if (image_url) body.image_url = image_url;
   try {
     const out = await atlas(path, key, {
