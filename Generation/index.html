@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#EDF0F5">
 <meta name="robots" content="noindex">
+<script>try{var t=localStorage.getItem("il.theme");if(t!=="dark"&&t!=="light")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t}catch(e){}</script>
 <title>Illume Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Fraunces:opsz,wght,SOFT@9..144,300;9..144,400;9..144,500&display=swap" rel="stylesheet">
@@ -20,10 +21,27 @@
   --sh-md:0 10px 24px -10px rgba(31,36,48,.16), 0 2px 6px -2px rgba(31,36,48,.08);
   --sh-lg:0 30px 60px -20px rgba(31,36,48,.22);
   --ease:180ms cubic-bezier(.2,.8,.2,1);
+  --bg-glow:#F4F6FC; --field:#FFFFFF;
+  color-scheme:light;
 }
+/* Dark theme: the same cool blue-grey family as the stage (#141826), just
+   inverted. Everything themed reads a token, so this block is the whole theme. */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F121A; --bg-glow:#171C2A; --panel:#141826; --raised:#1B2130; --field:#10141E;
+  --line:#262D3D; --line-soft:#1F2533;
+  --text:#E8ECF5; --muted:#A3ACC2; --faint:#6E778C;
+  --amber:#4A56FF; --amber-soft:rgba(90,102,255,.18);
+  --danger:#F06A63; --ok:#3FBF7F;
+  --sh-sm:0 1px 2px rgba(0,0,0,.35), 0 1px 1px rgba(0,0,0,.25);
+  --sh-md:0 10px 24px -10px rgba(0,0,0,.6), 0 2px 6px -2px rgba(0,0,0,.4);
+  --sh-lg:0 30px 60px -20px rgba(0,0,0,.7);
+}
+html[data-theme="dark"] .modal-backdrop{background:rgba(0,0,0,.6)}
+html[data-theme="dark"] .stage{box-shadow:0 0 0 1px var(--line),0 30px 60px -30px rgba(0,0,0,.6)}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:var(--bg)}
-body{background:radial-gradient(120% 100% at 0% 0%,#F4F6FC,var(--bg) 55%);color:var(--text);font:15px/1.45 var(--ui);-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(120% 100% at 0% 0%,var(--bg-glow),var(--bg) 55%);color:var(--text);font:15px/1.45 var(--ui);-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--amber)}
 ::selection{background:var(--amber);color:#fff}
@@ -72,7 +90,7 @@ a{color:var(--amber)}
 .f > label b{color:var(--text);font-weight:500}
 .f .hint{font-size:12px;color:var(--faint)}
 input[type=text],input[type=number],input[type=password],textarea,select{
-  width:100%;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;color:var(--text)
+  width:100%;background:var(--field);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;color:var(--text)
 }
 input::placeholder,textarea::placeholder{color:var(--faint)}
 input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
@@ -98,7 +116,7 @@ textarea{min-height:124px;resize:vertical;line-height:1.5}
 
 .drop{border:1px dashed var(--line);border-radius:var(--r);padding:12px;color:var(--muted);cursor:pointer;position:relative;min-height:72px;display:flex;align-items:center;gap:12px;transition:border-color var(--ease),box-shadow var(--ease)}
 .drop:hover{border-color:var(--muted)}
-.drop.has{border-style:solid;border-color:var(--line);background:#fff;color:var(--text);box-shadow:var(--sh-sm)}
+.drop.has{border-style:solid;border-color:var(--line);background:var(--field);color:var(--text);box-shadow:var(--sh-sm)}
 .drop input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:1}
 
 .refgrid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
@@ -112,6 +130,7 @@ textarea{min-height:124px;resize:vertical;line-height:1.5}
 
 .btn{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;text-decoration:none;display:inline-block;transition:border-color var(--ease),color var(--ease),box-shadow var(--ease)}
 .btn:hover{border-color:var(--muted);color:var(--text);box-shadow:var(--sh-sm)}
+.iconbtn{width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;font-size:15px;line-height:1}
 .sel{display:flex;align-items:center;gap:10px;background:var(--amber-soft);border:1px solid var(--amber);border-radius:var(--r);padding:10px 12px;color:var(--text);box-shadow:var(--sh-sm)}
 .sel .k{font-size:12px;color:var(--muted);white-space:nowrap}
 .sel .v{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
@@ -181,7 +200,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .hist button.on{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
 .hist img,.hist video{width:100%;height:100%;object-fit:cover;display:block}
 .hist .aud{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--amber);font-family:var(--display);font-size:22px}
-.hist .tag{position:absolute;left:6px;top:6px;font-size:11px;background:rgba(255,255,255,.9);color:var(--text);padding:2px 6px;border-radius:5px}
+.hist .tag{position:absolute;left:6px;top:6px;font-size:11px;background:rgba(255,255,255,.9);color:#1F2430;padding:2px 6px;border-radius:5px}
 .hist .none{grid-column:1/-1;color:var(--faint);font-size:14px;display:flex;align-items:center;gap:12px}
 .hist .none .noneArt{width:44px!important;height:44px!important;border-radius:8px;object-fit:cover;box-shadow:var(--sh-sm);flex-shrink:0}
 
@@ -332,6 +351,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
       <div style="display:flex;align-items:center;gap:12px">
         <span class="count" id="balance"></span>
         <span class="count" id="count"></span>
+        <button class="btn iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark mode" title="Switch to dark mode">☾</button>
         <button class="btn" id="briefBtn">Brief</button>
       </div>
     </div>
@@ -854,6 +874,24 @@ $("briefBtn").onclick = openBrief;
 $("briefClose").onclick = closeBrief;
 $("briefBackdrop").onclick = closeBrief;
 document.addEventListener("keydown", e => { if (e.key==="Escape" && !$("briefModal").classList.contains("hidden")) closeBrief(); });
+
+/* ---------- theme ---------- */
+// The tiny <script> in <head> already set data-theme before first paint, so
+// there's no flash of the wrong theme. This keeps the button glyph and the
+// browser-chrome colour in sync, and remembers the choice on this device.
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  $("themeBtn").textContent = t === "dark" ? "☀" : "☾";
+  $("themeBtn").title = t === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", t === "dark" ? "#0F121A" : "#EDF0F5");
+}
+$("themeBtn").onclick = () => {
+  const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  try { localStorage.setItem("il.theme", t); } catch {}
+  applyTheme(t);
+};
+applyTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
 
 /* ---------- init ---------- */
 projects = load(LS.projects, []);
