@@ -43,12 +43,24 @@ async function atlas(path, key, init = {}, base = BASE) {
 // estimate are always built from an identical request body.
 // Voice models (ElevenLabs) take `text`; song models (Suno) take `prompt`,
 // same as image/video. Sending `text` to a song model is silently ignored.
+// image_url may be a single URL string (the proven path — unchanged) or an
+// array of several. Different model families use different field names for
+// multiple references, and none of that is confirmed against a real Atlas
+// Cloud response yet — generate.js/estimate.js log the outgoing body whenever
+// there's more than one, so a wrong guess here is a log line, not a re-guess.
 function buildBody(mode, model, prompt, image_url, params) {
   const isSongModel = /suno|chirp|music|udio/i.test(model || "");
   const body = mode === "audio" && !isSongModel
     ? { model, text: prompt || "", ...(params || {}) }
     : { model, prompt: prompt || "", ...(params || {}) };
-  if (image_url) body.image_url = image_url;
+
+  const urls = Array.isArray(image_url) ? image_url.filter(Boolean) : (image_url ? [image_url] : []);
+  if (urls.length === 1) {
+    body.image_url = urls[0];
+  } else if (urls.length > 1) {
+    if (/gpt-image|openai/i.test(model || "")) body.image = urls; // OpenAI's real Images API field
+    else body.image_urls = urls; // best-guess convention for Seedream, Nano Banana, everything else
+  }
   return body;
 }
 

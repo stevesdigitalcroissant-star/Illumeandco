@@ -99,10 +99,7 @@ textarea{min-height:124px;resize:vertical;line-height:1.5}
 .drop{border:1px dashed var(--line);border-radius:var(--r);padding:12px;color:var(--muted);cursor:pointer;position:relative;min-height:72px;display:flex;align-items:center;gap:12px;transition:border-color var(--ease),box-shadow var(--ease)}
 .drop:hover{border-color:var(--muted)}
 .drop.has{border-style:solid;border-color:var(--line);background:#fff;color:var(--text);box-shadow:var(--sh-sm)}
-.drop img{width:48px;height:48px;object-fit:cover;border-radius:6px}
 .drop input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:1}
-.drop .x{margin-left:auto;background:transparent;border:0;color:var(--muted);cursor:pointer;padding:6px;z-index:2;position:relative}
-.drop .x:hover{color:var(--text)}
 
 .refgrid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .refgrid:empty{margin-top:0}
@@ -271,13 +268,12 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
     </div>
 
     <div class="f" id="refBlock">
-      <label>Reference image <span class="hint" id="refHint">Optional</span></label>
+      <label>Reference images <span class="hint" id="refHint">Optional, up to 10</span></label>
       <div class="drop" id="drop">
-        <input type="file" id="file" accept="image/png,image/jpeg,image/webp">
-        <img id="dropImg" class="hidden" alt="">
-        <span id="dropText">Drop an image or tap to choose</span>
-        <button class="x hidden" id="clearRef" aria-label="Remove image">✕</button>
+        <input type="file" id="file" accept="image/png,image/jpeg,image/webp" multiple>
+        <span id="dropText">Drop images or tap to choose — up to 10</span>
       </div>
+      <div class="refgrid" id="refPicked"></div>
     </div>
 
     <div class="f" id="soundWrap">
@@ -387,7 +383,8 @@ const FAV_DESC = {
 const LS = { key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist", model:"il.model.", favs:"il.favs2.", models:"il.models", projects:"il.projects", proj:"il.proj" };
 
 /* ---------- state ---------- */
-let mode = "image", refUrl = null, current = null, polling = null, tcTimer = null;
+let mode = "image", refUrls = [], current = null, polling = null, tcTimer = null;
+const MAX_REFS = 10; // Seedream 5.0 Pro's real, confirmed limit — the most restrictive of the pinned image models
 let catalogue = [];
 let projects = [], projId = null;
 
@@ -548,7 +545,7 @@ async function updateEstimate() {
       // for the real generation, only for pricing it.
       const promptForPricing = $("prompt").value.trim() || "placeholder";
       const out = await api("/api/estimate", { method:"POST", body: JSON.stringify({
-        mode, model, prompt: promptForPricing, image_url: mode==="audio" ? null : refUrl, params,
+        mode, model, prompt: promptForPricing, image_url: refsForRequest(), params,
       }) });
       const price = Number(out.price);
       if (!Number.isFinite(price)) { costEl.textContent = ""; return; }
@@ -587,7 +584,7 @@ function setMode(m) {
   $("prompt").placeholder = m==="audio" ? "The words to be spoken. Add tone or pacing notes if the model supports them."
     : m==="video" ? "Describe the motion and the camera: what moves, how fast, where the lens goes." : "Describe the shot: subject, lens, light, mood.";
   $("refBlock").classList.toggle("hidden", m==="audio");
-  $("refHint").textContent = m==="video" ? "The image that gets animated. Empty = text-to-video." : "Optional, for edit models";
+  $("refHint").textContent = m==="video" ? "The image that gets animated — only the first one attached is used. Empty = text-to-video." : "Optional, up to 10, for edit models";
   $("durWrap").classList.toggle("hidden", m!=="video");
   $("aspectWrap").classList.toggle("hidden", m==="audio");
   $("resWrap").classList.toggle("hidden", m==="audio");
@@ -626,26 +623,60 @@ async function shrinkForUpload(file, maxDim = 2048, quality = 0.85) {
   c.getContext("2d").drawImage(img, 0, 0, w, h);
   return c.toDataURL("image/jpeg", quality);
 }
+// setDrop keeps its name for anything still calling it, but a single call now
+// just means "set the reference list to exactly this one" (Animate does that);
+// everything else adds to or removes from the list.
 function setDrop(src, text) {
-  const has = !!src;
-  $("drop").classList.toggle("has", has); $("dropImg").classList.toggle("hidden", !has); $("clearRef").classList.toggle("hidden", !has);
-  if (has) $("dropImg").src = src;
-  $("dropText").textContent = has ? text : "Drop an image or tap to choose";
-  if (!has) { refUrl = null; $("file").value = ""; }
+  refUrls = src ? [{ url:src, name:text || "reference" }] : [];
+  renderRefPicked();
+}
+function renderRefPicked() {
+  $("drop").classList.toggle("has", refUrls.length>0);
+  $("dropText").textContent = refUrls.length ? `${refUrls.length} of ${MAX_REFS} attached — tap to add more` : "Drop images or tap to choose — up to 10";
+  const box = $("refPicked"); box.innerHTML = "";
+  refUrls.forEach((r, i) => {
+    const b = document.createElement("div"); b.className = "refthumb";
+    b.title = r.name || "reference";
+    b.innerHTML = `<img src="${r.url}" alt="">`;
+    const rm = document.createElement("button"); rm.className = "rm"; rm.type = "button"; rm.textContent = "✕";
+    rm.onclick = e => { e.stopPropagation(); refUrls.splice(i,1); renderRefPicked(); };
+    b.appendChild(rm);
+    box.appendChild(b);
+  });
   updateEstimate();
 }
-$("clearRef").onclick = e => { e.preventDefault(); e.stopPropagation(); setDrop(null); };
+// Video models here only take one starting frame — sending several would mean
+// silently sending an array field that model doesn't expect. Image edit models
+// are the ones that actually take multiple references.
+function refsForRequest() {
+  if (mode === "audio") return null;
+  const urls = refUrls.map(r => r.url);
+  return mode === "video" ? urls.slice(0, 1) : urls;
+}
+function addRef(url, name) {
+  if (refUrls.length >= MAX_REFS) { note(`Up to ${MAX_REFS} reference images.`, true); return; }
+  if (refUrls.some(r => r.url === url)) return; // already attached
+  refUrls.push({ url, name: name || "reference" });
+  renderRefPicked();
+}
 $("file").onchange = async e => {
-  const f = e.target.files[0]; if (!f) return;
-  const dataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
-  setDrop(dataUrl, "Preparing…");
-  try {
-    const small = await shrinkForUpload(f);
-    const mime = small.slice(5, small.indexOf(";"));
-    setDrop(dataUrl, "Uploading…");
-    const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:f.name, type:mime, data:small.slice(small.indexOf(",")+1) }) });
-    refUrl = out.url; setDrop(dataUrl, f.name);
-  } catch (err) { setDrop(null); note(err.message + " — try a smaller image.", true); }
+  const files = [...e.target.files]; if (!files.length) return;
+  for (const f of files) {
+    if (refUrls.length >= MAX_REFS) { note(`Up to ${MAX_REFS} reference images — the rest weren't added.`, true); break; }
+    const dataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
+    const entry = { url: dataUrl, name: f.name };
+    refUrls.push(entry); renderRefPicked();
+    try {
+      const small = await shrinkForUpload(f);
+      const mime = small.slice(5, small.indexOf(";"));
+      const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:f.name, type:mime, data:small.slice(small.indexOf(",")+1) }) });
+      entry.url = out.url; renderRefPicked();
+    } catch (err) {
+      refUrls.splice(refUrls.indexOf(entry), 1); renderRefPicked();
+      note(err.message + " — try a smaller image.", true);
+    }
+  }
+  $("file").value = "";
 };
 
 /* ---------- brand references (persist per project, for brief context and reuse) ---------- */
@@ -653,10 +684,10 @@ function projRefs() { return proj().refs || (proj().refs = []); }
 function renderRefGrid() {
   const box = $("refGrid"); if (!box) return; box.innerHTML = "";
   projRefs().forEach((r, i) => {
-    const b = document.createElement("div"); b.className = "refthumb" + (refUrl===r.url ? " on" : "");
-    b.title = (r.name || "reference") + " — tap to use as the reference image, ✕ to remove";
+    const b = document.createElement("div"); b.className = "refthumb" + (refUrls.some(x=>x.url===r.url) ? " on" : "");
+    b.title = (r.name || "reference") + " — tap to add as a reference image, ✕ to remove from this project";
     b.innerHTML = `<img src="${r.url}" alt="">`;
-    b.onclick = () => { refUrl = r.url; setDrop(r.url, r.name || "Brand reference"); renderRefGrid(); };
+    b.onclick = () => { addRef(r.url, r.name || "Brand reference"); renderRefGrid(); };
     const rm = document.createElement("button"); rm.className = "rm"; rm.type = "button"; rm.textContent = "✕";
     rm.onclick = e => { e.stopPropagation(); projRefs().splice(i,1); saveProjects(); renderRefGrid(); };
     b.appendChild(rm);
@@ -709,8 +740,9 @@ $("go").onclick = async () => {
   $("go").disabled = true; note("Sent to Atlas Cloud.");
   setStage(null, "queued"); $("stage").scrollIntoView({ behavior:"smooth", block:"center" });
   try {
-    const { id } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: mode==="audio" ? null : refUrl, params }) });
-    poll(id, { mode, model, prompt, ref:refUrl, proj:projId, started:Date.now() });
+    const imageUrls = refsForRequest();
+    const { id } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: imageUrls, params }) });
+    poll(id, { mode, model, prompt, ref:imageUrls, proj:projId, started:Date.now() });
   } catch (err) { note(err.message, true); setStage(null); $("go").disabled = false; }
 };
 // Any setting that changes what a generation actually costs re-triggers the estimate.
@@ -766,8 +798,8 @@ function show(item) {
   renderHistory();
 }
 $("reuse").onclick = () => { if (current) $("prompt").value = current.prompt; };
-$("asRef").onclick = () => { if (current) { refUrl = current.url; setDrop(current.url, "From reel"); } };
-$("animate").onclick = () => { if (!current) return; setMode("video"); refUrl = current.url; setDrop(current.url, "From reel"); $("prompt").value = ""; $("prompt").focus(); };
+$("asRef").onclick = () => { if (current) addRef(current.url, "From reel"); };
+$("animate").onclick = () => { if (!current) return; setMode("video"); setDrop(current.url, "From reel"); $("prompt").value = ""; $("prompt").focus(); };
 
 /* ---------- reel ---------- */
 function addHistory(item) { const h = load(LS.hist, []); h.unshift(item); save(LS.hist, h.slice(0,150)); renderProjects(); }
