@@ -389,24 +389,30 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 // and commercial-style video — rather than every model Atlas Cloud offers.
 // Nothing here is deleted from the catalogue: search still finds everything,
 // "Pin model" adds any of it back, and this list can be edited any time.
+// Pinned models use EXACT Atlas Cloud ids, verified against Atlas's own model
+// pages — not fuzzy name matching. Fuzzy matching is what silently sent the
+// display name "seedream 5.0 pro" as the model (→ Atlas "not found"). An
+// explicit id can't misresolve. Audio ids aren't confirmed yet, so those stay
+// fuzzy (via `match`) until verified.
 const DEFAULT_FAVS = {
-  image: ["nano banana pro", "seedream 5.0 pro", "gpt image 2"],
-  video: ["seedance 2.5", "seedance 2.0"],
-  audio: ["elevenlabs v3", "suno"],
+  image: [
+    { id:"google/nano-banana-pro/text-to-image", name:"Nano Banana Pro", desc:"Best for brand-consistent edits from a reference photo" },
+    { id:"bytedance/seedream-v5.0-pro/text-to-image", name:"Seedream 5.0 Pro", desc:"Highest realism and resolution — the hero shot engine" },
+    { id:"openai/gpt-image-2/text-to-image", name:"GPT Image 2", desc:"Legible text inside the image, for promo graphics" },
+  ],
+  video: [
+    { id:"bytedance/seedance-2.5/text-to-video", name:"Seedance 2.5", desc:"Cinematic camera moves — orbits, dolly-ins, product reveals" },
+    { id:"bytedance/seedance-2.0/text-to-video", name:"Seedance 2.0", desc:"The earlier Seedance — a cheaper draft tier before 2.5" },
+  ],
+  audio: [
+    { match:"elevenlabs", name:"ElevenLabs v3", desc:"Voiceover and narration" },
+    { match:"suno", name:"Suno", desc:"Full custom songs and jingles, not spoken voice" },
+  ],
 };
-// One line under each pinned model's name — why it's here, in plain terms.
-// Note: Higgsfield Soul 2.0 isn't listed — it's Higgsfield's own model and
-// isn't offered through Atlas Cloud, which is what this tool runs on.
-const FAV_DESC = {
-  "nano banana pro": "Best for brand-consistent edits from a reference photo",
-  "seedream 5.0 pro": "Highest realism and resolution — the hero shot engine",
-  "gpt image 2": "Reliable legible text inside the image, for promo graphics",
-  "seedance 2.5": "Cinematic camera moves — orbits, dolly-ins, product reveals",
-  "seedance 2.0": "The earlier Seedance — a cheaper draft tier before 2.5",
-  "elevenlabs v3": "Voiceover and narration",
-  "suno": "Full custom songs and jingles, not spoken voice",
-};
-const LS = { key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist", model:"il.model.", favs:"il.favs2.", models:"il.models", projects:"il.projects", proj:"il.proj", pending:"il.pending", draft:"il.draft." };
+const LS = { key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist", model:"il.model.", favs:"il.favs3.", models:"il.models", projects:"il.projects", proj:"il.proj", pending:"il.pending", draft:"il.draft." };
+// A real Atlas model id has no spaces (e.g. google/nano-banana-pro/text-to-image).
+// A display name like "seedream 5.0 pro" does — never send one as the model.
+const looksLikeId = v => !!v && !/\s/.test(v);
 
 /* ---------- state ---------- */
 let mode = "image", refUrls = [], current = null, tcTimer = null;
@@ -508,7 +514,7 @@ function restoreDraft() {
   setMode((d && d.mode) || "image"); // establishes the mode, option list and default model first…
   if (d) {                            // …then the saved draft overrides those
     DRAFT_FIELDS.forEach(f => { if ($(f) && (f in d)) $(f).value = d[f]; });
-    if (d.model) $("model").value = d.model;
+    if (looksLikeId(d.model)) $("model").value = d.model;
     $("useBrief").checked = !!d.useBrief;
     $("genAudio").checked = d.genAudio !== false;
     refUrls = Array.isArray(d.refs) ? d.refs.map(r => ({ preview:r.url, url:r.url, name:r.name, status:"ok" })) : [];
@@ -587,9 +593,13 @@ function findModel(want) {
 function seedFavs() {
   for (const m of Object.keys(DEFAULT_FAVS)) {
     const existing = load(LS.favs+m, null);
-    if (existing && existing.some(f => f.id)) continue;
-    const favs = DEFAULT_FAVS[m].map(want => { const hit = findModel(want); return hit ? { id:hit.id, name:hit.name, desc:FAV_DESC[want] } : { id:null, name:want, desc:FAV_DESC[want] }; });
-    save(LS.favs+m, favs.filter((f,i,a) => f.id===null || a.findIndex(x => x.id===f.id)===i));
+    if (existing && existing.length && existing.every(f => f.id)) continue; // re-run only if something's still unresolved (e.g. audio before the catalogue loaded)
+    const favs = DEFAULT_FAVS[m].map(f => {
+      if (f.id) return { id:f.id, name:f.name, desc:f.desc };     // explicit, verified id — trust it
+      const hit = findModel(f.match);                              // audio: resolve by name against the catalogue
+      return hit ? { id:hit.id, name:f.name||hit.name, desc:f.desc } : { id:null, name:f.name||f.match, desc:f.desc };
+    });
+    save(LS.favs+m, favs);
   }
 }
 function updateSel() {
@@ -613,7 +623,7 @@ async function updateEstimate() {
   const costEl = $("goCost"); if (!costEl) return;
   clearTimeout(estTimer);
   const model = $("model").value.trim();
-  if (!model) { costEl.textContent = ""; return; }
+  if (!looksLikeId(model)) { costEl.textContent = ""; return; }
   estTimer = setTimeout(async () => {
     let params;
     try { params = buildParams(); } catch { costEl.textContent = ""; return; }
@@ -670,7 +680,8 @@ function setMode(m) {
   updateResolutionOptions();
   $("soundWrap").classList.toggle("hidden", m!=="video");
   const favs = load(LS.favs+m, []);
-  $("model").value = localStorage.getItem(LS.model+m) || (favs.find(f => f.id)||{}).id || "";
+  const stored = localStorage.getItem(LS.model+m);
+  $("model").value = (looksLikeId(stored) ? stored : "") || (favs.find(f => f.id)||{}).id || "";
   fillDatalist(); renderFavs();
   saveDraft(); // remember the mode as part of this project's draft (no-op while restoring)
 }
@@ -859,6 +870,7 @@ $("go").onclick = async () => {
   let prompt = $("prompt").value.trim();
   const model = $("model").value.trim();
   if (!model) return note("Choose a model.", true);
+  if (!looksLikeId(model)) return note("That model didn't load properly — pick one from the list again (or Refresh catalogue).", true);
   if (!prompt) return note(mode==="audio" ? "Write the script first." : "Write a prompt first.", true);
   if ($("useBrief").checked && proj().brief.trim() && mode!=="audio") prompt = proj().brief.trim() + ". " + prompt;
 
