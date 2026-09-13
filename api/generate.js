@@ -25,6 +25,7 @@ module.exports = async (req, res) => {
     if (!id) return res.status(502).json({ error: "No prediction id returned.", detail: out });
     res.status(200).json({ id });
   } catch (e) {
+    console.log("generate failed:", e.message, "| sent:", JSON.stringify({ ...body, prompt: String(body.prompt || body.text || "").slice(0, 60) }).slice(0, 600));
     res.status(502).json({ error: e.message });
   }
 };

@@ -31,6 +31,9 @@ module.exports = async (req, res) => {
       estimated_tokens: d.estimated_tokens ?? null,
     });
   } catch (e) {
+    // Which settings combination Atlas Cloud refused, and what it said — a
+    // rejected estimate means the same generation would be rejected too.
+    console.log("calculate failed:", e.message, "| sent:", JSON.stringify({ ...body, prompt: String(body.prompt || body.text || "").slice(0, 60) }).slice(0, 600));
     res.status(502).json({ error: e.message });
   }
 };
