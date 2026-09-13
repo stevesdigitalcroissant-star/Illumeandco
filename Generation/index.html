@@ -89,6 +89,14 @@ textarea{min-height:124px;resize:vertical;line-height:1.5}
 .drop .x{margin-left:auto;background:transparent;border:0;color:var(--muted);cursor:pointer;padding:6px;z-index:2;position:relative}
 .drop .x:hover{color:var(--text)}
 
+.refgrid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.refgrid:empty{margin-top:0}
+.refthumb{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--line);cursor:pointer;background:var(--raised)}
+.refthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.refthumb.on{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-soft)}
+.refthumb .rm{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:18px;padding:0;cursor:pointer}
+.refthumb .rm:hover{background:rgba(0,0,0,.8)}
+
 .btn{background:transparent;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;text-decoration:none;display:inline-block}
 .btn:hover{border-color:var(--muted);color:var(--text)}
 .sel{display:flex;align-items:center;gap:10px;background:var(--amber-soft);border:1px solid var(--amber);border-radius:var(--r);padding:10px 12px;color:var(--text)}
@@ -245,6 +253,14 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
       <div>
         <div class="f"><label>Style notes <span class="hint">e.g. palette, lens, brand tone</span></label>
           <textarea id="brief" placeholder="Warm tungsten light, 35mm, muted olive and cream palette, no text overlays."></textarea></div>
+        <div class="f">
+          <label>Brand references <span class="hint">screenshots and photos from the client — stays in this project</span></label>
+          <div class="drop" id="refsDrop">
+            <input type="file" id="refsFile" accept="image/png,image/jpeg,image/webp" multiple>
+            <span id="refsDropText">Drop client screenshots or photos, or tap to choose — add as many as you like</span>
+          </div>
+          <div class="refgrid" id="refGrid"></div>
+        </div>
       </div>
     </details>
 
@@ -354,7 +370,7 @@ function selectProject(id) {
   $("projName").value = p.name; $("brief").value = p.brief || "";
   current = null; setStage(null); $("metaText").textContent = "";
   ["dl","animate","asRef","reuse"].forEach(i => $(i).classList.add("hidden"));
-  renderProjects(); renderHistory();
+  renderProjects(); renderHistory(); renderRefGrid();
 }
 $("newProj").onclick = () => {
   const name = prompt("Project name (client or job):"); if (!name) return;
@@ -483,6 +499,37 @@ $("file").onchange = async e => {
   setDrop(dataUrl, "Uploading…");
   try { const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:f.name, type:f.type, data:dataUrl.split(",")[1] }) }); refUrl = out.url; setDrop(dataUrl, f.name); }
   catch (err) { setDrop(null); note(err.message, true); }
+};
+
+/* ---------- brand references (persist per project, for brief context and reuse) ---------- */
+function projRefs() { return proj().refs || (proj().refs = []); }
+function renderRefGrid() {
+  const box = $("refGrid"); if (!box) return; box.innerHTML = "";
+  projRefs().forEach((r, i) => {
+    const b = document.createElement("div"); b.className = "refthumb" + (refUrl===r.url ? " on" : "");
+    b.title = (r.name || "reference") + " — tap to use as the reference image, ✕ to remove";
+    b.innerHTML = `<img src="${r.url}" alt="">`;
+    b.onclick = () => { refUrl = r.url; setDrop(r.url, r.name || "Brand reference"); renderRefGrid(); };
+    const rm = document.createElement("button"); rm.className = "rm"; rm.type = "button"; rm.textContent = "✕";
+    rm.onclick = e => { e.stopPropagation(); projRefs().splice(i,1); saveProjects(); renderRefGrid(); };
+    b.appendChild(rm);
+    box.appendChild(b);
+  });
+}
+$("refsFile").onchange = async e => {
+  const files = [...e.target.files]; if (!files.length) return;
+  for (const f of files) {
+    const dataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
+    const entry = { url: dataUrl, name: f.name };
+    projRefs().push(entry); renderRefGrid();
+    try {
+      const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:f.name, type:f.type, data:dataUrl.split(",")[1] }) });
+      entry.url = out.url; saveProjects(); renderRefGrid();
+    } catch (err) {
+      projRefs().splice(projRefs().indexOf(entry), 1); renderRefGrid(); note(err.message, true);
+    }
+  }
+  $("refsFile").value = "";
 };
 
 /* ---------- generate ---------- */
