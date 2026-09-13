@@ -81,6 +81,13 @@ textarea{min-height:124px;resize:vertical;line-height:1.5}
 .chip.dim{border-style:dashed;color:var(--muted)}
 .chip.on,.chip.on.dim{background:var(--amber);border-style:solid;border-color:var(--amber);color:var(--amber-ink);font-weight:600}
 
+.chip.fav{border-radius:10px;padding:9px 12px;white-space:normal;text-align:left;display:flex;flex-direction:column;gap:2px;line-height:1.3}
+.chip.fav span{font-weight:600;font-size:13.5px}
+.chip.fav small{font-weight:400;font-size:11.5px;color:var(--muted)}
+.chip.fav.on span,.chip.fav.on small{color:var(--amber-ink)}
+.chip.fav.on::before{content:none}
+.chip.fav.on span::before{content:"✓ ";}
+
 .drop{border:1px dashed var(--line);border-radius:var(--r);padding:12px;color:var(--muted);cursor:pointer;position:relative;min-height:72px;display:flex;align-items:center;gap:12px}
 .drop:hover{border-color:var(--muted)}
 .drop.has{border-style:solid;border-color:var(--line);background:#fff;color:var(--text)}
@@ -126,11 +133,16 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .head h1 input:hover,.head h1 input:focus{border-bottom-color:var(--line);outline:0}
 .head .count{color:var(--faint);font-size:13px}
 
-.stage{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#141826;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;
+.stage{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#141826;display:flex;align-items:center;justify-content:center;
   box-shadow:0 0 0 1px var(--line),0 30px 60px -30px rgba(31,36,48,.35)}
+/* Idle or generating: a compact strip, not a full 16:9 void with nothing in it. */
+.stage:not(.live){aspect-ratio:21/9;max-height:220px}
+/* A finished result: size to the media itself (a vertical video stays vertical,
+   it doesn't sit in a wide letterboxed box) rather than forcing 16:9 on everything. */
+.stage.live{aspect-ratio:auto}
 .stage::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 12% 0%,rgba(47,59,255,.22),transparent 55%)}
 .stage.live::before{opacity:0}
-.stage img,.stage video{max-width:100%;max-height:100%;display:block;position:relative}
+.stage img,.stage video{max-width:100%;max-height:70vh;display:block;position:relative}
 .stage audio{position:relative;width:min(560px,90%)}
 .empty{position:relative;text-align:center;max-width:40ch;padding:24px;color:#9AA3BE}
 .empty b{display:block;font-family:var(--display);font-weight:300;font-size:26px;color:#fff;margin-bottom:8px}
@@ -234,6 +246,13 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
       </div>
     </div>
 
+    <div class="f" id="soundWrap">
+      <label style="display:inline-flex;gap:8px;align-items:center;cursor:pointer">
+        <input type="checkbox" id="genAudio" checked style="width:auto;margin:0"> Generate with sound
+        <span class="hint">music, effects and speech, synced automatically</span>
+      </label>
+    </div>
+
     <details>
       <summary>Options</summary>
       <div>
@@ -241,10 +260,13 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
           <div class="f" id="aspectWrap"><label>Aspect ratio</label>
             <select id="aspect"><option value="">Model default</option><option>16:9</option><option>9:16</option><option>1:1</option><option>4:5</option><option>4:3</option><option>3:4</option><option>21:9</option></select>
           </div>
+          <div class="f" id="resWrap"><label>Resolution</label>
+            <select id="resolution"><option value="">Model default</option><option value="720p">720p</option><option value="1080p">1080p</option><option value="2k">2k</option><option value="4k">4k</option></select>
+          </div>
           <div class="f" id="durWrap"><label>Duration (s)</label><input type="number" id="duration" min="1" max="15" placeholder="Default"></div>
         </div>
         <div class="f"><label>Seed <span class="hint">same seed + prompt = same result</span></label><input type="number" id="seed" placeholder="Random"></div>
-        <div class="f"><label>Extra parameters (JSON) <span class="hint">from the model's page</span></label><input type="text" id="extra" placeholder='{"resolution":"1080p"}'></div>
+        <div class="f"><label>Extra parameters (JSON) <span class="hint">from the model's page</span></label><input type="text" id="extra" placeholder='{"cfg_scale":0.5}'></div>
       </div>
     </details>
 
@@ -304,9 +326,21 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 // Nothing here is deleted from the catalogue: search still finds everything,
 // "Pin model" adds any of it back, and this list can be edited any time.
 const DEFAULT_FAVS = {
-  image: ["nano banana pro", "nano banana 2", "seedream 5.0 pro", "flux 2", "gpt image 2.5"],
-  video: ["seedance 2.5", "seedance 2.5 edit", "kling 3.0", "veo 3.1"],
+  image: ["nano banana pro", "seedream 5.0 pro", "gpt image 2"],
+  video: ["seedance 2.5", "seedance 2.0"],
   audio: ["elevenlabs v3", "suno"],
+};
+// One line under each pinned model's name — why it's here, in plain terms.
+// Note: Higgsfield Soul 2.0 isn't listed — it's Higgsfield's own model and
+// isn't offered through Atlas Cloud, which is what this tool runs on.
+const FAV_DESC = {
+  "nano banana pro": "Best for brand-consistent edits from a reference photo",
+  "seedream 5.0 pro": "Highest realism and resolution — the hero shot engine",
+  "gpt image 2": "Reliable legible text inside the image, for promo graphics",
+  "seedance 2.5": "Cinematic camera moves — orbits, dolly-ins, product reveals",
+  "seedance 2.0": "The earlier Seedance — a cheaper draft tier before 2.5",
+  "elevenlabs v3": "Voiceover and narration",
+  "suno": "Full custom songs and jingles, not spoken voice",
 };
 const LS = { key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist", model:"il.model.", favs:"il.favs2.", models:"il.models", projects:"il.projects", proj:"il.proj" };
 
@@ -425,7 +459,7 @@ function seedFavs() {
   for (const m of Object.keys(DEFAULT_FAVS)) {
     const existing = load(LS.favs+m, null);
     if (existing && existing.some(f => f.id)) continue;
-    const favs = DEFAULT_FAVS[m].map(want => { const hit = findModel(want); return hit ? { id:hit.id, name:hit.name } : { id:null, name:want }; });
+    const favs = DEFAULT_FAVS[m].map(want => { const hit = findModel(want); return hit ? { id:hit.id, name:hit.name, desc:FAV_DESC[want] } : { id:null, name:want, desc:FAV_DESC[want] }; });
     save(LS.favs+m, favs.filter((f,i,a) => f.id===null || a.findIndex(x => x.id===f.id)===i));
   }
 }
@@ -442,8 +476,9 @@ function renderFavs() {
   const favs = load(LS.favs+mode, []); const box = $("favs"); box.innerHTML = "";
   favs.forEach((f, i) => {
     const val = f.id || f.name, cur = $("model").value.trim();
-    const b = document.createElement("button"); b.className = "chip" + (cur===val ? " on" : "") + (f.id ? "" : " dim");
-    b.textContent = shortName(f.name); b.title = f.id || "Will match the catalogue once loaded";
+    const b = document.createElement("button"); b.className = "chip fav" + (cur===val ? " on" : "") + (f.id ? "" : " dim");
+    b.innerHTML = `<span>${esc(shortName(f.name))}</span>` + (f.desc ? `<small>${esc(f.desc)}</small>` : "");
+    b.title = f.id || "Will match the catalogue once loaded";
     b.onclick = () => { $("model").value = val; localStorage.setItem(LS.model+mode, val); renderFavs(); };
     b.oncontextmenu = e => { e.preventDefault(); favs.splice(i,1); save(LS.favs+mode, favs); renderFavs(); };
     box.appendChild(b);
@@ -469,6 +504,8 @@ function setMode(m) {
   $("refHint").textContent = m==="video" ? "The image that gets animated. Empty = text-to-video." : "Optional, for edit models";
   $("durWrap").classList.toggle("hidden", m!=="video");
   $("aspectWrap").classList.toggle("hidden", m==="audio");
+  $("resWrap").classList.toggle("hidden", m==="audio");
+  $("soundWrap").classList.toggle("hidden", m!=="video");
   const favs = load(LS.favs+m, []);
   $("model").value = localStorage.getItem(LS.model+m) || (favs.find(f => f.id)||{}).id || "";
   fillDatalist(); renderFavs();
@@ -545,8 +582,12 @@ $("go").onclick = async () => {
   if ($("useBrief").checked && proj().brief.trim() && mode!=="audio") prompt = proj().brief.trim() + ". " + prompt;
 
   const params = {};
-  if (mode!=="audio" && $("aspect").value) params.aspect_ratio = $("aspect").value;
+  // Seedance takes the aspect ratio as `ratio`; other models here use `aspect_ratio`.
+  if (mode==="video" && $("aspect").value) params.ratio = $("aspect").value;
+  if (mode==="image" && $("aspect").value) params.aspect_ratio = $("aspect").value;
+  if (mode!=="audio" && $("resolution").value) params.resolution = $("resolution").value;
   if (mode==="video" && $("duration").value) params.duration = Number($("duration").value);
+  if (mode==="video") params.generate_audio = $("genAudio").checked;
   if ($("seed").value) params.seed = Number($("seed").value);
   if ($("extra").value.trim()) { try { Object.assign(params, JSON.parse($("extra").value)); } catch { return note("Extra parameters must be valid JSON.", true); } }
 
