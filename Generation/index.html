@@ -144,6 +144,12 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .stage.live::before{opacity:0}
 .stage img,.stage video{max-width:100%;max-height:70vh;display:block;position:relative}
 .stage audio{position:relative;width:min(560px,90%)}
+/* The client's name, so a result is never ambiguous about which project it's from. */
+.stageLabel{position:absolute;top:14px;left:16px;z-index:3;pointer-events:none;
+  font-family:var(--display);font-weight:300;font-size:15px;letter-spacing:.01em;color:#fff;
+  background:rgba(10,12,20,.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  padding:6px 14px;border-radius:999px;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stageLabel:empty{display:none}
 .empty{position:relative;text-align:center;max-width:40ch;padding:24px;color:#9AA3BE}
 .empty b{display:block;font-family:var(--display);font-weight:300;font-size:26px;color:#fff;margin-bottom:8px}
 .bar{position:absolute;left:0;top:0;height:2px;width:0;background:var(--amber);z-index:2}
@@ -323,6 +329,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 
     <div class="stage" id="stage">
       <div class="bar" id="bar"></div>
+      <div class="stageLabel" id="stageLabel"></div>
       <div class="empty" id="stageEmpty"><b>Roll camera.</b>Choose a model, write the shot, and generate. Everything lands here and in this project's reel.</div>
       <div class="readout hidden" id="readout"><span class="dot"></span><span id="readState">rendering</span><span class="tc" id="tc">00:00</span></div>
     </div>
@@ -430,19 +437,21 @@ function renderProjects() {
     box.appendChild(b);
   });
 }
+function renderStageLabel() { const p = proj(); $("stageLabel").textContent = p ? p.name : ""; }
 function selectProject(id) {
   projId = id; const p = proj(); saveProjects();
   $("projName").value = p.name; $("brief").value = p.brief || "";
   current = null; setStage(null); $("metaText").textContent = "";
   ["dl","animate","asRef","reuse"].forEach(i => $(i).classList.add("hidden"));
-  renderProjects(); renderHistory(); renderRefGrid();
+  renderProjects(); renderHistory(); renderRefGrid(); renderStageLabel();
 }
 $("newProj").onclick = () => {
   const name = prompt("Project name (client or job):"); if (!name) return;
   const p = { id: "p"+Date.now(), name: name.trim(), brief:"", created: Date.now() };
   projects.unshift(p); selectProject(p.id);
 };
-$("projName").onchange = () => { const p = proj(); p.name = $("projName").value.trim() || "Untitled project"; $("projName").value = p.name; saveProjects(); renderProjects(); };
+$("projName").onchange = () => { const p = proj(); p.name = $("projName").value.trim() || "Untitled project"; $("projName").value = p.name; saveProjects(); renderProjects(); renderStageLabel(); };
+$("projName").oninput = () => { $("stageLabel").textContent = $("projName").value.trim() || proj().name; };
 $("brief").oninput = () => { proj().brief = $("brief").value; saveProjects(); };
 
 /* ---------- models ---------- */
