@@ -215,15 +215,20 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
     </div>
 
     <div class="f">
-      <label><b>Model</b> <span class="hint" id="modelHint">Loading catalogue…</span></label>
+      <label><b>Model</b></label>
       <div class="chips" id="favs"></div>
-      <input type="text" id="model" list="modelList" placeholder="Search all Atlas models, or paste a model ID…" autocomplete="off">
-      <datalist id="modelList"></datalist>
-      <div style="display:flex;gap:8px">
-        <button class="btn" id="favAdd">Pin model</button>
-        <button class="btn" id="modelsRefresh">Refresh catalogue</button>
-        <a class="btn" href="https://www.atlascloud.ai/models" target="_blank" rel="noopener">Prices</a>
-      </div>
+      <details class="modelMore">
+        <summary>Use a different model <span class="hint" id="modelHint">Loading catalogue…</span></summary>
+        <div>
+          <input type="text" id="model" list="modelList" placeholder="Search all Atlas models, or paste a model ID…" autocomplete="off">
+          <datalist id="modelList"></datalist>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn" id="favAdd">Pin model</button>
+            <button class="btn" id="modelsRefresh">Refresh catalogue</button>
+            <a class="btn" href="https://www.atlascloud.ai/models" target="_blank" rel="noopener">Prices</a>
+          </div>
+        </div>
+      </details>
     </div>
 
     <div class="f">
