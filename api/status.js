@@ -9,9 +9,16 @@ module.exports = async (req, res) => {
   try {
     const out = await atlas(`/model/prediction/${encodeURIComponent(id)}`, key);
     const d = out?.data || out;
+    if (d.status === "completed" || d.status === "succeeded" || d.status === "failed") {
+      console.log("prediction terminal response:", JSON.stringify(out).slice(0, 800));
+    }
+    // Atlas Cloud's own docs say outputs is a plain array of URL strings, but
+    // given tonight's track record with this API, don't trust that blind —
+    // each entry might come back as an object instead. Unwrap either shape.
+    const outputs = (d.outputs || []).map(o => (typeof o === "string" ? o : (o?.url || o?.download_url || o?.output_url || o)));
     res.status(200).json({
       status: d.status,
-      outputs: d.outputs || [],
+      outputs,
       error: d.error || null,
     });
   } catch (e) {
