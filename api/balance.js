@@ -12,10 +12,14 @@ module.exports = async (req, res) => {
     // actually wrapped its payload in {code, data:{...}} — accept both, and
     // log the raw shape once so a mismatch is a log line, not a blank header.
     console.log("balance response shape:", JSON.stringify(out).slice(0, 300));
+    // Confirmed real shape: { available:{value,currency}, cash:{...}, bonus:{...} }.
+    // "available" is an object, not a number — read its nested .value.
     const d = out?.data || out;
-    const raw = d.value ?? d.balance ?? d.amount ?? d.available ?? null;
+    const pick = o => (o && typeof o === "object" ? o.value : o);
+    const raw = pick(d.available) ?? pick(d.cash) ?? d.value ?? d.balance ?? d.amount ?? null;
+    const currency = d.available?.currency || d.cash?.currency || d.currency || "usd";
     res.setHeader("Cache-Control", "no-store"); // this number changes with every generation — never let the browser cache it
-    res.status(200).json({ value: raw == null ? null : Number(raw), currency: d.currency || out.currency || "usd" });
+    res.status(200).json({ value: raw == null ? null : Number(raw), currency });
   } catch (e) {
     console.log("balance failed:", e.message);
     res.status(502).json({ error: e.message });

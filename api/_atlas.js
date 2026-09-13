@@ -44,8 +44,14 @@ async function atlas(path, key, init = {}, base = BASE) {
   let json;
   try { json = JSON.parse(text); } catch { json = { raw: text }; }
   if (!r.ok) {
-    const msg = json?.message || json?.error || json?.raw || `Atlas Cloud returned ${r.status}`;
-    throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
+    // Surface everything Atlas gives on a failure — status text, any error code,
+    // the raw body, and a couple of diagnostic headers. A bare 401 with no body
+    // is itself a clue (key valid but not permitted), so never hide it.
+    const detail = json?.message || json?.error || json?.msg || (text && text.slice(0, 300)) || r.statusText || "";
+    const code = json?.code || json?.error_code || "";
+    const reqId = r.headers.get("x-request-id") || r.headers.get("x-atlas-request-id") || "";
+    console.log(`atlas ${r.status} ${path} | code=${code} | detail=${JSON.stringify(detail).slice(0,300)} | reqId=${reqId}`);
+    throw new Error(`Atlas Cloud returned ${r.status}${detail ? ": " + detail : ""}`);
   }
   return json;
 }
