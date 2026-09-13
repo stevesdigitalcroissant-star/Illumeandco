@@ -301,6 +301,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
     </details>
 
     <div class="sel none" id="sel"><span class="k">Will use</span><span class="v" id="selName">No model chosen</span><span class="id" id="selId"></span></div>
+    <div class="hint" id="costText" style="text-align:right;min-height:1.2em"></div>
     <button class="go" id="go">Generate image</button>
     <div class="msg" id="msg"></div>
   </aside>
@@ -526,6 +527,28 @@ function updateSel() {
       ? "Describe the song: genre, mood, instrumentation — or paste your own lyrics."
       : "The words to be spoken. Add tone or pacing notes if the model supports them.";
   }
+  updateEstimate();
+}
+let estTimer = null;
+async function updateEstimate() {
+  const costEl = $("costText"); if (!costEl) return;
+  clearTimeout(estTimer);
+  const model = $("model").value.trim();
+  if (!model) { costEl.textContent = ""; return; }
+  estTimer = setTimeout(async () => {
+    let params;
+    try { params = buildParams(); } catch { costEl.textContent = ""; return; }
+    costEl.textContent = "Estimating…";
+    try {
+      const out = await api("/api/estimate", { method:"POST", body: JSON.stringify({
+        mode, model, prompt: $("prompt").value.trim(), image_url: mode==="audio" ? null : refUrl, params,
+      }) });
+      const price = Number(out.price);
+      if (!Number.isFinite(price)) { costEl.textContent = ""; return; }
+      const txt = price.toLocaleString(undefined, { style:"currency", currency:"usd", minimumFractionDigits:2, maximumFractionDigits:4 });
+      costEl.textContent = `Estimated cost: ${txt}` + (out.estimated ? " (approx.)" : "");
+    } catch { costEl.textContent = ""; } // quiet failure — this is a helper number, not core to generating
+  }, 500);
 }
 function renderFavs() {
   updateSel();
@@ -588,6 +611,7 @@ function setDrop(src, text) {
   if (has) $("dropImg").src = src;
   $("dropText").textContent = has ? text : "Drop an image or tap to choose";
   if (!has) { refUrl = null; $("file").value = ""; }
+  updateEstimate();
 }
 $("clearRef").onclick = e => { e.preventDefault(); e.stopPropagation(); setDrop(null); };
 $("file").onchange = async e => {
@@ -630,13 +654,9 @@ $("refsFile").onchange = async e => {
 };
 
 /* ---------- generate ---------- */
-$("go").onclick = async () => {
-  let prompt = $("prompt").value.trim();
-  const model = $("model").value.trim();
-  if (!model) return note("Choose a model.", true);
-  if (!prompt) return note(mode==="audio" ? "Write the script first." : "Write a prompt first.", true);
-  if ($("useBrief").checked && proj().brief.trim() && mode!=="audio") prompt = proj().brief.trim() + ". " + prompt;
-
+// Shared by the Generate click and the cost estimate — so they can never build
+// a different request body from the same on-screen settings.
+function buildParams() {
   const params = {};
   // Seedance takes the aspect ratio as `ratio`; other models here use `aspect_ratio`.
   if (mode==="video" && $("aspect").value) params.ratio = $("aspect").value;
@@ -645,7 +665,18 @@ $("go").onclick = async () => {
   if (mode==="video" && $("duration").value) params.duration = Number($("duration").value);
   if (mode==="video") params.generate_audio = $("genAudio").checked;
   if ($("seed").value) params.seed = Number($("seed").value);
-  if ($("extra").value.trim()) { try { Object.assign(params, JSON.parse($("extra").value)); } catch { return note("Extra parameters must be valid JSON.", true); } }
+  if ($("extra").value.trim()) { Object.assign(params, JSON.parse($("extra").value)); } // throws on bad JSON — caller decides how to handle
+  return params;
+}
+$("go").onclick = async () => {
+  let prompt = $("prompt").value.trim();
+  const model = $("model").value.trim();
+  if (!model) return note("Choose a model.", true);
+  if (!prompt) return note(mode==="audio" ? "Write the script first." : "Write a prompt first.", true);
+  if ($("useBrief").checked && proj().brief.trim() && mode!=="audio") prompt = proj().brief.trim() + ". " + prompt;
+
+  let params;
+  try { params = buildParams(); } catch { return note("Extra parameters must be valid JSON.", true); }
 
   $("go").disabled = true; note("Sent to Atlas Cloud.");
   setStage(null, "queued"); $("stage").scrollIntoView({ behavior:"smooth", block:"center" });
@@ -654,6 +685,9 @@ $("go").onclick = async () => {
     poll(id, { mode, model, prompt, ref:refUrl, proj:projId, started:Date.now() });
   } catch (err) { note(err.message, true); setStage(null); $("go").disabled = false; }
 };
+// Any setting that changes what a generation actually costs re-triggers the estimate.
+["aspect","resolution","duration","seed","extra"].forEach(id => { $(id).oninput = updateEstimate; });
+$("genAudio").onchange = updateEstimate;
 function poll(id, item) {
   clearInterval(polling);
   const every = item.mode==="image" ? 2000 : 5000;

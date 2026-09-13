@@ -39,4 +39,17 @@ async function atlas(path, key, init = {}, base = BASE) {
   return json;
 }
 
-module.exports = { checkAccess, apiKey, atlas, PUBLIC_BASE };
+// Shared by generate.js and estimate.js, so a real generation and its cost
+// estimate are always built from an identical request body.
+// Voice models (ElevenLabs) take `text`; song models (Suno) take `prompt`,
+// same as image/video. Sending `text` to a song model is silently ignored.
+function buildBody(mode, model, prompt, image_url, params) {
+  const isSongModel = /suno|chirp|music|udio/i.test(model || "");
+  const body = mode === "audio" && !isSongModel
+    ? { model, text: prompt || "", ...(params || {}) }
+    : { model, prompt: prompt || "", ...(params || {}) };
+  if (image_url) body.image_url = image_url;
+  return body;
+}
+
+module.exports = { checkAccess, apiKey, atlas, PUBLIC_BASE, buildBody };

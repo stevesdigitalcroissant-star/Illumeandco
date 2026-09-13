@@ -1,5 +1,7 @@
 const { checkAccess, apiKey, atlas, buildBody } = require("./_atlas");
 
+// Atlas Cloud's price calculator: same request body as a real generation,
+// but /model/calculate only prices it — no job is created, nothing is charged.
 module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
   if (!checkAccess(req, res)) return;
@@ -7,20 +9,22 @@ module.exports = async (req, res) => {
   if (!key) return;
 
   const { mode, model, prompt, image_url, params } = req.body || {};
-  if (!model || !prompt) return res.status(400).json({ error: "Model and prompt are required." });
-
-  const PATHS = { image: "/model/generateImage", video: "/model/generateVideo", audio: "/model/generateAudio" };
-  const path = PATHS[mode] || PATHS.image;
+  if (!model) return res.status(400).json({ error: "Model is required." });
   const body = buildBody(mode, model, prompt, image_url, params);
+
   try {
-    const out = await atlas(path, key, {
+    const out = await atlas("/model/calculate", key, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const id = out?.data?.id || out?.id || out?.predictionId;
-    if (!id) return res.status(502).json({ error: "No prediction id returned.", detail: out });
-    res.status(200).json({ id });
+    res.status(200).json({
+      price: out.price,
+      origin_price: out.origin_price,
+      discount: out.discount,
+      estimated: !!out.estimated,
+      estimated_tokens: out.estimated_tokens ?? null,
+    });
   } catch (e) {
     res.status(502).json({ error: e.message });
   }
