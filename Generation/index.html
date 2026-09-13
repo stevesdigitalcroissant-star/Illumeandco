@@ -637,6 +637,17 @@ async function shrinkForUpload(file, maxDim = 2048, quality = 0.85) {
   c.getContext("2d").drawImage(img, 0, 0, w, h);
   return c.toDataURL("image/jpeg", quality);
 }
+// Results and uploads live on Atlas Cloud's storage host (*.aliyuncs.com).
+// Load them directly first — fast, no bytes through Vercel. If the browser
+// refuses (an extension or tracking protection blocking that host — a real
+// case: curl and a clean Chromium loaded a result fine, the user's browser
+// showed a broken image), fall back to the same file via our own domain.
+const mediaSrc = url => "/api/media?url=" + encodeURIComponent(url);
+function mediaFallback(el) {
+  const u = el && el.getAttribute("src");
+  if (!u || el.dataset.fell || !/^https?:/i.test(u) || u.startsWith("/api/media")) return;
+  el.dataset.fell = "1"; el.src = mediaSrc(u);
+}
 // setDrop keeps its name for anything still calling it, but a single call now
 // just means "set the reference list to exactly this one" (Animate does that);
 // everything else adds to or removes from the list.
@@ -651,7 +662,7 @@ function renderRefPicked() {
   refUrls.forEach((r, i) => {
     const b = document.createElement("div"); b.className = "refthumb";
     b.title = r.name || "reference";
-    b.innerHTML = `<img src="${r.url}" alt="">`;
+    b.innerHTML = `<img src="${r.url}" alt="" onerror="mediaFallback(this)">`;
     const rm = document.createElement("button"); rm.className = "rm"; rm.type = "button"; rm.textContent = "✕";
     rm.onclick = e => { e.stopPropagation(); refUrls.splice(i,1); renderRefPicked(); };
     b.appendChild(rm);
@@ -700,7 +711,7 @@ function renderRefGrid() {
   projRefs().forEach((r, i) => {
     const b = document.createElement("div"); b.className = "refthumb" + (refUrls.some(x=>x.url===r.url) ? " on" : "");
     b.title = (r.name || "reference") + " — tap to add as a reference image, ✕ to remove from this project";
-    b.innerHTML = `<img src="${r.url}" alt="">`;
+    b.innerHTML = `<img src="${r.url}" alt="" onerror="mediaFallback(this)">`;
     b.onclick = () => { addRef(r.url, r.name || "Brand reference"); renderRefGrid(); };
     const rm = document.createElement("button"); rm.className = "rm"; rm.type = "button"; rm.textContent = "✕";
     rm.onclick = e => { e.stopPropagation(); projRefs().splice(i,1); saveProjects(); renderRefGrid(); };
@@ -799,13 +810,18 @@ function setStage(item, status) {
     if (item.mode==="video") el = Object.assign(document.createElement("video"), { src:item.url, controls:true, autoplay:true, loop:true, playsInline:true });
     else if (item.mode==="audio") el = Object.assign(document.createElement("audio"), { src:item.url, controls:true, autoplay:true });
     else el = Object.assign(document.createElement("img"), { src:item.url, alt:item.prompt });
+    el.onerror = () => mediaFallback(el);
     st.appendChild(el);
   }
 }
 function show(item) {
   current = item; setStage(item);
   $("metaText").innerHTML = `<b>${{image:"Image",video:"Video",audio:"Voice"}[item.mode]} · ${esc(item.model)}</b> — ${esc(item.prompt)}`;
-  $("dl").href = item.url; $("dl").classList.remove("hidden");
+  // Download goes through our own domain: the download attribute only works
+  // same-origin (a direct storage link just opens the file), and it gets a real filename.
+  const ext = (item.url.split("?")[0].match(/\.(\w{2,5})$/) || [,"jpg"])[1];
+  const slug = (item.prompt || "illume").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "illume";
+  $("dl").href = mediaSrc(item.url) + "&download=1&name=" + encodeURIComponent(`${slug}.${ext}`); $("dl").classList.remove("hidden");
   $("reuse").classList.remove("hidden");
   $("animate").classList.toggle("hidden", item.mode!=="image");
   $("asRef").classList.toggle("hidden", item.mode!=="image");
@@ -823,8 +839,8 @@ function renderHistory() {
   if (!h.length) { box.innerHTML = '<div class="none"><img src="/Generation/images/brand-texture-3.webp" alt="" class="noneArt">This project\'s generations will collect here, on this device.</div>'; return; }
   h.forEach(item => {
     const b = document.createElement("button"); b.className = current && current.id===item.id ? "on" : "";
-    const inner = item.mode==="video" ? `<video src="${item.url}" muted playsinline preload="metadata"></video>`
-      : item.mode==="audio" ? `<div class="aud">♪</div>` : `<img src="${item.url}" alt="">`;
+    const inner = item.mode==="video" ? `<video src="${item.url}" muted playsinline preload="metadata" onerror="mediaFallback(this)"></video>`
+      : item.mode==="audio" ? `<div class="aud">♪</div>` : `<img src="${item.url}" alt="" onerror="mediaFallback(this)">`;
     b.innerHTML = inner + `<span class="tag">${{image:"Image",video:"Video",audio:"Voice"}[item.mode]}</span>`;
     b.title = item.prompt; b.onclick = () => show(item); box.appendChild(b);
   });
