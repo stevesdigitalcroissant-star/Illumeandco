@@ -406,10 +406,11 @@ const FAV_DESC = {
   "elevenlabs v3": "Voiceover and narration",
   "suno": "Full custom songs and jingles, not spoken voice",
 };
-const LS = { key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist", model:"il.model.", favs:"il.favs2.", models:"il.models", projects:"il.projects", proj:"il.proj" };
+const LS = { key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist", model:"il.model.", favs:"il.favs2.", models:"il.models", projects:"il.projects", proj:"il.proj", pending:"il.pending", draft:"il.draft." };
 
 /* ---------- state ---------- */
-let mode = "image", refUrls = [], current = null, polling = null, tcTimer = null;
+let mode = "image", refUrls = [], current = null, tcTimer = null;
+let viewingPendingId = null; // the in-flight generation currently shown on the stage (null once the user navigates away)
 const MAX_REFS = 10; // Seedream 5.0 Pro's real, confirmed limit — the most restrictive of the pinned image models
 // Resolution options genuinely differ by mode — video models speak in 720p/1080p,
 // image models in 1k/2k/4k. One shared <select>, rebuilt whenever the mode changes.
@@ -485,11 +486,46 @@ function renderProjects() {
     box.appendChild(b);
   });
 }
+// The working draft — prompt, attached references and the option fields — is
+// saved per project, so a refresh (or an accidental reload) never makes you
+// re-type anything for the project you're on. It's scoped to the project, so a
+// different or brand-new project shows its own draft (or empty), never bleeds.
+let draftTimer = null, restoringDraft = false;
+const DRAFT_FIELDS = ["prompt","aspect","resolution","duration","seed","extra"];
+function saveDraft() {
+  if (restoringDraft || !projId) return;
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => {
+    const d = { mode, model: $("model").value.trim(), useBrief: $("useBrief").checked, genAudio: $("genAudio").checked,
+      refs: refUrls.filter(r => r.status === "ok").map(r => ({ url:r.url, name:r.name })) };
+    DRAFT_FIELDS.forEach(f => d[f] = $(f).value);
+    save(LS.draft + projId, d);
+  }, 300);
+}
+function restoreDraft() {
+  restoringDraft = true;
+  const d = load(LS.draft + projId, null);
+  setMode((d && d.mode) || "image"); // establishes the mode, option list and default model first…
+  if (d) {                            // …then the saved draft overrides those
+    DRAFT_FIELDS.forEach(f => { if ($(f) && (f in d)) $(f).value = d[f]; });
+    if (d.model) $("model").value = d.model;
+    $("useBrief").checked = !!d.useBrief;
+    $("genAudio").checked = d.genAudio !== false;
+    refUrls = Array.isArray(d.refs) ? d.refs.map(r => ({ preview:r.url, url:r.url, name:r.name, status:"ok" })) : [];
+  } else {                            // a project with no draft: empty working boxes, mode defaults intact
+    $("prompt").value = ""; refUrls = [];
+  }
+  renderRefPicked();
+  restoringDraft = false;
+  renderFavs(); // refresh the model label, cost estimate and pills for the restored values
+}
 function selectProject(id) {
+  if (projId && projId !== id) saveDraft(); // keep the draft of the project we're leaving
   projId = id; const p = proj(); saveProjects();
   $("projName").value = p.name; $("brief").value = p.brief || "";
   current = null; setStage(null); $("metaText").textContent = "";
   ["dl","animate","asRef","reuse"].forEach(i => $(i).classList.add("hidden"));
+  restoreDraft();
   renderProjects(); renderHistory(); renderRefGrid();
 }
 $("newProj").onclick = () => {
@@ -616,7 +652,7 @@ $("favAdd").onclick = () => {
   const hit = catalogue.find(x => x.id===id); favs.push({ id, name: hit ? hit.name : id }); save(LS.favs+mode, favs); renderFavs();
 };
 $("modelsRefresh").onclick = () => { for (const m of Object.keys(DEFAULT_FAVS)) localStorage.removeItem(LS.favs+m); loadModels(true); };
-$("model").onchange = $("model").oninput = () => { localStorage.setItem(LS.model+mode, $("model").value.trim()); renderFavs(); };
+$("model").onchange = $("model").oninput = () => { localStorage.setItem(LS.model+mode, $("model").value.trim()); renderFavs(); saveDraft(); };
 
 /* ---------- mode ---------- */
 function setMode(m) {
@@ -636,6 +672,7 @@ function setMode(m) {
   const favs = load(LS.favs+m, []);
   $("model").value = localStorage.getItem(LS.model+m) || (favs.find(f => f.id)||{}).id || "";
   fillDatalist(); renderFavs();
+  saveDraft(); // remember the mode as part of this project's draft (no-op while restoring)
 }
 document.querySelectorAll('.tabs [role=tab]').forEach(t => t.onclick = () => setMode(t.dataset.mode));
 
@@ -726,6 +763,7 @@ function renderRefPicked() {
     box.appendChild(b);
   });
   updateEstimate();
+  saveDraft();
 }
 // Video models here only take one starting frame. Only send references that
 // actually finished uploading to a hosted URL — never a local data: URL (Atlas
@@ -837,7 +875,9 @@ $("go").onclick = async () => {
   try {
     const imageUrls = refsForRequest();
     const { id } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: imageUrls, params }) });
-    poll(id, { mode, model, prompt, ref:imageUrls, proj:projId, started:Date.now() });
+    const item = { mode, model, prompt, ref:imageUrls, proj:projId, started:Date.now() };
+    addPending(id, item);
+    poll(id, item, true); // true = this is the generation currently on the stage
   } catch (err) { note(friendlyErr(err.message), true); setStage(null); $("go").disabled = false; }
 };
 // Turn a raw upstream error into something that points at the real cause.
@@ -852,25 +892,60 @@ function friendlyErr(msg) {
   return msg;
 }
 // Any setting that changes what a generation actually costs re-triggers the estimate.
-["aspect","resolution","duration","seed","extra"].forEach(id => { $(id).oninput = updateEstimate; });
-$("genAudio").onchange = updateEstimate;
-function poll(id, item) {
-  clearInterval(polling);
-  const every = item.mode==="image" ? 2000 : 5000;
-  const tick = async () => {
-    try {
-      const s = await api(`/api/status?id=${encodeURIComponent(id)}`);
-      if ((s.status==="completed" || s.status==="succeeded") && s.outputs.length) {
-        clearInterval(polling); $("go").disabled = false;
-        const done = { ...item, id, url:s.outputs[0], at:Date.now() };
-        addHistory(done); show(done); note(`Done in ${Math.round((Date.now()-item.started)/1000)}s.`);
-        $("stage").scrollIntoView({ behavior:"smooth", block:"center" }); refreshBalance();
-      } else if (s.status==="failed" || s.status==="canceled") {
-        clearInterval(polling); $("go").disabled = false; setStage(null); note("Failed: " + (s.error || "unknown error"), true);
-      } else { $("readState").textContent = s.status || "rendering"; }
-    } catch (err) { clearInterval(polling); $("go").disabled = false; setStage(null); note(friendlyErr(err.message), true); }
-  };
-  tick(); polling = setInterval(tick, every);
+["aspect","resolution","duration","seed","extra"].forEach(id => { $(id).oninput = () => { updateEstimate(); saveDraft(); }; });
+$("genAudio").onchange = () => { updateEstimate(); saveDraft(); };
+$("prompt").addEventListener("input", saveDraft);
+$("useBrief").addEventListener("change", saveDraft);
+// A started generation is recorded in localStorage so it survives navigation
+// AND a page refresh — a paid job is never orphaned. Each poll owns its own
+// timer (several can run at once) and, crucially, a transient network error
+// NEVER stops it: only a real completed/failed status ends the poll. When it
+// finishes it always lands in the reel, whether or not you're still watching.
+function loadPending() { return load(LS.pending, []); }
+function addPending(id, item) { const p = loadPending().filter(x => x.id !== id); p.push({ id, item }); save(LS.pending, p); }
+function removePending(id) { save(LS.pending, loadPending().filter(x => x.id !== id)); }
+
+function poll(id, item, activeView) {
+  if (activeView) viewingPendingId = id;
+  const every = item.mode === "image" ? 2000 : 5000;
+  let misses = 0;
+  const timer = setInterval(tick, every);
+  async function tick() {
+    let s;
+    try { s = await api(`/api/status?id=${encodeURIComponent(id)}`); misses = 0; }
+    catch (err) {
+      // Network blip, throttle while the tab is backgrounded, etc. Keep waiting —
+      // the generation is running on Atlas regardless. Only give up after ~2 min.
+      if (++misses > 40) { clearInterval(timer); removePending(id); if (viewingPendingId===id){ $("go").disabled=false; setStage(null); viewingPendingId=null; } note("Lost contact while a generation was running — check the reel shortly; it may still finish.", true); }
+      return;
+    }
+    if ((s.status === "completed" || s.status === "succeeded") && s.outputs.length) {
+      clearInterval(timer); removePending(id);
+      const done = { ...item, id, url: s.outputs[0], at: Date.now() };
+      addHistory(done); // always lands in the reel, even if you've navigated away
+      refreshBalance();
+      if (viewingPendingId === id) {
+        $("go").disabled = false; show(done); note(`Done in ${Math.round((Date.now() - (item.started||Date.now()))/1000)}s.`);
+        $("stage").scrollIntoView({ behavior: "smooth", block: "center" }); viewingPendingId = null;
+      } else {
+        note("A generation just finished — it's in the reel.");
+      }
+    } else if (s.status === "failed" || s.status === "canceled") {
+      clearInterval(timer); removePending(id);
+      if (viewingPendingId === id) { $("go").disabled = false; setStage(null); viewingPendingId = null; }
+      note(friendlyErr(s.error || "Generation failed"), true);
+    } else if (viewingPendingId === id) {
+      $("readState").textContent = s.status || "rendering";
+    }
+  }
+  tick();
+}
+// On load, resume any generation that was still running when the page closed/refreshed.
+function resumePending() {
+  const p = loadPending();
+  if (!p.length) return;
+  p.forEach(({ id, item }) => poll(id, item, false));
+  note(p.length === 1 ? "Resuming a generation that was still running…" : `Resuming ${p.length} generations that were still running…`);
 }
 
 /* ---------- stage ---------- */
@@ -913,7 +988,7 @@ $("asRef").onclick = () => { if (current) addRef(current.url, "From reel"); };
 $("animate").onclick = () => { if (!current) return; setMode("video"); setDrop(current.url, "From reel"); $("prompt").value = ""; $("prompt").focus(); };
 
 /* ---------- reel ---------- */
-function addHistory(item) { const h = load(LS.hist, []); h.unshift(item); save(LS.hist, h.slice(0,150)); renderProjects(); }
+function addHistory(item) { const h = load(LS.hist, []); h.unshift(item); save(LS.hist, h.slice(0,150)); renderProjects(); renderHistory(); }
 function renderHistory() {
   const h = load(LS.hist, []).filter(x => x.proj===projId); const box = $("hist"); box.innerHTML = "";
   $("count").textContent = h.length ? `${h.length} generation${h.length>1?"s":""}` : "";
@@ -923,7 +998,7 @@ function renderHistory() {
     const inner = item.mode==="video" ? `<video src="${item.url}" muted playsinline preload="metadata" onerror="mediaFallback(this)"></video>`
       : item.mode==="audio" ? `<div class="aud">♪</div>` : `<img src="${item.url}" alt="" onerror="mediaFallback(this)">`;
     b.innerHTML = inner + `<span class="tag">${{image:"Image",video:"Video",audio:"Voice"}[item.mode]}</span>`;
-    b.title = item.prompt; b.onclick = () => show(item); box.appendChild(b);
+    b.title = item.prompt; b.onclick = () => { viewingPendingId = null; show(item); }; box.appendChild(b);
   });
 }
 $("clearHist").onclick = () => { if (confirm("Clear this project's reel on this device?")) { save(LS.hist, load(LS.hist, []).filter(x => x.proj!==projId)); renderHistory(); renderProjects(); } };
@@ -958,8 +1033,8 @@ applyTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light")
 projects = load(LS.projects, []);
 if (!projects.length) projects = [{ id:"p0", name:"Untitled project", brief:"", created:Date.now() }];
 projId = localStorage.getItem(LS.proj); if (!projects.some(p => p.id===projId)) projId = projects[0].id;
-selectProject(projId); renderPresets(); setMode("image");
-if (localStorage.getItem(LS.atlas)) { loadModels(); refreshBalance(); } else showGate();
+renderPresets(); selectProject(projId); // selectProject → restoreDraft sets the mode and restores the working draft
+if (localStorage.getItem(LS.atlas)) { loadModels(); refreshBalance(); resumePending(); } else showGate();
 </script>
 </body>
 </html>
