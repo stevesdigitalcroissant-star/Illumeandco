@@ -2,15 +2,26 @@
 const BASE = "https://api.atlascloud.ai/api/v1";
 const PUBLIC_BASE = "https://api.atlascloud.ai/public/v1"; // billing/account endpoints live here, not /api/v1
 
+const { timingSafeEqual } = require("crypto");
+const same = (a, b) => {
+  const x = Buffer.from(a), y = Buffer.from(b);
+  return x.length === y.length && timingSafeEqual(x, y);
+};
+
 function checkAccess(req, res) {
-  const expected = process.env.STUDIO_PASSWORD;
+  const expected = String(process.env.STUDIO_PASSWORD || "").trim(); // a pasted trailing space/newline in Vercel must not lock everyone out
   if (!expected) return true; // no password configured
-  const given = req.headers["x-studio-key"];
-  if (given !== expected) {
-    res.status(401).json({ error: "Wrong access code." });
-    return false;
-  }
-  return true;
+  const given = String(req.headers["x-studio-key"] || "").trim();
+  if (same(given, expected)) return true;
+  // Diagnostic that never reveals either value: enough to tell "not sent" from
+  // "typed something else" from "Caps Lock / keyboard layout" in the logs.
+  const why = !given ? "no code sent"
+    : given.length !== expected.length ? `length ${given.length} vs ${expected.length}`
+    : given.toLowerCase() === expected.toLowerCase() ? "case-only mismatch (Caps Lock?)"
+    : "same length, different characters";
+  console.log("access code rejected:", why);
+  res.status(401).json({ error: "Wrong access code." });
+  return false;
 }
 
 // The Atlas key can come from the browser (entered in Settings, stored on the user's device)
