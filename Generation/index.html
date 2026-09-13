@@ -169,6 +169,10 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .head h1 input{font:inherit;color:inherit;background:transparent;border:0;border-bottom:1px solid transparent;padding:0;width:min(100%,520px)}
 .head h1 input:hover,.head h1 input:focus{border-bottom-color:var(--line);outline:0}
 .head .count{color:var(--faint);font-size:13px}
+.activity{display:inline-flex;align-items:center;gap:7px;background:var(--amber-soft);border:1px solid var(--amber);color:var(--amber);
+  border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.activity::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.2s ease-in-out infinite}
+.activity:hover{filter:brightness(1.05)}
 
 .stage{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#141826;display:flex;align-items:center;justify-content:center;
   box-shadow:0 0 0 1px var(--line),0 30px 60px -30px rgba(31,36,48,.35)}
@@ -360,6 +364,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
     <div class="head">
       <h1><input id="projName" value="Untitled project" aria-label="Project name"></h1>
       <div style="display:flex;align-items:center;gap:12px">
+        <button class="activity hidden" id="activity" type="button" title="Generations in progress — click to view"></button>
         <span class="count" id="count"></span>
         <button class="btn iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark mode" title="Switch to dark mode">☾</button>
         <button class="btn" id="briefBtn">Brief</button>
@@ -534,13 +539,13 @@ function restoreDraft() {
   renderFavs(); // refresh the model label, cost estimate and pills for the restored values
 }
 function selectProject(id) {
-  if (projId && projId !== id) saveDraft(); // keep the draft of the project we're leaving
+  if (projId && projId !== id) { saveDraft(); viewingPendingId = null; } // leaving: keep this project's draft; a finishing job no longer hijacks the stage
   projId = id; const p = proj(); saveProjects();
   $("projName").value = p.name; $("brief").value = p.brief || "";
   current = null; setStage(null); $("metaText").textContent = "";
   ["dl","animate","asRef","reuse"].forEach(i => $(i).classList.add("hidden"));
   restoreDraft();
-  renderProjects(); renderHistory(); renderRefGrid();
+  renderProjects(); renderHistory(); renderRefGrid(); renderActivity();
 }
 $("newProj").onclick = () => {
   const name = prompt("Project name (client or job):"); if (!name) return;
@@ -952,8 +957,26 @@ $("useBrief").addEventListener("change", saveDraft);
 // NEVER stops it: only a real completed/failed status ends the poll. When it
 // finishes it always lands in the reel, whether or not you're still watching.
 function loadPending() { return load(LS.pending, []); }
-function addPending(id, item) { const p = loadPending().filter(x => x.id !== id); p.push({ id, item }); save(LS.pending, p); }
-function removePending(id) { save(LS.pending, loadPending().filter(x => x.id !== id)); }
+function addPending(id, item) { const p = loadPending().filter(x => x.id !== id); p.push({ id, item }); save(LS.pending, p); renderActivity(); }
+function removePending(id) { save(LS.pending, loadPending().filter(x => x.id !== id)); renderActivity(); }
+// Always-visible "N generating…" pill, across every project. Clicking it jumps
+// to a running generation so you can never lose track of in-flight work.
+function projName(pid) { const p = projects.find(x => x.id === pid); return p ? p.name : "a project"; }
+function renderActivity() {
+  const el = $("activity"); if (!el) return;
+  const p = loadPending();
+  el.classList.toggle("hidden", !p.length);
+  if (p.length) el.textContent = p.length === 1 ? "1 generating…" : `${p.length} generating…`;
+}
+$("activity").onclick = () => {
+  const p = loadPending(); if (!p.length) return;
+  // jump to the oldest running generation and show its progress
+  const target = p[0];
+  if (target.item.proj && target.item.proj !== projId) selectProject(target.item.proj);
+  viewingPendingId = target.id;
+  setStage(null, "queued");
+  $("stage").scrollIntoView({ behavior: "smooth", block: "center" });
+};
 
 function poll(id, item, activeView) {
   if (activeView) viewingPendingId = id;
@@ -978,7 +1001,7 @@ function poll(id, item, activeView) {
         $("go").disabled = false; show(done); note(`Done in ${Math.round((Date.now() - (item.started||Date.now()))/1000)}s.`);
         $("stage").scrollIntoView({ behavior: "smooth", block: "center" }); viewingPendingId = null;
       } else {
-        note("A generation just finished — it's in the reel.");
+        note(item.proj === projId ? "A generation just finished — it's in the reel." : `A generation finished in “${projName(item.proj)}”.`);
       }
     } else if (s.status === "failed" || s.status === "canceled") {
       clearInterval(timer); removePending(id);
@@ -1085,6 +1108,7 @@ if (!projects.length) projects = [{ id:"p0", name:"Untitled project", brief:"", 
 projId = localStorage.getItem(LS.proj); if (!projects.some(p => p.id===projId)) projId = projects[0].id;
 renderPresets(); selectProject(projId); // selectProject → restoreDraft sets the mode and restores the working draft
 if (localStorage.getItem(LS.atlas)) { loadModels(); refreshBalance(); resumePending(); } else showGate();
+renderActivity();
 </script>
 </body>
 </html>
