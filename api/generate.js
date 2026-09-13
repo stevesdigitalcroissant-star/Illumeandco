@@ -12,8 +12,10 @@ module.exports = async (req, res) => {
   const PATHS = { image: "/model/generateImage", video: "/model/generateVideo", audio: "/model/generateAudio" };
   const path = PATHS[mode] || PATHS.image;
   const body = buildBody(mode, model, prompt, image_url, params);
-  if (Array.isArray(image_url) && image_url.length > 1) {
-    console.log("multi-reference generate body:", JSON.stringify(body).slice(0, 500));
+  const refCount = Array.isArray(image_url) ? image_url.length : (image_url ? 1 : 0);
+  if (refCount) {
+    // Confirm the edit-endpoint routing + field mapping on every reference run.
+    console.log(`generate with ${refCount} ref(s): model ${model} -> ${body.model}, fields=${Object.keys(body).join(",")}`);
   }
   try {
     const out = await atlas(path, key, {

@@ -60,26 +60,64 @@ async function atlas(path, key, init = {}, base = BASE) {
 
 // Shared by generate.js and estimate.js, so a real generation and its cost
 // estimate are always built from an identical request body.
-// Voice models (ElevenLabs) take `text`; song models (Suno) take `prompt`,
-// same as image/video. Sending `text` to a song model is silently ignored.
-// image_url may be a single URL string (the proven path — unchanged) or an
-// array of several. Different model families use different field names for
-// multiple references, and none of that is confirmed against a real Atlas
-// Cloud response yet — generate.js/estimate.js log the outgoing body whenever
-// there's more than one, so a wrong guess here is a log line, not a re-guess.
+//
+// The important, hard-won rule: a text-to-image / text-to-video model IGNORES
+// any reference images you send it. To actually USE references you must call
+// the model's EDIT (image) or IMAGE-TO-VIDEO variant, and pass the images
+// under the field that variant expects. Confirmed against Atlas Cloud's docs:
+//   google/nano-banana-pro/text-to-image  →  .../edit,  field: images[] (1-10)
+//   openai/gpt-image-2/text-to-image       →  .../edit,  field: images[] (1-10)
+// So when references are attached we rewrite the model id to its edit variant
+// and send `images`. buildBody returns the model it actually used, so the
+// caller can log/record it.
+// GPT Image models speak `size` (pixel dimensions) + `quality`, NOT the
+// aspect_ratio/resolution (1k/2k/4k) every other image model here uses.
+// Sending the wrong ones risks a hard 400, so translate for gpt-image only.
+const GPT_SIZE = {
+  square:    { "1k":"1024x1024", "2k":"2048x2048", "4k":"2048x2048" },
+  landscape: { "1k":"1536x1024", "2k":"2048x1152", "4k":"3840x2160" },
+  portrait:  { "1k":"1024x1536", "2k":"1152x2048", "4k":"2160x3840" },
+};
+function gptTranslate(params) {
+  const p = { ...(params || {}) };
+  const ar = p.aspect_ratio || p.ratio; const res = p.resolution || "2k";
+  delete p.aspect_ratio; delete p.ratio; delete p.resolution;
+  if (ar && !p.size) {
+    const orient = ar === "1:1" ? "square"
+      : /^(9:16|2:3|3:4|4:5)$/.test(ar) ? "portrait" : "landscape";
+    p.size = (GPT_SIZE[orient] || GPT_SIZE.square)[res] || "2048x2048";
+  }
+  if (!p.quality) p.quality = "high";
+  return p;
+}
+
 function buildBody(mode, model, prompt, image_url, params) {
   const isSongModel = /suno|chirp|music|udio/i.test(model || "");
-  const body = mode === "audio" && !isSongModel
-    ? { model, text: prompt || "", ...(params || {}) }
-    : { model, prompt: prompt || "", ...(params || {}) };
-
+  const isGptImage = /gpt-image/i.test(model || "");
   const urls = Array.isArray(image_url) ? image_url.filter(Boolean) : (image_url ? [image_url] : []);
-  if (urls.length === 1) {
-    body.image_url = urls[0];
-  } else if (urls.length > 1) {
-    if (/gpt-image|openai/i.test(model || "")) body.image = urls; // OpenAI's real Images API field
-    else body.image_urls = urls; // best-guess convention for Seedream, Nano Banana, everything else
+  if (mode === "image" && isGptImage) params = gptTranslate(params);
+
+  let m = model || "";
+  const body = {};
+
+  if (mode === "image" && urls.length) {
+    m = m.replace(/\/(text-to-image|t2i)$/i, "/edit"); // route to the edit endpoint
+    body.model = m; body.prompt = prompt || "";
+    Object.assign(body, params || {});
+    body.images = urls.slice(0, 10); // confirmed field + cap
+    return body;
   }
+  if (mode === "video" && urls.length) {
+    m = m.replace(/\/(text-to-video|t2v)$/i, "/image-to-video"); // route to i2v
+    body.model = m; body.prompt = prompt || "";
+    Object.assign(body, params || {});
+    body.image = urls[0]; // video takes a single start frame
+    return body;
+  }
+
+  body.model = m;
+  if (mode === "audio" && !isSongModel) body.text = prompt || ""; else body.prompt = prompt || "";
+  Object.assign(body, params || {});
   return body;
 }
 
