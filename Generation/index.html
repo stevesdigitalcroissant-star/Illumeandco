@@ -148,7 +148,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
   box-shadow:0 0 0 1px var(--line),0 30px 60px -30px rgba(31,36,48,.35)}
 /* Idle or generating: a compact strip, not a full 16:9 void with nothing in it. */
 .stage:not(.live){aspect-ratio:21/9;max-height:220px;
-  background:linear-gradient(180deg,rgba(10,12,20,.55),rgba(10,12,20,.78)),url(images/brand-texture-2.webp) center 65%/cover}
+  background:linear-gradient(180deg,rgba(10,12,20,.55),rgba(10,12,20,.78)),url(/Generation/images/brand-texture-2.webp) center 65%/cover}
 /* A finished result: size to the media itself (a vertical video stays vertical,
    it doesn't sit in a wide letterboxed box) rather than forcing 16:9 on everything. */
 .stage.live{aspect-ratio:auto}
@@ -222,7 +222,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
   <!-- projects -->
   <aside class="rail">
     <div class="wordmark"><i></i>Illume Studio</div>
-    <div class="railart" style="background-image:url(images/brand-texture-1.webp)"></div>
+    <div class="railart" style="background-image:url(/Generation/images/brand-texture-1.webp)"></div>
     <h2>Projects</h2>
     <div class="railrow">
       <div class="projects" id="projects"></div>
@@ -704,7 +704,7 @@ function addHistory(item) { const h = load(LS.hist, []); h.unshift(item); save(L
 function renderHistory() {
   const h = load(LS.hist, []).filter(x => x.proj===projId); const box = $("hist"); box.innerHTML = "";
   $("count").textContent = h.length ? `${h.length} generation${h.length>1?"s":""}` : "";
-  if (!h.length) { box.innerHTML = '<div class="none"><img src="images/brand-texture-3.webp" alt="" class="noneArt">This project\'s generations will collect here, on this device.</div>'; return; }
+  if (!h.length) { box.innerHTML = '<div class="none"><img src="/Generation/images/brand-texture-3.webp" alt="" class="noneArt">This project\'s generations will collect here, on this device.</div>'; return; }
   h.forEach(item => {
     const b = document.createElement("button"); b.className = current && current.id===item.id ? "on" : "";
     const inner = item.mode==="video" ? `<video src="${item.url}" muted playsinline preload="metadata"></video>`
