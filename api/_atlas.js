@@ -1,5 +1,6 @@
 // Shared helpers for the Atlas Cloud proxy functions.
 const BASE = "https://api.atlascloud.ai/api/v1";
+const PUBLIC_BASE = "https://api.atlascloud.ai/public/v1"; // billing/account endpoints live here, not /api/v1
 
 function checkAccess(req, res) {
   const expected = process.env.STUDIO_PASSWORD;
@@ -23,8 +24,8 @@ function apiKey(res, req) {
   return key;
 }
 
-async function atlas(path, key, init = {}) {
-  const r = await fetch(BASE + path, {
+async function atlas(path, key, init = {}, base = BASE) {
+  const r = await fetch(base + path, {
     ...init,
     headers: { Authorization: `Bearer ${key}`, ...(init.headers || {}) },
   });
@@ -38,4 +39,4 @@ async function atlas(path, key, init = {}) {
   return json;
 }
 
-module.exports = { checkAccess, apiKey, atlas };
+module.exports = { checkAccess, apiKey, atlas, PUBLIC_BASE };

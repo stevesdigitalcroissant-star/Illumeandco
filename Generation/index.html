@@ -330,6 +330,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
     <div class="head">
       <h1><input id="projName" value="Untitled project" aria-label="Project name"></h1>
       <div style="display:flex;align-items:center;gap:12px">
+        <span class="count" id="balance"></span>
         <span class="count" id="count"></span>
         <button class="btn" id="briefBtn">Brief</button>
       </div>
@@ -425,7 +426,7 @@ $("gateForm").addEventListener("submit", e => {
   const a = $("atlasKey").value.trim(), k = $("gateInput").value.trim();
   if (a) localStorage.setItem(LS.atlas, a); else localStorage.removeItem(LS.atlas);
   if (k) localStorage.setItem(LS.key, k); else localStorage.removeItem(LS.key);
-  $("gate").classList.add("hidden"); loadModels(true);
+  $("gate").classList.add("hidden"); loadModels(true); refreshBalance();
 });
 $("gateCancel").onclick = () => $("gate").classList.add("hidden");
 $("settings").onclick = () => showGate("", true);
@@ -473,6 +474,13 @@ function fillDatalist() {
   const list = modelsFor(mode).length ? modelsFor(mode) : catalogue;
   list.forEach(x => { const o = document.createElement("option"); o.value = x.id; o.label = shortName(x.name, kindOf(x)); dl.appendChild(o); });
   $("modelHint").textContent = catalogue.length ? `${modelsFor(mode).length} in catalogue` : "Catalogue not loaded — paste an ID from atlascloud.ai/models";
+}
+async function refreshBalance() {
+  try {
+    const { value, currency } = await api("/api/balance");
+    $("balance").textContent = Number.isFinite(value) ? value.toLocaleString(undefined, { style:"currency", currency: currency||"usd" }) : "";
+    $("balance").title = "Atlas Cloud balance";
+  } catch { $("balance").textContent = ""; } // stay quiet — this is a nice-to-have, not worth an error message
 }
 async function loadModels(force=false) {
   catalogue = load(LS.models, []);
@@ -656,7 +664,7 @@ function poll(id, item) {
         clearInterval(polling); $("go").disabled = false;
         const done = { ...item, id, url:s.outputs[0], at:Date.now() };
         addHistory(done); show(done); note(`Done in ${Math.round((Date.now()-item.started)/1000)}s.`);
-        $("stage").scrollIntoView({ behavior:"smooth", block:"center" });
+        $("stage").scrollIntoView({ behavior:"smooth", block:"center" }); refreshBalance();
       } else if (s.status==="failed" || s.status==="canceled") {
         clearInterval(polling); $("go").disabled = false; setStage(null); note("Failed: " + (s.error || "unknown error"), true);
       } else { $("readState").textContent = s.status || "rendering"; }
@@ -728,7 +736,7 @@ projects = load(LS.projects, []);
 if (!projects.length) projects = [{ id:"p0", name:"Untitled project", brief:"", created:Date.now() }];
 projId = localStorage.getItem(LS.proj); if (!projects.some(p => p.id===projId)) projId = projects[0].id;
 selectProject(projId); renderPresets(); setMode("image");
-if (localStorage.getItem(LS.atlas)) loadModels(); else showGate();
+if (localStorage.getItem(LS.atlas)) { loadModels(); refreshBalance(); } else showGate();
 </script>
 </body>
 </html>
