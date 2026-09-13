@@ -16,10 +16,14 @@
   --danger:#C8322B; --ok:#1F8A5A;
   --r:10px; --r-lg:14px;
   --ui:"DM Sans",system-ui,sans-serif; --display:"Fraunces",Georgia,serif;
+  --sh-sm:0 1px 2px rgba(31,36,48,.05), 0 1px 1px rgba(31,36,48,.04);
+  --sh-md:0 10px 24px -10px rgba(31,36,48,.16), 0 2px 6px -2px rgba(31,36,48,.08);
+  --sh-lg:0 30px 60px -20px rgba(31,36,48,.22);
+  --ease:180ms cubic-bezier(.2,.8,.2,1);
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:var(--bg)}
-body{background:var(--bg);color:var(--text);font:15px/1.45 var(--ui);-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(120% 100% at 0% 0%,#F4F6FC,var(--bg) 55%);color:var(--text);font:15px/1.45 var(--ui);-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--amber)}
 ::selection{background:var(--amber);color:#fff}
@@ -30,18 +34,18 @@ a{color:var(--amber)}
 @media (max-width:1120px){.app{grid-template-columns:1fr}}
 
 /* ---------- projects rail ---------- */
-.rail{background:var(--panel);border-right:1px solid var(--line);padding:22px 16px;display:flex;flex-direction:column;gap:14px}
+.rail{background:var(--panel);border-right:1px solid var(--line);padding:22px 16px;display:flex;flex-direction:column;gap:14px;box-shadow:2px 0 12px -8px rgba(31,36,48,.08)}
 .wordmark{font-family:var(--display);font-size:22px;font-weight:400;letter-spacing:-.01em;padding:0 6px;display:flex;align-items:baseline;gap:8px}
 .wordmark i{font-style:normal;display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber)}
 .rail h2{font-size:12px;font-weight:500;color:var(--muted);margin:10px 6px 0;letter-spacing:.02em}
 .projects{display:flex;flex-direction:column;gap:2px}
-.projects button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:9px 10px;color:var(--muted);cursor:pointer}
+.projects button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:9px 10px;color:var(--muted);cursor:pointer;transition:background var(--ease),box-shadow var(--ease),color var(--ease)}
 .projects button:hover{background:var(--raised);color:var(--text)}
-.projects button.on{background:var(--amber-soft);color:var(--text);font-weight:500}
+.projects button.on{background:var(--amber-soft);color:var(--text);font-weight:500;box-shadow:var(--sh-sm)}
 .projects button.on::before{content:"";width:3px;height:16px;border-radius:2px;background:var(--amber);margin-right:2px}
 .projects button span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .projects button small{color:var(--faint);font-size:12px}
-.newproj{background:transparent;border:1px dashed var(--line);border-radius:8px;padding:9px;color:var(--muted);cursor:pointer;text-align:left}
+.newproj{background:transparent;border:1px dashed var(--line);border-radius:8px;padding:9px;color:var(--muted);cursor:pointer;text-align:left;transition:border-color var(--ease),color var(--ease)}
 .newproj:hover{border-color:var(--muted);color:var(--text)}
 @media (max-width:1120px){
   .rail{border-right:0;border-bottom:1px solid var(--line);padding:16px}
@@ -54,12 +58,13 @@ a{color:var(--amber)}
 }
 
 /* ---------- controls ---------- */
-.controls{background:var(--panel);border-right:1px solid var(--line);padding:22px 22px 36px;display:flex;flex-direction:column;gap:16px}
+.controls{background:var(--panel);border-right:1px solid var(--line);padding:22px 22px 36px;display:flex;flex-direction:column;gap:16px;box-shadow:2px 0 12px -8px rgba(31,36,48,.08)}
 @media (max-width:1120px){.controls{border-right:0;border-bottom:1px solid var(--line)} .main{padding:18px 16px 32px} .head h1{font-size:26px}}
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line)}
-.tabs button{background:transparent;border:0;padding:8px 12px 10px;color:var(--muted);cursor:pointer;font-weight:500;position:relative}
+.tabs button{background:transparent;border:0;padding:8px 12px 10px;color:var(--muted);cursor:pointer;font-weight:500;position:relative;transition:color var(--ease)}
+.tabs button:hover{color:var(--text)}
 .tabs button[aria-selected="true"]{color:var(--text)}
-.tabs button[aria-selected="true"]::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:var(--amber)}
+.tabs button[aria-selected="true"]::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;border-radius:2px;background:var(--amber)}
 
 .f{display:flex;flex-direction:column;gap:6px}
 .f > label{font-size:13px;font-weight:500;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
@@ -74,23 +79,25 @@ textarea{min-height:124px;resize:vertical;line-height:1.5}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{background:transparent;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px;color:var(--text);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chip:hover{border-color:var(--amber);}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px;color:var(--text);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:border-color var(--ease),background var(--ease),box-shadow var(--ease),transform var(--ease)}
+.chip:hover{border-color:var(--amber);box-shadow:var(--sh-sm)}
 .chip.on{background:var(--amber);border-color:var(--amber);color:var(--amber-ink);font-weight:600}
 .chip.on::before{content:"✓ ";}
-.chip.dim{border-style:dashed;color:var(--muted)}
+.chip.dim{border-style:dashed;color:var(--muted);background:transparent}
 .chip.on,.chip.on.dim{background:var(--amber);border-style:solid;border-color:var(--amber);color:var(--amber-ink);font-weight:600}
 
-.chip.fav{border-radius:10px;padding:9px 12px;white-space:normal;text-align:left;display:flex;flex-direction:column;gap:2px;line-height:1.3}
+.chip.fav{border-radius:12px;padding:11px 14px;white-space:normal;text-align:left;display:flex;flex-direction:column;gap:3px;line-height:1.3;box-shadow:var(--sh-sm)}
+.chip.fav:hover{transform:translateY(-1px);box-shadow:var(--sh-md)}
 .chip.fav span{font-weight:600;font-size:13.5px}
 .chip.fav small{font-weight:400;font-size:11.5px;color:var(--muted)}
+.chip.fav.on{box-shadow:0 10px 22px -10px rgba(47,59,255,.45)}
 .chip.fav.on span,.chip.fav.on small{color:var(--amber-ink)}
 .chip.fav.on::before{content:none}
 .chip.fav.on span::before{content:"✓ ";}
 
-.drop{border:1px dashed var(--line);border-radius:var(--r);padding:12px;color:var(--muted);cursor:pointer;position:relative;min-height:72px;display:flex;align-items:center;gap:12px}
+.drop{border:1px dashed var(--line);border-radius:var(--r);padding:12px;color:var(--muted);cursor:pointer;position:relative;min-height:72px;display:flex;align-items:center;gap:12px;transition:border-color var(--ease),box-shadow var(--ease)}
 .drop:hover{border-color:var(--muted)}
-.drop.has{border-style:solid;border-color:var(--line);background:#fff;color:var(--text)}
+.drop.has{border-style:solid;border-color:var(--line);background:#fff;color:var(--text);box-shadow:var(--sh-sm)}
 .drop img{width:48px;height:48px;object-fit:cover;border-radius:6px}
 .drop input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:1}
 .drop .x{margin-left:auto;background:transparent;border:0;color:var(--muted);cursor:pointer;padding:6px;z-index:2;position:relative}
@@ -98,23 +105,26 @@ textarea{min-height:124px;resize:vertical;line-height:1.5}
 
 .refgrid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .refgrid:empty{margin-top:0}
-.refthumb{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--line);cursor:pointer;background:var(--raised)}
+.refthumb{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--line);cursor:pointer;background:var(--raised);box-shadow:var(--sh-sm);transition:transform var(--ease),box-shadow var(--ease)}
+.refthumb:hover{transform:translateY(-1px);box-shadow:var(--sh-md)}
 .refthumb img{width:100%;height:100%;object-fit:cover;display:block}
 .refthumb.on{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-soft)}
 .refthumb .rm{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:18px;padding:0;cursor:pointer}
 .refthumb .rm:hover{background:rgba(0,0,0,.8)}
 
-.btn{background:transparent;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;text-decoration:none;display:inline-block}
-.btn:hover{border-color:var(--muted);color:var(--text)}
-.sel{display:flex;align-items:center;gap:10px;background:var(--amber-soft);border:1px solid var(--amber);border-radius:var(--r);padding:10px 12px;color:var(--text)}
+.btn{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;text-decoration:none;display:inline-block;transition:border-color var(--ease),color var(--ease),box-shadow var(--ease)}
+.btn:hover{border-color:var(--muted);color:var(--text);box-shadow:var(--sh-sm)}
+.sel{display:flex;align-items:center;gap:10px;background:var(--amber-soft);border:1px solid var(--amber);border-radius:var(--r);padding:10px 12px;color:var(--text);box-shadow:var(--sh-sm)}
 .sel .k{font-size:12px;color:var(--muted);white-space:nowrap}
 .sel .v{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .sel .id{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sel.none{background:transparent;border-color:var(--danger);color:var(--text)}
 .sel.none .v{color:var(--danger)}
-.go{background:var(--amber);color:var(--amber-ink);border:0;border-radius:var(--r);padding:14px;font-weight:600;font-size:16px;cursor:pointer;width:100%;margin-top:4px}
-.go:hover{filter:brightness(1.06)}
-.go:disabled{opacity:.5;cursor:default;filter:none}
+.go{background:var(--amber);color:var(--amber-ink);border:0;border-radius:var(--r);padding:14px;font-weight:600;font-size:16px;cursor:pointer;width:100%;margin-top:4px;
+  box-shadow:0 14px 28px -10px rgba(47,59,255,.45);transition:transform var(--ease),box-shadow var(--ease),filter var(--ease)}
+.go:hover{filter:brightness(1.06);transform:translateY(-1px);box-shadow:0 18px 34px -10px rgba(47,59,255,.55)}
+.go:active{transform:translateY(0);box-shadow:0 8px 18px -8px rgba(47,59,255,.4)}
+.go:disabled{opacity:.5;cursor:default;filter:none;box-shadow:none;transform:none}
 
 details{border-top:1px solid var(--line);padding-top:12px}
 summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;list-style:none;display:flex;justify-content:space-between}
@@ -144,12 +154,6 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .stage.live::before{opacity:0}
 .stage img,.stage video{max-width:100%;max-height:70vh;display:block;position:relative}
 .stage audio{position:relative;width:min(560px,90%)}
-/* The client's name, so a result is never ambiguous about which project it's from. */
-.stageLabel{position:absolute;top:14px;left:16px;z-index:3;pointer-events:none;
-  font-family:var(--display);font-weight:300;font-size:15px;letter-spacing:.01em;color:#fff;
-  background:rgba(10,12,20,.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-  padding:6px 14px;border-radius:999px;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.stageLabel:empty{display:none}
 .empty{position:relative;text-align:center;max-width:40ch;padding:24px;color:#9AA3BE}
 .empty b{display:block;font-family:var(--display);font-weight:300;font-size:26px;color:#fff;margin-bottom:8px}
 .bar{position:absolute;left:0;top:0;height:2px;width:0;background:var(--amber);z-index:2}
@@ -329,7 +333,6 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 
     <div class="stage" id="stage">
       <div class="bar" id="bar"></div>
-      <div class="stageLabel" id="stageLabel"></div>
       <div class="empty" id="stageEmpty"><b>Roll camera.</b>Choose a model, write the shot, and generate. Everything lands here and in this project's reel.</div>
       <div class="readout hidden" id="readout"><span class="dot"></span><span id="readState">rendering</span><span class="tc" id="tc">00:00</span></div>
     </div>
@@ -437,21 +440,19 @@ function renderProjects() {
     box.appendChild(b);
   });
 }
-function renderStageLabel() { const p = proj(); $("stageLabel").textContent = p ? p.name : ""; }
 function selectProject(id) {
   projId = id; const p = proj(); saveProjects();
   $("projName").value = p.name; $("brief").value = p.brief || "";
   current = null; setStage(null); $("metaText").textContent = "";
   ["dl","animate","asRef","reuse"].forEach(i => $(i).classList.add("hidden"));
-  renderProjects(); renderHistory(); renderRefGrid(); renderStageLabel();
+  renderProjects(); renderHistory(); renderRefGrid();
 }
 $("newProj").onclick = () => {
   const name = prompt("Project name (client or job):"); if (!name) return;
   const p = { id: "p"+Date.now(), name: name.trim(), brief:"", created: Date.now() };
   projects.unshift(p); selectProject(p.id);
 };
-$("projName").onchange = () => { const p = proj(); p.name = $("projName").value.trim() || "Untitled project"; $("projName").value = p.name; saveProjects(); renderProjects(); renderStageLabel(); };
-$("projName").oninput = () => { $("stageLabel").textContent = $("projName").value.trim() || proj().name; };
+$("projName").onchange = () => { const p = proj(); p.name = $("projName").value.trim() || "Untitled project"; $("projName").value = p.name; saveProjects(); renderProjects(); };
 $("brief").oninput = () => { proj().brief = $("brief").value; saveProjects(); };
 
 /* ---------- models ---------- */
