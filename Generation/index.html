@@ -414,11 +414,12 @@ const DEFAULT_FAVS = {
     { id:"bytedance/seedance-2.0/text-to-video", name:"Seedance 2.0", desc:"The earlier Seedance — a cheaper draft tier before 2.5" },
   ],
   audio: [
-    { match:"elevenlabs", name:"ElevenLabs v3", desc:"Voiceover and narration" },
+    { id:"bytedance/seed-audio-1.0", name:"Seed Audio", desc:"Voiceover / narration — works on your account" },
+    { match:"elevenlabs", name:"ElevenLabs v3", desc:"Best English voice, but must be enabled on your Atlas account first" },
     { match:"suno", name:"Suno", desc:"Full custom songs and jingles, not spoken voice" },
   ],
 };
-const LS = { key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist", model:"il.model.", favs:"il.favs3.", models:"il.models", projects:"il.projects", proj:"il.proj", pending:"il.pending", draft:"il.draft." };
+const LS = { key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist", model:"il.model.", favs:"il.favs4.", models:"il.models", projects:"il.projects", proj:"il.proj", pending:"il.pending", draft:"il.draft." };
 // A real Atlas model id has no spaces (e.g. google/nano-banana-pro/text-to-image).
 // A display name like "seedream 5.0 pro" does — never send one as the model.
 const looksLikeId = v => !!v && !/\s/.test(v);
@@ -938,8 +939,10 @@ $("go").onclick = async () => {
 // Turn a raw upstream error into something that points at the real cause.
 function friendlyErr(msg) {
   msg = String(msg || "");
-  if (/invalid_api_key|apikey credential|returned 401|unauthor/i.test(msg))
+  if (/invalid_api_key|apikey credential/i.test(msg))
     return "Your Atlas Cloud API key on this device is invalid. Open Settings and paste your full key again from atlascloud.ai (copy the whole thing — a truncated paste is the usual cause).";
+  if (/returned 401|unauthor/i.test(msg))
+    return "This model isn't enabled on your Atlas Cloud account — pick another model, or enable this one at atlascloud.ai. (Your other models still work, so your key is fine.)";
   if (/returned 40[23]|insufficient|balance|credit|quota/i.test(msg))
     return "Atlas Cloud says the account is out of credit or over quota — top up at atlascloud.ai, then try again.";
   if (/security policy|blocked|violat/i.test(msg))
