@@ -113,7 +113,7 @@ function videoTranslate(model, params) {
   if (p.duration != null && p.duration !== "") {
     let d = Math.round(Number(p.duration));
     if (!Number.isFinite(d)) delete p.duration;        // garbage in → let the model default
-    else p.duration = Math.max(3, Math.min(12, d));    // Seedance's supported range
+    else p.duration = Math.max(4, Math.min(15, d));    // Seedance schema: integer seconds, 4-15
   } else {
     delete p.duration; // empty = the model's own default ("Auto"), which always works
   }
