@@ -787,6 +787,12 @@ async function shrinkForUpload(file) {
 // case: curl and a clean Chromium loaded a result fine, the user's browser
 // showed a broken image), fall back to the same file via our own domain.
 const mediaSrc = url => "/api/media?url=" + encodeURIComponent(url);
+// Decide how to render a result by what the file ACTUALLY is, not only its label.
+// A mislabeled item (e.g. a "video" entry whose URL is a .png) must never be put
+// in a <video>, or it shows as a black, unplayable box.
+const isImageUrl = url => /\.(png|jpe?g|webp|gif|avif|bmp|svg)(\?|$)/i.test(String(url || ""));
+const isVideoUrl = url => /\.(mp4|webm|mov|m4v|ogv)(\?|$)/i.test(String(url || ""));
+const isVideoItem = item => !!item && !isImageUrl(item.url) && (isVideoUrl(item.url) || item.mode === "video");
 function mediaFallback(el) {
   const u = el && el.getAttribute("src");
   if (!u || el.dataset.fell || !/^https?:/i.test(u) || u.startsWith("/api/media")) return;
@@ -1068,8 +1074,12 @@ function setStage(item, status) {
   }
   if (item) {
     let el;
-    if (item.mode==="video") el = Object.assign(document.createElement("video"), { src:item.url, controls:true, autoplay:true, loop:true, playsInline:true });
-    else if (item.mode==="audio") el = Object.assign(document.createElement("audio"), { src:item.url, controls:true, autoplay:true });
+    // Video always plays through our own domain: iOS needs Range support (our
+    // proxy provides it; the storage host + the user's browser blocking don't
+    // reliably), so proxy up front rather than waiting for an onerror that a
+    // <video> may never fire.
+    if (isVideoItem(item)) el = Object.assign(document.createElement("video"), { src:mediaSrc(item.url), controls:true, autoplay:true, loop:true, playsInline:true, muted:true });
+    else if (item.mode==="audio" && !isImageUrl(item.url)) el = Object.assign(document.createElement("audio"), { src:item.url, controls:true, autoplay:true });
     else el = Object.assign(document.createElement("img"), { src:item.url, alt:item.prompt });
     el.onerror = () => mediaFallback(el);
     st.appendChild(el);
@@ -1100,8 +1110,8 @@ function renderHistory() {
   if (!h.length) { box.innerHTML = '<div class="none"><img src="/Generation/images/brand-texture-3.webp" alt="" class="noneArt">This project\'s generations will collect here, on this device.</div>'; return; }
   h.forEach(item => {
     const b = document.createElement("button"); b.className = current && current.id===item.id ? "on" : "";
-    const inner = item.mode==="video" ? `<video src="${item.url}" muted playsinline preload="metadata" onerror="mediaFallback(this)"></video>`
-      : item.mode==="audio" ? `<div class="aud">♪</div>` : `<img src="${item.url}" alt="" onerror="mediaFallback(this)">`;
+    const inner = isVideoItem(item) ? `<video src="${mediaSrc(item.url)}" muted playsinline preload="metadata"></video>`
+      : (item.mode==="audio" && !isImageUrl(item.url)) ? `<div class="aud">♪</div>` : `<img src="${item.url}" alt="" onerror="mediaFallback(this)">`;
     b.innerHTML = inner + `<span class="tag">${{image:"Image",video:"Video",audio:"Voice"}[item.mode]}</span>`;
     b.title = item.prompt; b.onclick = () => { viewingPendingId = null; show(item); }; box.appendChild(b);
   });

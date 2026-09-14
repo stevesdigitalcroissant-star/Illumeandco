@@ -30,20 +30,34 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: "This media host isn't allowed: " + target.hostname });
   }
 
+  // Forward the browser's Range header. iOS Safari will NOT play a <video>
+  // unless the server answers a range request with 206 + Accept-Ranges — a
+  // plain 200 gives a black, unplayable player. So we pass Range upstream and
+  // relay the 206 (and its Content-Range) straight back.
+  const range = req.headers.range;
   let upstream;
-  try { upstream = await fetch(target.toString(), { method: req.method }); }
+  try {
+    upstream = await fetch(target.toString(), {
+      method: req.method,
+      headers: range ? { Range: range } : {},
+    });
+  }
   catch (e) { return res.status(502).json({ error: "Could not reach storage: " + e.message }); }
-  if (!upstream.ok) return res.status(502).json({ error: `Storage returned ${upstream.status}` });
+  if (!upstream.ok && upstream.status !== 206) return res.status(502).json({ error: `Storage returned ${upstream.status}` });
 
   const type = upstream.headers.get("content-type") || "application/octet-stream";
   res.setHeader("Content-Type", type);
+  res.setHeader("Accept-Ranges", "bytes"); // tell the player range is supported (essential for iOS video)
   const len = upstream.headers.get("content-length"); if (len) res.setHeader("Content-Length", len);
+  const cr = upstream.headers.get("content-range"); if (cr) res.setHeader("Content-Range", cr);
   res.setHeader("Cache-Control", "public, max-age=31536000, immutable"); // the URL is content-addressed; safe to cache hard
   if (req.query.download) {
     const name = String(req.query.name || target.pathname.split("/").pop() || "illume").replace(/[^\w.\- ]+/g, "_");
     res.setHeader("Content-Disposition", `attachment; filename="${name}"`);
   }
-  if (req.method === "HEAD" || !upstream.body) return res.status(200).end();
-  res.status(200);
+  // Relay the upstream status: 206 for a partial (range) response, else 200.
+  const status = upstream.status === 206 ? 206 : 200;
+  if (req.method === "HEAD" || !upstream.body) return res.status(status).end();
+  res.status(status);
   Readable.fromWeb(upstream.body).on("error", () => res.end()).pipe(res);
 };
