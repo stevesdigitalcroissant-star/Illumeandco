@@ -526,31 +526,69 @@ function renderProjects() {
 // re-type anything for the project you're on. It's scoped to the project, so a
 // different or brand-new project shows its own draft (or empty), never bleeds.
 let draftTimer = null, restoringDraft = false;
+// The per-mode fields. CRITICAL: Image, Video and Voice each keep their OWN
+// prompt, model, references and settings — a video prompt must never appear on
+// the image tab, or vice versa. The draft is { mode, useBrief, count, modes:{
+// image:{...}, video:{...}, audio:{...} } }, one slot per mode.
 const DRAFT_FIELDS = ["prompt","aspect","resolution","duration","seed","extra"];
+const CLEAR_IF_ABSENT = { prompt:1, seed:1, extra:1, duration:1 }; // a fresh mode starts these empty; aspect/resolution keep the mode default
+function captureModeState() {
+  const s = { model: $("model").value.trim(), genAudio: $("genAudio").checked,
+    refs: refUrls.filter(r => r.status === "ok").map(r => ({ url:r.url, name:r.name })) };
+  DRAFT_FIELDS.forEach(f => { if ($(f)) s[f] = $(f).value; });
+  return s;
+}
+function applyModeState(s) {
+  s = s || {};
+  DRAFT_FIELDS.forEach(f => {
+    if (!$(f)) return;
+    if (f in s && s[f] != null) $(f).value = s[f];
+    else if (CLEAR_IF_ABSENT[f]) $(f).value = ""; // don't inherit the last mode's prompt/seed/etc
+  });
+  if (looksLikeId(s.model)) $("model").value = s.model; // else keep setMode's per-mode default
+  $("genAudio").checked = s.genAudio !== false;
+  refUrls = Array.isArray(s.refs) ? s.refs.map(r => ({ preview:r.url, url:r.url, name:r.name, status:"ok" })) : [];
+}
+function loadModeState(m) {
+  const d = load(LS.draft + projId, null); if (!d) return null;
+  if (d.modes && d.modes[m]) return d.modes[m];
+  // Migrate a legacy flat draft (single shared prompt) into its own mode's slot,
+  // so nobody loses work-in-progress the first time they load the new version.
+  if (!d.modes && (d.mode || "image") === m) {
+    const s = { model:d.model, genAudio:d.genAudio, refs:d.refs };
+    DRAFT_FIELDS.forEach(f => s[f] = d[f]);
+    return s;
+  }
+  return null;
+}
+function flushModeState(m) {
+  if (!projId) return;
+  const d = load(LS.draft + projId, null) || {};
+  d.modes = d.modes || {};
+  d.modes[m] = captureModeState(); // reads the inputs as they are for the mode being left
+  save(LS.draft + projId, d);
+}
 function saveDraft() {
   if (restoringDraft || !projId) return;
   clearTimeout(draftTimer);
   draftTimer = setTimeout(() => {
-    const d = { mode, model: $("model").value.trim(), useBrief: $("useBrief").checked, genAudio: $("genAudio").checked, count: genCount,
-      refs: refUrls.filter(r => r.status === "ok").map(r => ({ url:r.url, name:r.name })) };
-    DRAFT_FIELDS.forEach(f => d[f] = $(f).value);
+    const d = load(LS.draft + projId, null) || {};
+    d.mode = mode; d.useBrief = $("useBrief").checked; d.count = genCount;
+    d.modes = d.modes || {};
+    d.modes[mode] = captureModeState();
+    // Drop any legacy top-level fields so they can never bleed across modes again.
+    ["prompt","model","aspect","resolution","duration","seed","extra","refs","genAudio"].forEach(k => delete d[k]);
     save(LS.draft + projId, d);
   }, 300);
 }
 function restoreDraft() {
   restoringDraft = true;
   const d = load(LS.draft + projId, null);
-  setMode((d && d.mode) || "image"); // establishes the mode, option list and default model first…
-  if (d) {                            // …then the saved draft overrides those
-    DRAFT_FIELDS.forEach(f => { if ($(f) && (f in d)) $(f).value = d[f]; });
-    if (looksLikeId(d.model)) $("model").value = d.model;
-    $("useBrief").checked = !!d.useBrief;
-    $("genAudio").checked = d.genAudio !== false;
-    genCount = Math.max(1, Math.min(MAX_COUNT, d.count || 1));
-    refUrls = Array.isArray(d.refs) ? d.refs.map(r => ({ preview:r.url, url:r.url, name:r.name, status:"ok" })) : [];
-  } else {                            // a project with no draft: empty working boxes, mode defaults intact
-    $("prompt").value = ""; refUrls = []; genCount = 1;
-  }
+  const m = (d && d.mode) || "image";
+  setMode(m); // sets up the mode's UI + per-mode default model (apply is skipped while restoring)
+  $("useBrief").checked = !!(d && d.useBrief);
+  genCount = Math.max(1, Math.min(MAX_COUNT, (d && d.count) || 1));
+  applyModeState(loadModeState(m)); // load THIS mode's own prompt/refs/settings (or clear for a fresh mode)
   renderCountChips();
   renderRefPicked();
   restoringDraft = false;
@@ -715,6 +753,9 @@ $("model").onchange = $("model").oninput = () => { localStorage.setItem(LS.model
 
 /* ---------- mode ---------- */
 function setMode(m) {
+  // Leaving a tab: stash that mode's prompt/refs/settings in its own slot before
+  // we switch, so the mode we enter loads ITS prompt, not the one we're leaving.
+  if (!restoringDraft && projId && mode && mode !== m) flushModeState(mode);
   mode = m;
   document.querySelectorAll('.tabs [role=tab]').forEach(t => t.setAttribute("aria-selected", t.dataset.mode===m));
   $("goLabel").textContent = { image:"Generate image", video:"Generate video", audio:"Generate voice" }[m];
@@ -731,6 +772,10 @@ function setMode(m) {
   const favs = load(LS.favs+m, []);
   const stored = localStorage.getItem(LS.model+m);
   $("model").value = (looksLikeId(stored) ? stored : "") || (favs.find(f => f.id)||{}).id || "";
+  // Entering a tab (a real switch, not the restore path): load THIS mode's own
+  // saved prompt/refs/settings over the defaults just set. restoreDraft does its
+  // own applyModeState, so skip here while restoring to avoid doing it twice.
+  if (!restoringDraft) { applyModeState(loadModeState(m)); renderRefPicked(); }
   fillDatalist(); renderFavs();
   saveDraft(); // remember the mode as part of this project's draft (no-op while restoring)
 }
