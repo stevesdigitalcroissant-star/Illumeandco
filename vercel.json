@@ -3,5 +3,20 @@
   "rewrites": [
     { "source": "/generation", "destination": "/Generation/index.html" },
     { "source": "/Generation", "destination": "/Generation/index.html" }
+  ],
+  "headers": [
+    {
+      "comment": "Never let the browser run a stale copy of the tool after a deploy — always revalidate the HTML. (Images/assets under /Generation/images keep their own default caching.)",
+      "source": "/generation",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+    },
+    {
+      "source": "/Generation",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+    },
+    {
+      "source": "/Generation/index.html",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+    }
   ]
 }
