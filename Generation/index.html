@@ -985,7 +985,7 @@ function poll(id, item, activeView) {
   const timer = setInterval(tick, every);
   async function tick() {
     let s;
-    try { s = await api(`/api/status?id=${encodeURIComponent(id)}`); misses = 0; }
+    try { s = await api(`/api/status?id=${encodeURIComponent(id)}`, { cache: "no-store" }); misses = 0; }
     catch (err) {
       // Network blip, throttle while the tab is backgrounded, etc. Keep waiting —
       // the generation is running on Atlas regardless. Only give up after ~2 min.

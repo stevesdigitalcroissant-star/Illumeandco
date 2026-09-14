@@ -6,6 +6,10 @@ module.exports = async (req, res) => {
   if (!key) return;
   const id = req.query.id;
   if (!id) return res.status(400).json({ error: "Missing id." });
+  // NEVER cache a status check. Without this the browser/CDN returns 304 and the
+  // poll keeps reading a stale "processing" forever — the generation finishes on
+  // Atlas but the tool never sees it (looks like it hangs for 10+ minutes).
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
   try {
     const out = await atlas(`/model/prediction/${encodeURIComponent(id)}`, key);
     const d = out?.data || out;
