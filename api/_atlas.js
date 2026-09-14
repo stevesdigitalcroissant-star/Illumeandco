@@ -91,11 +91,41 @@ function gptTranslate(params) {
   return p;
 }
 
+// Video models (Seedance especially) reject the friendly labels the UI uses.
+// Confirmed from Atlas's own 400s: "2k" is NOT a valid resolution — Seedance
+// wants 720p / 1080p / 1440p-sr / 4k, and 2.5 uses the -esr variants for 4k.
+// And a non-integer or out-of-range duration ("3.5") is refused with
+// "requested video duration is not supported". Translate both so a valid
+// request is always sent. Only the resolution vocab is Seedance-specific;
+// forcing an integer, in-range duration is safe for any video model.
+function videoTranslate(model, params) {
+  const p = { ...(params || {}) };
+  const isSeedance = /seedance/i.test(model || "");
+  const is25 = /seedance-2\.5/i.test(model || "");
+  if (isSeedance && p.resolution) {
+    const RMAP = {
+      "1k": "720p", "720p": "720p", "1080p": "1080p",
+      "2k": "1440p-sr", "1440p": "1440p-sr",
+      "4k": is25 ? "4k-esr" : "4k", "480p": "480p",
+    };
+    if (RMAP[p.resolution]) p.resolution = RMAP[p.resolution];
+  }
+  if (p.duration != null && p.duration !== "") {
+    let d = Math.round(Number(p.duration));
+    if (!Number.isFinite(d)) delete p.duration;        // garbage in → let the model default
+    else p.duration = Math.max(3, Math.min(12, d));    // Seedance's supported range
+  } else {
+    delete p.duration; // empty = the model's own default ("Auto"), which always works
+  }
+  return p;
+}
+
 function buildBody(mode, model, prompt, image_url, params) {
   const isSongModel = /suno|chirp|music|udio/i.test(model || "");
   const isGptImage = /gpt-image/i.test(model || "");
   const urls = Array.isArray(image_url) ? image_url.filter(Boolean) : (image_url ? [image_url] : []);
   if (mode === "image" && isGptImage) params = gptTranslate(params);
+  if (mode === "video") params = videoTranslate(model, params);
 
   let m = model || "";
   const body = {};

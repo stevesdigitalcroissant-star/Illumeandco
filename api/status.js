@@ -26,6 +26,15 @@ module.exports = async (req, res) => {
       error: d.error || null,
     });
   } catch (e) {
+    // An Atlas 4xx on a prediction means the JOB ITSELF is bad (e.g. invalid
+    // duration/resolution) — it will never complete, so this is terminal, not a
+    // transient blip. Report it as a real failure so the poll stops immediately,
+    // removes the job from the pending list, and shows the reason — instead of
+    // silently retrying a doomed job for two minutes.
+    const m = String(e.message || "");
+    if (/returned 4\d\d/.test(m)) {
+      return res.status(200).json({ status: "failed", outputs: [], error: m });
+    }
     res.status(502).json({ error: e.message });
   }
 };
