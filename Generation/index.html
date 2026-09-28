@@ -211,6 +211,20 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .hist img,.hist video{width:100%;height:100%;object-fit:cover;display:block}
 .hist .aud{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--amber);font-family:var(--display);font-size:22px}
 .hist .tag{position:absolute;left:6px;top:6px;font-size:11px;background:rgba(255,255,255,.9);color:#1F2430;padding:2px 6px;border-radius:5px}
+/* Every generation has a tile from the moment it's sent: running → result, or a red failed tile with the reason. */
+.hist .run,.hist .fail{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:28px 10px 10px;text-align:center;font-size:12.5px;line-height:1.3}
+.hist .run{color:#C9CEFF;background:linear-gradient(135deg,#1B2140,#141826)}
+.hist .run .spin{width:22px;height:22px;border-radius:50%;border:2px solid rgba(201,206,255,.25);border-top-color:#8C95FF;animation:spin .9s linear infinite}
+.hist .fail{color:#FFD9D6;background:linear-gradient(135deg,#4A1512,#2A0E0C)}
+.hist .fail b{font-size:13px;color:#fff}
+.hist .fail small{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;opacity:.85}
+.hist button.failed{border-color:var(--danger)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.hist .run .spin{animation:none}}
+.stageFail{position:relative;z-index:2;max-width:46ch;padding:28px 24px;text-align:center;color:#FFD9D6}
+.stageFail b{display:block;font-family:var(--display);font-weight:300;font-size:26px;color:#fff;margin-bottom:10px}
+.stageFail p{margin:0 0 16px;line-height:1.5}
+.stageFail .btn{background:#fff;color:#1F2430;border-color:#fff}
 .hist .none{grid-column:1/-1;color:var(--faint);font-size:14px;display:flex;align-items:center;gap:12px}
 .hist .none .noneArt{width:44px!important;height:44px!important;border-radius:8px;object-fit:cover;box-shadow:var(--sh-sm);flex-shrink:0}
 
@@ -379,6 +393,7 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
     <div class="stage" id="stage">
       <div class="bar" id="bar"></div>
       <div class="empty" id="stageEmpty"><b>Roll camera.</b>Choose a model, write the shot, and generate. Everything lands here and in this project's reel.</div>
+      <div class="stageFail hidden" id="stageFail"><b>Atlas couldn't make this one</b><p id="stageFailMsg"></p><button class="btn" id="retry" type="button">Try again</button></div>
       <div class="readout hidden" id="readout"><span class="dot"></span><span id="readState">rendering</span><span class="tc" id="tc">00:00</span></div>
     </div>
 
@@ -431,7 +446,6 @@ const looksLikeId = v => !!v && !/\s/.test(v);
 
 /* ---------- state ---------- */
 let mode = "image", refUrls = [], current = null, tcTimer = null;
-let viewingPendingId = null; // the in-flight generation currently shown on the stage (null once the user navigates away)
 let genCount = 1;            // how many variations to fire off per Generate click
 const MAX_COUNT = 6;
 const MAX_REFS = 10; // Seedream 5.0 Pro's real, confirmed limit — the most restrictive of the pinned image models
@@ -665,7 +679,7 @@ function restoreDraft() {
   renderFavs(); // refresh the model label, cost estimate and pills for the restored values
 }
 function selectProject(id) {
-  if (projId && projId !== id) { saveDraft(); viewingPendingId = null; } // leaving: keep this project's draft; a finishing job no longer hijacks the stage
+  if (projId && projId !== id) { saveDraft(); viewing = null; } // leaving: keep this project's draft; a finishing job no longer hijacks the stage
   projId = id; const p = proj(); saveProjects();
   $("projName").value = p.name; $("brief").value = p.brief || "";
   current = null; setStage(null); $("metaText").textContent = "";
@@ -1052,29 +1066,35 @@ $("go").onclick = async () => {
   const failed = refUrls.some(r => r.status === "failed");
   if (failed) return note("A reference image failed to upload — remove it or tap it to retry before generating.", true);
 
-  const count = Math.max(1, Math.min(MAX_COUNT, genCount));
+  startGeneration({ mode, model, prompt, ref: refsForRequest(), params, count: Math.max(1, Math.min(MAX_COUNT, genCount)) });
+};
+// Sends one or more variations. EVERY variation gets a tile in the reel the
+// moment it's sent — "Generating…" → the result, or a red "Failed" tile with
+// Atlas's reason — so nothing can ever vanish without a trace. The newest
+// result always opens on the stage.
+async function startGeneration({ mode, model, prompt, ref, params, count = 1 }) {
   $("go").disabled = true; note(count > 1 ? `Sending ${count} to Atlas Cloud…` : "Sent to Atlas Cloud.");
-  setStage(null, "queued"); $("stage").scrollIntoView({ behavior:"smooth", block:"center" });
-  const imageUrls = refsForRequest();
-  // Fire each variation as its own generation. They poll independently (the
-  // durable poller handles many at once) and each lands in the reel as it
-  // finishes; the first is the one shown on the stage. A seed, if set, is
-  // nudged per variation so they don't all come back identical.
-  let submitted = 0, firstErr = null;
+  $("stage").scrollIntoView({ behavior:"smooth", block:"center" });
+  let firstShown = false;
   await Promise.all(Array.from({ length: count }, async (_, i) => {
     const p = { ...params };
     if (p.seed != null) p.seed = Number(p.seed) + i;
+    const item = { mode, model, prompt, ref, params: p, proj: projId, started: Date.now() };
     try {
-      const { id } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: imageUrls, params: p }) });
-      const item = { mode, model, prompt, ref:imageUrls, proj:projId, started:Date.now() };
-      addPending(id, item);
-      poll(id, item, i === 0); // the first variation is the one on the stage
-      submitted++;
-    } catch (err) { firstErr = firstErr || err; reportClient("generate", err, { mode, model, count }); }
+      const { id } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: ref, params: p }) });
+      const job = { ...item, id, status: "running" };
+      upsertHistory(job); addPending(id, item);
+      if (!firstShown) { firstShown = true; view(job); }
+      poll(id, item);
+    } catch (err) {
+      reportClient("generate", err, { mode, model, count });
+      const bad = { ...item, id: "x" + Date.now() + "_" + i, status: "failed", error: friendlyErr(errText(err) || "Generation failed"), at: Date.now() };
+      upsertHistory(bad);
+      if (!firstShown) { firstShown = true; view(bad); }
+    }
   }));
-  if (!submitted) { note(friendlyErr(errText(firstErr) || "Generation failed"), true); setStage(null); $("go").disabled = false; }
-  else { $("go").disabled = false; if (firstErr) note(`${submitted} of ${count} started — ${friendlyErr(errText(firstErr))}`, true); }
-};
+  $("go").disabled = false;
+}
 // A bare JS error (e.g. a TypeError from a fetch that never reached the server)
 // often has a message that means nothing to a user ("Load failed", "Type error").
 // Keep the error's type on it so a network/JS fault reads differently from an
@@ -1095,6 +1115,12 @@ function friendlyErr(msg) {
     return "This model isn't enabled on your Atlas Cloud account — pick another model, or enable this one at atlascloud.ai. (Your other models still work, so your key is fine.)";
   if (/returned 40[23]|insufficient|balance|credit|quota/i.test(msg))
     return "Atlas Cloud says the account is out of credit or over quota — top up at atlascloud.ai, then try again.";
+  if (/copyright/i.test(msg))
+    return "Blocked for possible copyright: the prompt or a reference image looks like a brand, logo, character or someone else's photo. Remove it, or try a different reference, then try again.";
+  if (/failed to generate expected content|adjust your prompt/i.test(msg))
+    return "The model couldn't produce a result for this prompt. Try rewording it, using fewer reference images, or another model.";
+  if (/nsfw|sensitive|inappropriate/i.test(msg))
+    return "Atlas's safety filter blocked this result. Adjust the wording or the reference image and try again.";
   if (/security policy|blocked|violat/i.test(msg))
     return "Atlas Cloud blocked this prompt or reference under its content policy — adjust the wording or image and retry.";
   return msg;
@@ -1126,67 +1152,67 @@ $("activity").onclick = () => {
   // jump to the oldest running generation and show its progress
   const target = p[0];
   if (target.item.proj && target.item.proj !== projId) selectProject(target.item.proj);
-  viewingPendingId = target.id;
-  setStage(null, "queued");
+  const job = load(LS.hist, []).find(h => h.id === target.id) || { ...target.item, id: target.id, status: "running" };
+  view(job);
   $("stage").scrollIntoView({ behavior: "smooth", block: "center" });
 };
 
-function poll(id, item, activeView) {
-  if (activeView) viewingPendingId = id;
-  const every = item.mode === "image" ? 2000 : 5000;
+function poll(id, item) {
   let misses = 0;
-  const timer = setInterval(tick, every);
+  const base = item.mode === "image" ? 2000 : 5000;
+  const next = () => setTimeout(tick, misses > 40 ? 15000 : base); // offline for a while → keep checking, just slower
   async function tick() {
     let s;
     try { s = await api(`/api/status?id=${encodeURIComponent(id)}`, { cache: "no-store" }); misses = 0; }
     catch (err) {
-      // Network blip, throttle while the tab is backgrounded, etc. Keep waiting —
-      // the generation is running on Atlas regardless. Only give up after ~2 min.
-      if (++misses > 40) { clearInterval(timer); removePending(id); if (viewingPendingId===id){ $("go").disabled=false; setStage(null); viewingPendingId=null; } note("Lost contact while a generation was running — check the reel shortly; it may still finish.", true); }
-      return;
+      // Network blip, laptop asleep, tab in the background… The job keeps running
+      // on Atlas, so NEVER give up on it: keep checking until it finishes.
+      misses++; if (misses === 41) note("Having trouble reaching the server — still checking on your generation.", true);
+      return next();
     }
+    const ended = ["completed","succeeded","failed","canceled"].includes(s.status);
+    if (!ended) { if (viewing === id) $("readState").textContent = s.status || "rendering"; return next(); }
+    removePending(id);
     if ((s.status === "completed" || s.status === "succeeded") && s.outputs.length) {
-      clearInterval(timer); removePending(id);
-      const done = { ...item, id, url: s.outputs[0], at: Date.now() };
-      addHistory(done); // always lands in the reel, even if you've navigated away
+      const done = { ...item, id, url: s.outputs[0], status: "done", at: Date.now() };
+      upsertHistory(done);
       if (me && me.role === "owner") refreshBalance();
-      if (viewingPendingId === id) {
-        $("go").disabled = false; show(done); note(`Done in ${Math.round((Date.now() - (item.started||Date.now()))/1000)}s.`);
-        $("stage").scrollIntoView({ behavior: "smooth", block: "center" }); viewingPendingId = null;
-      } else {
-        note(item.proj === projId ? "A generation just finished — it's in the reel." : `A generation finished in “${projName(item.proj)}”.`);
-      }
-    } else if (s.status === "failed" || s.status === "canceled" || s.status === "completed" || s.status === "succeeded") {
-      // A "completed" with no output URL used to fall through here and poll
-      // forever — "1 generating…" that never lands. End it and say so.
-      clearInterval(timer); removePending(id);
-      if (viewingPendingId === id) { $("go").disabled = false; setStage(null); viewingPendingId = null; }
-      if (s.status === "failed" || s.status === "canceled") note(friendlyErr(s.error || "Generation failed"), true);
-      else { note("Atlas Cloud finished this generation but sent back no file — check it in your Atlas Cloud dashboard.", true); reportClient("empty-output", { message: "completed without outputs" }, { id, model: item.model }); }
-    } else if (viewingPendingId === id) {
-      $("readState").textContent = s.status || "rendering";
+      note(`Done in ${Math.round((Date.now() - (item.started||Date.now()))/1000)}s.`);
+      if (item.proj === projId) { view(done); $("stage").scrollIntoView({ behavior: "smooth", block: "center" }); } // the newest result always takes the stage
+      else note(`A generation finished in “${projName(item.proj)}” — it's in that project's reel.`);
+    } else {
+      const msg = s.status === "canceled" ? "This generation was cancelled."
+        : s.status === "failed" ? friendlyErr(s.error || "Generation failed")
+        : "Atlas Cloud finished but sent back no file. Check it in your Atlas Cloud dashboard.";
+      if (s.status !== "failed" && s.status !== "canceled") reportClient("empty-output", { message: "completed without outputs" }, { id, model: item.model });
+      const bad = { ...item, id, status: "failed", error: msg, at: Date.now() };
+      upsertHistory(bad);
+      note(msg, true);
+      if (item.proj === projId && (viewing === id || !current)) view(bad);
     }
   }
   tick();
 }
-// On load, resume any generation that was still running when the page closed/refreshed.
+// On load, pick up every generation still running: anything in the pending list
+// and any reel tile still marked "Generating…".
 function resumePending() {
-  const p = loadPending();
-  if (!p.length) return;
-  p.forEach(({ id, item }) => poll(id, item, false));
-  note(p.length === 1 ? "Resuming a generation that was still running…" : `Resuming ${p.length} generations that were still running…`);
+  const ids = new Set();
+  loadPending().forEach(({ id, item }) => { ids.add(id); if (!load(LS.hist, []).some(h => h.id === id)) upsertHistory({ ...item, id, status: "running" }); poll(id, item); });
+  load(LS.hist, []).filter(h => h.status === "running" && !ids.has(h.id)).forEach(h => { ids.add(h.id); addPending(h.id, h); poll(h.id, h); });
+  if (ids.size) note(ids.size === 1 ? "Checking on a generation that was still running…" : `Checking on ${ids.size} generations that were still running…`);
 }
 
 /* ---------- stage ---------- */
-function setStage(item, status) {
+function setStage(item, status, since) {
   const st = $("stage"); st.querySelectorAll("img,video,audio").forEach(n => n.remove());
+  $("stageFail").classList.add("hidden");
   st.classList.toggle("live", !!item);
   $("stageEmpty").classList.toggle("hidden", !!(item || status));
   $("bar").classList.toggle("run", !!status && !item);
   $("readout").classList.toggle("hidden", !status || !!item);
   clearInterval(tcTimer);
   if (status && !item) {
-    $("readState").textContent = status; const t0 = Date.now();
+    $("readState").textContent = status; const t0 = since || Date.now();
     const tc = () => { const s = Math.floor((Date.now()-t0)/1000); $("tc").textContent = String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); };
     tc(); tcTimer = setInterval(tc, 1000);
   }
@@ -1203,8 +1229,33 @@ function setStage(item, status) {
     st.appendChild(el);
   }
 }
+// Put any reel entry on the stage: a result, a running job, or a failure.
+let viewing = null; // id of the job currently on the stage
+const modelLabel = (id, m) => { const hit = catalogue.find(x => x.id === id); return hit ? shortName(hit.name, m) : id; };
+function view(item) {
+  viewing = item.id;
+  if (item.status === "running") {
+    current = null; setStage(null, "rendering", item.started);
+    $("metaText").innerHTML = `<b>Generating · ${esc(modelLabel(item.model, item.mode))}</b> — ${esc(item.prompt)}`;
+    ["dl","animate","asRef"].forEach(i => $(i).classList.add("hidden")); $("reuse").classList.remove("hidden");
+    failedView = null; renderHistory(); return;
+  }
+  if (item.status === "failed") {
+    current = null; setStage(null); $("stageEmpty").classList.add("hidden");
+    $("stageFailMsg").textContent = item.error || "Generation failed."; $("stageFail").classList.remove("hidden");
+    $("metaText").innerHTML = `<b>Failed · ${esc(modelLabel(item.model, item.mode))}</b> — ${esc(item.prompt)}`;
+    ["dl","animate","asRef"].forEach(i => $(i).classList.add("hidden")); $("reuse").classList.remove("hidden");
+    failedView = item; renderHistory(); return;
+  }
+  failedView = null; show(item);
+}
+let failedView = null;
+$("retry").onclick = () => {
+  const f = failedView; if (!f) return;
+  startGeneration({ mode: f.mode, model: f.model, prompt: f.prompt, ref: f.ref, params: f.params || {}, count: 1 });
+};
 function show(item) {
-  current = item; setStage(item);
+  current = item; viewing = item.id; setStage(item);
   $("metaText").innerHTML = `<b>${{image:"Image",video:"Video",audio:"Voice"}[item.mode]} · ${esc(item.model)}</b> — ${esc(item.prompt)}`;
   // Download goes through our own domain: the download attribute only works
   // same-origin (a direct storage link just opens the file), and it gets a real filename.
@@ -1216,24 +1267,39 @@ function show(item) {
   $("asRef").classList.toggle("hidden", item.mode!=="image");
   renderHistory();
 }
-$("reuse").onclick = () => { if (current) $("prompt").value = current.prompt; };
+$("reuse").onclick = () => { const it = current || failedView || load(LS.hist, []).find(h => h.id === viewing); if (it) $("prompt").value = it.prompt; };
 $("asRef").onclick = () => { if (current) addRef(current.url, "From reel"); };
 $("animate").onclick = () => { if (!current) return; setMode("video"); setDrop(current.url, "From reel"); $("prompt").value = ""; $("prompt").focus(); };
 
 /* ---------- reel ---------- */
-function addHistory(item) { const h = load(LS.hist, []); h.unshift(item); save(LS.hist, h.slice(0,150)); renderProjects(); renderHistory(); }
+// Add a reel entry, or update the one with the same id (running → done/failed).
+function upsertHistory(item) {
+  const h = load(LS.hist, []); const i = h.findIndex(x => x.id === item.id);
+  if (i >= 0) h[i] = item; else h.unshift(item);
+  save(LS.hist, h.slice(0,150)); renderProjects(); renderHistory(); renderActivity();
+}
+const addHistory = upsertHistory;
+const clock = t => { const s = Math.max(0, Math.floor((Date.now() - t) / 1000)); return Math.floor(s/60) + ":" + String(s%60).padStart(2, "0"); };
 function renderHistory() {
   const h = load(LS.hist, []).filter(x => x.proj===projId); const box = $("hist"); box.innerHTML = "";
-  $("count").textContent = h.length ? `${h.length} generation${h.length>1?"s":""}` : "";
-  if (!h.length) { box.innerHTML = '<div class="none"><img src="/Generation/images/brand-texture-3.webp" alt="" class="noneArt">This project\'s generations will collect here, on this device.</div>'; return; }
+  const n = h.filter(x => x.status !== "failed").length;
+  $("count").textContent = n ? `${n} generation${n>1?"s":""}` : "";
+  if (!h.length) { box.innerHTML = '<div class="none"><img src="/Generation/images/brand-texture-3.webp" alt="" class="noneArt">This project\'s generations will collect here — every one, the moment you press Generate.</div>'; return; }
   h.forEach(item => {
-    const b = document.createElement("button"); b.className = current && current.id===item.id ? "on" : "";
-    const inner = isVideoItem(item) ? `<video src="${mediaSrc(item.url)}" muted playsinline preload="metadata"></video>`
+    const b = document.createElement("button");
+    b.className = (viewing===item.id ? "on" : "") + (item.status==="failed" ? " failed" : "");
+    const kind = {image:"Image",video:"Video",audio:"Voice"}[item.mode];
+    let inner;
+    if (item.status === "running") inner = `<div class="run"><span class="spin"></span><span>Generating… <span class="tick" data-t="${item.started||Date.now()}">${clock(item.started||Date.now())}</span></span></div>`;
+    else if (item.status === "failed") inner = `<div class="fail"><b>✕ Failed</b><small>${esc(item.error || "")}</small></div>`;
+    else inner = isVideoItem(item) ? `<video src="${mediaSrc(item.url)}" muted playsinline preload="metadata"></video>`
       : (item.mode==="audio" && !isImageUrl(item.url)) ? `<div class="aud">♪</div>` : `<img src="${item.url}" alt="" onerror="mediaFallback(this)">`;
-    b.innerHTML = inner + `<span class="tag">${{image:"Image",video:"Video",audio:"Voice"}[item.mode]}</span>`;
-    b.title = item.prompt; b.onclick = () => { viewingPendingId = null; show(item); }; box.appendChild(b);
+    b.innerHTML = inner + `<span class="tag">${kind}</span>`;
+    b.title = item.status === "failed" ? `Failed: ${item.error || ""}\n\n${item.prompt}` : item.prompt;
+    b.onclick = () => view(item); box.appendChild(b);
   });
 }
+setInterval(() => document.querySelectorAll("#hist .tick").forEach(el => { el.textContent = clock(Number(el.dataset.t)); }), 1000);
 $("clearHist").onclick = () => { if (confirm("Clear this project's reel on this device?")) { save(LS.hist, load(LS.hist, []).filter(x => x.proj!==projId)); renderHistory(); renderProjects(); } };
 
 /* ---------- brief modal ---------- */

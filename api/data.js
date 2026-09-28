@@ -26,19 +26,17 @@ module.exports = async (req, res) => {
     const set = Object.entries((body && body.set) || {}).filter(([k]) => ALLOWED.test(k));
     if (!set.length) return res.status(200).json({ ok: true });
 
-    // Merge into the saved file. ifMatch makes two tabs saving at once retry
-    // instead of one silently wiping the other's change.
-    for (let attempt = 0; attempt < 4; attempt++) {
-      const r = await db.readJson(file);
-      const data = (r && r.value) || {};
-      for (const [k, v] of set) { if (v === null) delete data[k]; else data[k] = v; }
-      if (JSON.stringify(data).length > MAX_FILE) return res.status(413).json({ error: "Your saved work is too large — clear an old reel." });
-      try {
-        await db.writeJson(file, data, r && r.etag ? { ifMatch: r.etag } : { overwrite: !!r });
-        return res.status(200).json({ ok: true });
-      } catch (e) { if (!db.alreadyExists(e)) throw e; } // someone saved in between — re-read and merge again
-    }
-    res.status(409).json({ error: "Couldn't save — too many changes at once. Retrying." });
+    // Merge the changed keys into the saved file and write it back.
+    // (No ETag check: the ETag a read returns isn't the form a conditional
+    // write accepts, so every save after the first was refused as a conflict.
+    // Only the keys this save changed are replaced, so two tabs still don't
+    // wipe each other's other work.)
+    const r = await db.readJson(file);
+    const data = (r && r.value) || {};
+    for (const [k, v] of set) { if (v === null) delete data[k]; else data[k] = v; }
+    if (JSON.stringify(data).length > MAX_FILE) return res.status(413).json({ error: "Your saved work is too large — clear an old reel." });
+    await db.writeJson(file, data);
+    res.status(200).json({ ok: true });
   } catch (e) {
     console.log("data failed:", e.message);
     res.status(503).json({ error: e.message });
