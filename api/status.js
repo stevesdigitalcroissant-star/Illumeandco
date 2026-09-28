@@ -19,7 +19,14 @@ module.exports = async (req, res) => {
     // Atlas Cloud's own docs say outputs is a plain array of URL strings, but
     // given tonight's track record with this API, don't trust that blind —
     // each entry might come back as an object instead. Unwrap either shape.
-    const outputs = (d.outputs || []).map(o => (typeof o === "string" ? o : (o?.url || o?.download_url || o?.output_url || o)));
+    // Some models put the result under a different key (output / urls / images /
+    // videos / audio_url…) — accept any of them, so a finished job never reads
+    // as "no output" and sits in the pending list forever.
+    const raw = [d.outputs, d.output, d.urls, d.images, d.videos, d.audios, d.result, d.url, d.image_url, d.video_url, d.audio_url]
+      .find(v => v && (!Array.isArray(v) || v.length));
+    const outputs = [].concat(raw || [])
+      .map(o => (typeof o === "string" ? o : (o?.url || o?.download_url || o?.output_url || o?.uri || null)))
+      .filter(u => typeof u === "string" && /^https?:\/\//i.test(u));
     res.status(200).json({
       status: d.status,
       outputs,

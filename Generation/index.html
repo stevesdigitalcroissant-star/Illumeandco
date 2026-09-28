@@ -447,8 +447,37 @@ let catalogue = [];
 let projects = [], projId = null;
 
 const $ = id => document.getElementById(id);
-const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
-const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+// Values that couldn't be written (storage full) are kept here for the session,
+// and reads check here first — so the page keeps working either way.
+const memStore = {};
+const load = (k, d) => { if (k in memStore) return memStore[k]; try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+// localStorage holds ~5MB per site. When it fills, setItem THROWS — and a throw
+// inside the poll's "finished" handler meant a paid generation vanished: it was
+// already removed from the pending list, but never reached the stage or reel.
+// So saving never throws: on a full store it frees what can be rebuilt (the
+// model catalogue cache, local data: previews, the oldest reel entries) and
+// retries; if it still won't fit it warns and carries on.
+function freeStorage() {
+  try { localStorage.removeItem(LS.models); } catch {}           // re-fetched from Atlas on demand
+  try { const p = load(LS.projects, []); p.forEach(x => { if (x.refs) x.refs = x.refs.filter(r => !/^data:/i.test(r.url)); }); localStorage.setItem(LS.projects, JSON.stringify(p)); } catch {}
+  try { const h = load(LS.hist, []); if (h.length > 40) localStorage.setItem(LS.hist, JSON.stringify(h.slice(0, Math.floor(h.length / 2)))); } catch {}
+}
+let storageWarned = false;
+// Plain-string settings (API key, chosen model): same no-throw rule.
+const rawMem = {};
+const setRaw = (k, v) => { try { localStorage.setItem(k, v); delete rawMem[k]; } catch { freeStorage(); try { localStorage.setItem(k, v); delete rawMem[k]; } catch { rawMem[k] = v; } } };
+const getRaw = k => (k in rawMem ? rawMem[k] : localStorage.getItem(k));
+const save = (k, v) => {
+  const s = JSON.stringify(v);
+  try { localStorage.setItem(k, s); delete memStore[k]; return true; } catch {}
+  freeStorage();
+  try { localStorage.setItem(k, s); delete memStore[k]; return true; } catch (err) {
+    memStore[k] = JSON.parse(s);
+    reportClient("storage", err, { key: k, size: s.length });
+    if (!storageWarned) { storageWarned = true; note("This browser's storage for the studio is full — new results still show, but may not be kept after a refresh. Clear old reels to make room.", true); }
+    return false;
+  }
+};
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 // Drop the "Text-to-Image"/"Text-to-Video"/"Text-to-Speech" suffix a model's
 // display name carries when it's the same thing the current tab already says.
@@ -464,8 +493,8 @@ const note = (t, err=false) => { $("msg").textContent = t; $("msg").classList.to
 /* ---------- access ---------- */
 function headers() {
   const h = { "Content-Type":"application/json" };
-  const k = localStorage.getItem(LS.key); if (k) h["x-studio-key"] = k;
-  const a = localStorage.getItem(LS.atlas); if (a) h["x-atlas-key"] = a;
+  const k = getRaw(LS.key); if (k) h["x-studio-key"] = k;
+  const a = getRaw(LS.atlas); if (a) h["x-atlas-key"] = a;
   return h;
 }
 async function api(path, opts={}) {
@@ -494,14 +523,14 @@ window.addEventListener("error", e => reportClient("window.onerror", e.error || 
 window.addEventListener("unhandledrejection", e => reportClient("unhandledrejection", e.reason || { message: String(e.reason) }));
 function showGate(m="", cancellable=false) {
   $("gate").classList.remove("hidden"); $("gateMsg").textContent = m;
-  $("atlasKey").value = localStorage.getItem(LS.atlas) || ""; $("gateInput").value = localStorage.getItem(LS.key) || "";
+  $("atlasKey").value = getRaw(LS.atlas) || ""; $("gateInput").value = getRaw(LS.key) || "";
   $("gateCancel").classList.toggle("hidden", !cancellable); $("atlasKey").focus();
 }
 $("gateForm").addEventListener("submit", e => {
   e.preventDefault();
   const a = $("atlasKey").value.trim(), k = $("gateInput").value.trim();
-  if (a) localStorage.setItem(LS.atlas, a); else localStorage.removeItem(LS.atlas);
-  if (k) localStorage.setItem(LS.key, k); else localStorage.removeItem(LS.key);
+  if (a) setRaw(LS.atlas, a); else { localStorage.removeItem(LS.atlas); delete rawMem[LS.atlas]; }
+  if (k) setRaw(LS.key, k); else { localStorage.removeItem(LS.key); delete rawMem[LS.key]; }
   $("gate").classList.add("hidden"); loadModels(true); refreshBalance();
 });
 $("gateCancel").onclick = () => $("gate").classList.add("hidden");
@@ -509,7 +538,12 @@ $("settings").onclick = () => showGate("", true);
 
 /* ---------- projects ---------- */
 function proj() { return projects.find(p => p.id === projId); }
-function saveProjects() { save(LS.projects, projects); localStorage.setItem(LS.proj, projId); }
+// A brand reference still uploading holds the full photo as a data: URL (often
+// several MB). Never write that to storage — it alone can fill it.
+function saveProjects() {
+  save(LS.projects, projects.map(p => p.refs ? { ...p, refs: p.refs.filter(r => !/^data:/i.test(r.url)) } : p));
+  setRaw(LS.proj, projId);
+}
 function renderProjects() {
   const box = $("projects"); box.innerHTML = "";
   projects.forEach(p => {
@@ -635,8 +669,8 @@ async function refreshBalance() {
 }
 // Keep it current while the tab is open: every minute in the foreground, and the
 // moment you come back to the tab. Completed generations also refresh it (see poll).
-setInterval(() => { if (!document.hidden && localStorage.getItem(LS.atlas)) refreshBalance(); }, 60000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden && localStorage.getItem(LS.atlas)) refreshBalance(); });
+setInterval(() => { if (!document.hidden && getRaw(LS.atlas)) refreshBalance(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && getRaw(LS.atlas)) refreshBalance(); });
 async function loadModels(force=false) {
   catalogue = load(LS.models, []);
   if (!catalogue.length || force) {
@@ -646,8 +680,8 @@ async function loadModels(force=false) {
   }
   seedFavs();
   const cur = $("model").value.trim();
-  if (cur && !catalogue.some(x => x.id===cur)) { const hit = findModel(cur); if (hit) { $("model").value = hit.id; localStorage.setItem(LS.model+mode, hit.id); } }
-  if (!$("model").value.trim()) { const first = load(LS.favs+mode, []).find(f => f.id); if (first) { $("model").value = first.id; localStorage.setItem(LS.model+mode, first.id); } }
+  if (cur && !catalogue.some(x => x.id===cur)) { const hit = findModel(cur); if (hit) { $("model").value = hit.id; setRaw(LS.model+mode, hit.id); } }
+  if (!$("model").value.trim()) { const first = load(LS.favs+mode, []).find(f => f.id); if (first) { $("model").value = first.id; setRaw(LS.model+mode, first.id); } }
   fillDatalist(); renderFavs();
 }
 function findModel(want) {
@@ -738,7 +772,7 @@ function renderFavs() {
     const b = document.createElement("button"); b.className = "chip fav" + (cur===val ? " on" : "") + (f.id ? "" : " dim");
     b.innerHTML = `<span>${esc(shortName(f.name))}</span>` + (f.desc ? `<small>${esc(f.desc)}</small>` : "");
     b.title = f.id || "Will match the catalogue once loaded";
-    b.onclick = () => { $("model").value = val; localStorage.setItem(LS.model+mode, val); renderFavs(); };
+    b.onclick = () => { $("model").value = val; setRaw(LS.model+mode, val); renderFavs(); };
     b.oncontextmenu = e => { e.preventDefault(); favs.splice(i,1); save(LS.favs+mode, favs); renderFavs(); };
     box.appendChild(b);
   });
@@ -749,7 +783,7 @@ $("favAdd").onclick = () => {
   const hit = catalogue.find(x => x.id===id); favs.push({ id, name: hit ? hit.name : id }); save(LS.favs+mode, favs); renderFavs();
 };
 $("modelsRefresh").onclick = () => { for (const m of Object.keys(DEFAULT_FAVS)) localStorage.removeItem(LS.favs+m); loadModels(true); };
-$("model").onchange = $("model").oninput = () => { localStorage.setItem(LS.model+mode, $("model").value.trim()); renderFavs(); saveDraft(); };
+$("model").onchange = $("model").oninput = () => { setRaw(LS.model+mode, $("model").value.trim()); renderFavs(); saveDraft(); };
 
 /* ---------- mode ---------- */
 function setMode(m) {
@@ -770,7 +804,7 @@ function setMode(m) {
   updateResolutionOptions();
   $("soundWrap").classList.toggle("hidden", m!=="video");
   const favs = load(LS.favs+m, []);
-  const stored = localStorage.getItem(LS.model+m);
+  const stored = getRaw(LS.model+m);
   $("model").value = (looksLikeId(stored) ? stored : "") || (favs.find(f => f.id)||{}).id || "";
   // Entering a tab (a real switch, not the restore path): load THIS mode's own
   // saved prompt/refs/settings over the defaults just set. restoreDraft does its
@@ -1086,10 +1120,13 @@ function poll(id, item, activeView) {
       } else {
         note(item.proj === projId ? "A generation just finished — it's in the reel." : `A generation finished in “${projName(item.proj)}”.`);
       }
-    } else if (s.status === "failed" || s.status === "canceled") {
+    } else if (s.status === "failed" || s.status === "canceled" || s.status === "completed" || s.status === "succeeded") {
+      // A "completed" with no output URL used to fall through here and poll
+      // forever — "1 generating…" that never lands. End it and say so.
       clearInterval(timer); removePending(id);
       if (viewingPendingId === id) { $("go").disabled = false; setStage(null); viewingPendingId = null; }
-      note(friendlyErr(s.error || "Generation failed"), true);
+      if (s.status === "failed" || s.status === "canceled") note(friendlyErr(s.error || "Generation failed"), true);
+      else { note("Atlas Cloud finished this generation but sent back no file — check it in your Atlas Cloud dashboard.", true); reportClient("empty-output", { message: "completed without outputs" }, { id, model: item.model }); }
     } else if (viewingPendingId === id) {
       $("readState").textContent = s.status || "rendering";
     }
@@ -1192,9 +1229,9 @@ applyTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light")
 /* ---------- init ---------- */
 projects = load(LS.projects, []);
 if (!projects.length) projects = [{ id:"p0", name:"Untitled project", brief:"", created:Date.now() }];
-projId = localStorage.getItem(LS.proj); if (!projects.some(p => p.id===projId)) projId = projects[0].id;
+projId = getRaw(LS.proj); if (!projects.some(p => p.id===projId)) projId = projects[0].id;
 renderPresets(); selectProject(projId); // selectProject → restoreDraft sets the mode and restores the working draft
-if (localStorage.getItem(LS.atlas)) { loadModels(); refreshBalance(); resumePending(); } else showGate();
+if (getRaw(LS.atlas)) { loadModels(); refreshBalance(); resumePending(); } else showGate();
 renderActivity();
 </script>
 </body>
