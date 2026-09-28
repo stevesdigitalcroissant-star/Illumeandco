@@ -462,7 +462,7 @@ const isAccountKey = k => /^il\.(projects|proj|hist|presets|pending|imported|fav
 const account = {};           // this person's data, as loaded from the server
 let unsynced = {}, syncTimer = null, syncWarned = false;
 const clone = v => (v == null ? v : JSON.parse(JSON.stringify(v)));
-function queueSync(k, v) { unsynced[k] = v; clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 700); }
+function queueSync(k, v) { unsynced[k] = v; clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 4000); } // batched: each save is a metered Blob write
 async function syncNow() {
   const batch = unsynced; if (!Object.keys(batch).length) return;
   unsynced = {};
