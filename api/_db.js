@@ -5,7 +5,8 @@
 // is reachable without that token.
 //
 // Files in the store:
-//   users/<name>.json → { hash, salt, created, role }   (role "owner" = first account)
+//   users/<name>.json  (name as fileKey(): @ → ~40, + → ~2b)
+//   → { hash, salt, created, role }   (role "owner" = first account)
 //   owner.json        → { name }  written once, by the first sign-up
 //   data/<name>.json  → { key: value, … } that person's studio work
 //
@@ -57,10 +58,14 @@ async function passwordMatches(password, user) {
 
 // Usernames are case-insensitive: "Ann" and "ann" are the same account.
 const cleanName = n => String(n || "").trim().toLowerCase();
-const validName = n => /^[a-z0-9._-]{3,32}$/.test(n);
+// An email address works as a username (steve@example.com), so @ and + are allowed.
+const validName = n => /^[a-z0-9._@+-]{3,64}$/.test(n) && !n.includes("..");
+// Blob file name for a username: @ and + spelled out (~40, ~2b) so paths stay plain.
+// "~" itself can't appear in a username, so two names can never share a file.
+const fileKey = name => name.replace(/[^a-z0-9._-]/g, c => "~" + c.charCodeAt(0).toString(16).padStart(2, "0"));
 
 async function getUser(name) {
-  const r = await readJson(`users/${name}.json`);
+  const r = await readJson(`users/${fileKey(name)}.json`);
   return r && r.value && r.value.hash ? { name, ...r.value } : null;
 }
 
@@ -95,7 +100,7 @@ function sessionCookie(req) {
 // The signed-in person, or null.
 function currentUser(req) {
   if (!ready()) return null;
-  const m = sessionCookie(req).match(/^([a-z0-9._-]{3,32})\.(owner|member)\.(\d{10,})\.([a-f0-9]{64})$/);
+  const m = sessionCookie(req).match(/^([a-z0-9._@+-]{3,64})\.(owner|member)\.(\d{10,})\.([a-f0-9]{64})$/);
   if (!m) return null;
   const [, name, role, expires, sig] = m;
   const good = Buffer.from(sign(`${name}.${role}.${expires}`), "hex"), given = Buffer.from(sig, "hex");
@@ -113,6 +118,6 @@ async function requireUser(req, res) {
 }
 
 module.exports = {
-  ready, dbReady, readJson, writeJson, alreadyExists, hashPassword, passwordMatches, cleanName, validName,
+  ready, dbReady, readJson, writeJson, alreadyExists, hashPassword, passwordMatches, cleanName, validName, fileKey,
   getUser, underLimit, clearLimit, startSession, endSession, currentUser, requireUser,
 };

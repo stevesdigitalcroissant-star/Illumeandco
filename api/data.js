@@ -14,7 +14,7 @@ module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   const user = await db.requireUser(req, res);
   if (!user) return;
-  const file = `data/${user.name}.json`;
+  const file = `data/${db.fileKey(user.name)}.json`;
   try {
     if (req.method === "GET") {
       const r = await db.readJson(file);

@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
   try {
     if (action === "signup") {
       if (signupCode && String(code || "").trim() !== signupCode) return res.status(403).json({ error: "That sign-up code isn't right." });
-      if (!db.validName(name)) return res.status(400).json({ error: "Username: 3–32 characters — letters, numbers, dot, dash or underscore." });
+      if (!db.validName(name)) return res.status(400).json({ error: "Use your email, or a username of 3–64 letters, numbers, dots, dashes or underscores (no spaces)." });
       if (pw.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters." });
       if (!db.underLimit("signup:" + clientIp(req), 5, 3600)) return res.status(429).json({ error: "Too many new accounts from here — try again in an hour." });
       const salt = randomBytes(16).toString("hex");
@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
         catch (e) { if (!db.alreadyExists(e)) throw e; }
       }
       // Creating the user file without overwrite claims the name atomically.
-      try { await db.writeJson(`users/${name}.json`, { hash, salt, created: Date.now(), role }, { overwrite: false }); }
+      try { await db.writeJson(`users/${db.fileKey(name)}.json`, { hash, salt, created: Date.now(), role }, { overwrite: false }); }
       catch (e) { if (db.alreadyExists(e)) return res.status(409).json({ error: "That username is taken." }); throw e; }
       db.startSession(res, { name, role });
       return res.status(200).json({ user: { name, role }, created: true });
