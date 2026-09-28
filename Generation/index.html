@@ -219,6 +219,8 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .gate form{background:var(--panel);border:1px solid var(--line);padding:28px;border-radius:var(--r-lg);width:min(360px,100%);display:flex;flex-direction:column;gap:12px}
 .gate h1{font-family:var(--display);font-weight:300;font-size:26px;margin:0}
 .gate p{margin:0;color:var(--muted)}
+.gate .gateSwitch{font-size:13px;text-align:center}
+.whoami{font-size:12px;color:var(--faint);padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ---------- brief modal ---------- */
 .modal{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:24px}
@@ -237,13 +239,15 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 <div class="gate hidden" id="gate">
   <form id="gateForm">
     <h1>Illume Studio</h1>
-    <p>Connect your Atlas Cloud account. The key is kept only on this device and sent straight to Atlas through the site.</p>
-    <div class="f"><label>Atlas Cloud API key <span class="hint"><a href="https://www.atlascloud.ai/console/api-keys" target="_blank" rel="noopener">get one</a></span></label>
-      <input type="password" id="atlasKey" placeholder="apikey-…" autocomplete="off"></div>
-    <div class="f" id="codeWrap"><label>Site access code <span class="hint">only if one was set on Vercel</span></label>
-      <input type="password" id="gateInput" placeholder="Optional" autocomplete="current-password"></div>
-    <button class="go" type="submit">Save and enter</button>
-    <button class="btn hidden" type="button" id="gateCancel">Cancel</button>
+    <p id="gateLead">Sign in to your studio. Your projects and reel are saved to your account, on any device.</p>
+    <div class="f"><label for="gateUser">Username</label>
+      <input type="text" id="gateUser" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
+    <div class="f"><label for="gatePass">Password</label>
+      <input type="password" id="gatePass" autocomplete="current-password" required></div>
+    <div class="f hidden" id="codeWrap"><label for="gateCode">Sign-up code</label>
+      <input type="text" id="gateCode" autocomplete="off"></div>
+    <button class="go" type="submit" id="gateGo">Sign in</button>
+    <p class="gateSwitch"><span id="gateSwitchText">New here?</span> <a href="#" id="gateSwitch">Create an account</a></p>
     <div class="msg err" id="gateMsg"></div>
   </form>
 </div>
@@ -252,12 +256,13 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
   <!-- projects -->
   <aside class="rail">
     <div class="wordmark"><i></i>Illume Studio</div>
+    <div class="whoami" id="whoami"></div>
     <div class="railart" style="background-image:url(/Generation/images/brand-texture-1.webp)"></div>
     <h2>Projects</h2>
     <div class="railrow">
       <div class="projects" id="projects"></div>
       <button class="newproj" id="newProj">+ New project</button>
-      <button class="newproj" id="settings">Settings</button>
+      <button class="newproj" id="settings">Sign out</button>
     </div>
   </aside>
 
@@ -447,37 +452,47 @@ let catalogue = [];
 let projects = [], projId = null;
 
 const $ = id => document.getElementById(id);
-// Values that couldn't be written (storage full) are kept here for the session,
-// and reads check here first — so the page keeps working either way.
-const memStore = {};
-const load = (k, d) => { if (k in memStore) return memStore[k]; try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
-// localStorage holds ~5MB per site. When it fills, setItem THROWS — and a throw
-// inside the poll's "finished" handler meant a paid generation vanished: it was
-// already removed from the pending list, but never reached the stage or reel.
-// So saving never throws: on a full store it frees what can be rebuilt (the
-// model catalogue cache, local data: previews, the oldest reel entries) and
-// retries; if it still won't fit it warns and carries on.
-function freeStorage() {
-  try { localStorage.removeItem(LS.models); } catch {}           // re-fetched from Atlas on demand
-  try { const p = load(LS.projects, []); p.forEach(x => { if (x.refs) x.refs = x.refs.filter(r => !/^data:/i.test(r.url)); }); localStorage.setItem(LS.projects, JSON.stringify(p)); } catch {}
-  try { const h = load(LS.hist, []); if (h.length > 40) localStorage.setItem(LS.hist, JSON.stringify(h.slice(0, Math.floor(h.length / 2)))); } catch {}
-}
-let storageWarned = false;
-// Plain-string settings (API key, chosen model): same no-throw rule.
-const rawMem = {};
-const setRaw = (k, v) => { try { localStorage.setItem(k, v); delete rawMem[k]; } catch { freeStorage(); try { localStorage.setItem(k, v); delete rawMem[k]; } catch { rawMem[k] = v; } } };
-const getRaw = k => (k in rawMem ? rawMem[k] : localStorage.getItem(k));
-const save = (k, v) => {
-  const s = JSON.stringify(v);
-  try { localStorage.setItem(k, s); delete memStore[k]; return true; } catch {}
-  freeStorage();
-  try { localStorage.setItem(k, s); delete memStore[k]; return true; } catch (err) {
-    memStore[k] = JSON.parse(s);
-    reportClient("storage", err, { key: k, size: s.length });
-    if (!storageWarned) { storageWarned = true; note("This browser's storage for the studio is full — new results still show, but may not be kept after a refresh. Clear old reels to make room.", true); }
-    return false;
+// Everything that is a person's WORK — projects, reel, drafts, saved prompts,
+// pinned models, running generations — belongs to their account: it's loaded
+// from /api/data after sign-in and every change is saved back there, so it
+// follows them to any device and two people never see each other's work.
+// Only device conveniences (the model catalogue cache, the theme) stay in
+// this browser's localStorage.
+const isAccountKey = k => /^il\.(projects|proj|hist|presets|pending|imported|favs4\.|model\.|draft\.)/.test(k);
+const account = {};           // this person's data, as loaded from the server
+let unsynced = {}, syncTimer = null, syncWarned = false;
+const clone = v => (v == null ? v : JSON.parse(JSON.stringify(v)));
+function queueSync(k, v) { unsynced[k] = v; clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 700); }
+async function syncNow() {
+  const batch = unsynced; if (!Object.keys(batch).length) return;
+  unsynced = {};
+  try {
+    const r = await fetch("/api/data", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ set: batch }) });
+    if (r.status === 401) { unsynced = { ...batch, ...unsynced }; return showGate("Your session ended — sign in again. Nothing is lost."); }
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `Error ${r.status}`);
+    if (syncWarned) { syncWarned = false; note("Saved to your account."); }
+  } catch (err) {
+    unsynced = { ...batch, ...unsynced }; // keep it, newer edits win
+    if (!syncWarned) { syncWarned = true; note("Couldn't save to your account just now — retrying. Keep this tab open.", true); reportClient("sync", err); }
+    clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 5000);
   }
+}
+// Leaving the page: send anything not yet saved.
+window.addEventListener("pagehide", () => {
+  if (!Object.keys(unsynced).length) return;
+  try { navigator.sendBeacon("/api/data", new Blob([JSON.stringify({ set: unsynced })], { type:"application/json" })); unsynced = {}; } catch {}
+});
+const load = (k, d) => {
+  if (isAccountKey(k)) return k in account ? clone(account[k]) : d;
+  try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; }
 };
+const save = (k, v) => {
+  if (isAccountKey(k)) { account[k] = clone(v); queueSync(k, account[k]); return true; }
+  try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } // only caches live here; losing one is harmless
+};
+// Plain-string settings (chosen model, current project) — account data too.
+const setRaw = (k, v) => save(k, v);
+const getRaw = k => (isAccountKey(k) ? (account[k] ?? null) : localStorage.getItem(k));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 // Drop the "Text-to-Image"/"Text-to-Video"/"Text-to-Speech" suffix a model's
 // display name carries when it's the same thing the current tab already says.
@@ -491,16 +506,14 @@ const isSongModel = idOrName => /suno|chirp|music|udio/i.test(String(idOrName ||
 const note = (t, err=false) => { $("msg").textContent = t; $("msg").classList.toggle("err", err); };
 
 /* ---------- access ---------- */
-function headers() {
-  const h = { "Content-Type":"application/json" };
-  const k = getRaw(LS.key); if (k) h["x-studio-key"] = k;
-  const a = getRaw(LS.atlas); if (a) h["x-atlas-key"] = a;
-  return h;
-}
+// Signed in with a session cookie (HttpOnly, set by /api/auth) — the browser
+// sends it on every same-site request, so no key or code is ever stored here.
+let me = null; // { name, role }
+function headers() { return { "Content-Type":"application/json" }; }
 async function api(path, opts={}) {
   const r = await fetch(path, { ...opts, headers: headers() });
   const j = await r.json().catch(() => ({ error:"Bad response from server." }));
-  if (r.status === 401 || r.status === 428) { showGate(j.error); throw new Error(j.error || "Access denied"); }
+  if (r.status === 401) { showGate("Your session ended — sign in again. Nothing is lost."); throw new Error(j.error || "Please sign in."); }
   if (!r.ok) throw new Error(j.error || `Error ${r.status}`);
   return j;
 }
@@ -521,20 +534,43 @@ function reportClient(where, err, extra) {
 }
 window.addEventListener("error", e => reportClient("window.onerror", e.error || { message: e.message }, { src: e.filename, line: e.lineno }));
 window.addEventListener("unhandledrejection", e => reportClient("unhandledrejection", e.reason || { message: String(e.reason) }));
-function showGate(m="", cancellable=false) {
-  $("gate").classList.remove("hidden"); $("gateMsg").textContent = m;
-  $("atlasKey").value = getRaw(LS.atlas) || ""; $("gateInput").value = getRaw(LS.key) || "";
-  $("gateCancel").classList.toggle("hidden", !cancellable); $("atlasKey").focus();
+let gateSignup = false, gateNeedsCode = false;
+function setGateMode(signup) {
+  gateSignup = signup;
+  $("gateGo").textContent = signup ? "Create account" : "Sign in";
+  $("gateLead").textContent = signup ? "Pick a username and password. Your projects and reel are kept in your account, separate from everyone else's." : "Sign in to your studio. Your projects and reel are saved to your account, on any device.";
+  $("gateSwitchText").textContent = signup ? "Already have an account?" : "New here?";
+  $("gateSwitch").textContent = signup ? "Sign in" : "Create an account";
+  $("gatePass").autocomplete = signup ? "new-password" : "current-password";
+  $("codeWrap").classList.toggle("hidden", !(signup && gateNeedsCode));
+  $("gateMsg").textContent = "";
 }
-$("gateForm").addEventListener("submit", e => {
+function showGate(m="") {
+  $("gate").classList.remove("hidden"); $("gateMsg").textContent = m;
+  (($("gateUser").value ? $("gatePass") : $("gateUser"))).focus();
+}
+$("gateSwitch").onclick = e => { e.preventDefault(); setGateMode(!gateSignup); };
+$("gateForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const a = $("atlasKey").value.trim(), k = $("gateInput").value.trim();
-  if (a) setRaw(LS.atlas, a); else { localStorage.removeItem(LS.atlas); delete rawMem[LS.atlas]; }
-  if (k) setRaw(LS.key, k); else { localStorage.removeItem(LS.key); delete rawMem[LS.key]; }
-  $("gate").classList.add("hidden"); loadModels(true); refreshBalance();
+  const body = { action: gateSignup ? "signup" : "login", username: $("gateUser").value.trim(), password: $("gatePass").value, code: $("gateCode").value.trim() };
+  $("gateGo").disabled = true; $("gateMsg").textContent = "";
+  try {
+    const r = await fetch("/api/auth", { method:"POST", headers: headers(), body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({ error:"Bad response from server." }));
+    if (!r.ok) throw new Error(j.error || `Error ${r.status}`);
+    $("gatePass").value = "";
+    if (me && me.name === j.user.name) { $("gate").classList.add("hidden"); syncNow(); } // same person, session renewed: carry on
+    else if (me) location.reload();                                                    // someone else: start clean
+    else await startStudio(j.user);
+  } catch (err) { $("gateMsg").textContent = err.message; }
+  finally { $("gateGo").disabled = false; }
 });
-$("gateCancel").onclick = () => $("gate").classList.add("hidden");
-$("settings").onclick = () => showGate("", true);
+$("settings").onclick = async () => {
+  if (!confirm(`Sign out of ${me ? me.name : "the studio"}?`)) return;
+  await syncNow();
+  await fetch("/api/auth", { method:"POST", headers: headers(), body: JSON.stringify({ action:"logout" }) }).catch(() => {});
+  location.reload();
+};
 
 /* ---------- projects ---------- */
 function proj() { return projects.find(p => p.id === projId); }
@@ -669,8 +705,8 @@ async function refreshBalance() {
 }
 // Keep it current while the tab is open: every minute in the foreground, and the
 // moment you come back to the tab. Completed generations also refresh it (see poll).
-setInterval(() => { if (!document.hidden && getRaw(LS.atlas)) refreshBalance(); }, 60000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden && getRaw(LS.atlas)) refreshBalance(); });
+setInterval(() => { if (!document.hidden && me && me.role === "owner") refreshBalance(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && me && me.role === "owner") refreshBalance(); });
 async function loadModels(force=false) {
   catalogue = load(LS.models, []);
   if (!catalogue.length || force) {
@@ -1113,7 +1149,7 @@ function poll(id, item, activeView) {
       clearInterval(timer); removePending(id);
       const done = { ...item, id, url: s.outputs[0], at: Date.now() };
       addHistory(done); // always lands in the reel, even if you've navigated away
-      refreshBalance();
+      if (me && me.role === "owner") refreshBalance();
       if (viewingPendingId === id) {
         $("go").disabled = false; show(done); note(`Done in ${Math.round((Date.now() - (item.started||Date.now()))/1000)}s.`);
         $("stage").scrollIntoView({ behavior: "smooth", block: "center" }); viewingPendingId = null;
@@ -1227,12 +1263,52 @@ $("themeBtn").onclick = () => {
 applyTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
 
 /* ---------- init ---------- */
-projects = load(LS.projects, []);
-if (!projects.length) projects = [{ id:"p0", name:"Untitled project", brief:"", created:Date.now() }];
-projId = getRaw(LS.proj); if (!projects.some(p => p.id===projId)) projId = projects[0].id;
-renderPresets(); selectProject(projId); // selectProject → restoreDraft sets the mode and restores the working draft
-if (getRaw(LS.atlas)) { loadModels(); refreshBalance(); resumePending(); } else showGate();
-renderActivity();
+// Before accounts, work lived only in this browser. The first time someone signs
+// in to an EMPTY account on this device, bring that work over once, so nothing
+// made before accounts existed is lost; later accounts on the same device start clean.
+async function importDeviceWork() {
+  try {
+    if (localStorage.getItem("il.imported") || Object.keys(account).length) return;
+    const found = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (isAccountKey(k)) { const v = localStorage.getItem(k); try { found[k] = JSON.parse(v); } catch { found[k] = v; } }
+    }
+    localStorage.setItem("il.imported", me.name);
+    if (!found["il.projects"] && !found["il.hist"]) return;
+    Object.entries(found).forEach(([k, v]) => save(k, v));
+    await syncNow();
+    note("Brought over the work saved in this browser into your account.");
+  } catch {}
+}
+async function startStudio(user) {
+  me = user;
+  $("whoami").textContent = "Signed in as " + me.name;
+  $("settings").title = "Sign out of " + me.name;
+  try {
+    const { data } = await api("/api/data", { cache:"no-store" });
+    Object.assign(account, data || {});
+  } catch (err) { return showGate("Couldn't load your work: " + err.message); }
+  $("gate").classList.add("hidden");
+  // Old versions kept an Atlas key / access code in the browser — no longer used.
+  try { localStorage.removeItem("il.atlas"); localStorage.removeItem("il.key"); } catch {}
+  await importDeviceWork();
+  projects = load(LS.projects, []);
+  if (!projects.length) projects = [{ id:"p0", name:"Untitled project", brief:"", created:Date.now() }];
+  projId = getRaw(LS.proj); if (!projects.some(p => p.id===projId)) projId = projects[0].id;
+  renderPresets(); selectProject(projId); // selectProject → restoreDraft sets the mode and restores the working draft
+  loadModels(); resumePending();
+  if (me.role === "owner") refreshBalance();
+  renderActivity();
+}
+(async () => {
+  let info = {};
+  try { info = await (await fetch("/api/auth", { cache:"no-store" })).json(); } catch {}
+  gateNeedsCode = !!info.signupCode;
+  setGateMode(false);
+  if (info.user) return startStudio(info.user);
+  showGate(info.ready === false ? "Accounts aren't switched on yet — the site owner needs to connect the database in Vercel." : "");
+})();
 </script>
 </body>
 </html>

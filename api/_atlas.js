@@ -2,34 +2,18 @@
 const BASE = "https://api.atlascloud.ai/api/v1";
 const PUBLIC_BASE = "https://api.atlascloud.ai/public/v1"; // billing/account endpoints live here, not /api/v1
 
-const { timingSafeEqual } = require("crypto");
-const same = (a, b) => {
-  const x = Buffer.from(a), y = Buffer.from(b);
-  return x.length === y.length && timingSafeEqual(x, y);
-};
+const { requireUser } = require("./_db");
 
-function checkAccess(req, res) {
-  const expected = String(process.env.STUDIO_PASSWORD || "").trim(); // a pasted trailing space/newline in Vercel must not lock everyone out
-  if (!expected) return true; // no password configured
-  const given = String(req.headers["x-studio-key"] || "").trim();
-  if (same(given, expected)) return true;
-  // Diagnostic that never reveals either value: enough to tell "not sent" from
-  // "typed something else" from "Caps Lock / keyboard layout" in the logs.
-  const why = !given ? "no code sent"
-    : given.length !== expected.length ? `length ${given.length} vs ${expected.length}`
-    : given.toLowerCase() === expected.toLowerCase() ? "case-only mismatch (Caps Lock?)"
-    : "same length, different characters";
-  console.log("access code rejected:", why);
-  res.status(401).json({ error: "Wrong access code." });
-  return false;
-}
+// Every studio endpoint needs a signed-in account (see api/auth.js). Resolves
+// to the user, or null after sending 401 — callers: if (!(await checkAccess(req, res))) return;
+const checkAccess = (req, res) => requireUser(req, res);
 
-// The Atlas key can come from the browser (entered in Settings, stored on the user's device)
-// or from the ATLASCLOUD_API_KEY environment variable on Vercel.
-function apiKey(res, req) {
-  const key = (req && req.headers["x-atlas-key"]) || process.env.ATLASCLOUD_API_KEY;
+// One studio Atlas key, kept only on the server (ATLASCLOUD_API_KEY in Vercel).
+// Nobody types or sees it; every account's generations use it.
+function apiKey(res) {
+  const key = String(process.env.ATLASCLOUD_API_KEY || "").trim();
   if (!key) {
-    res.status(428).json({ error: "No Atlas Cloud API key. Add it in Settings." });
+    res.status(503).json({ error: "The studio's Atlas Cloud key isn't set up yet: add ATLASCLOUD_API_KEY in Vercel, then redeploy." });
     return null;
   }
   return key;

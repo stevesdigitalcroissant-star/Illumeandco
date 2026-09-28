@@ -2,8 +2,8 @@ const { checkAccess, apiKey, atlas } = require("./_atlas");
 
 // Returns the live model catalogue: [{ id, name, type }]
 module.exports = async (req, res) => {
-  if (!checkAccess(req, res)) return;
-  const key = apiKey(res, req);
+  if (!(await checkAccess(req, res))) return;
+  const key = apiKey(res);
   if (!key) return;
   const paths = ["/models", "/../../v1/models"]; // /api/v1/models, then /v1/models
   let last = null;

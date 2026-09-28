@@ -2,8 +2,8 @@ const { checkAccess, apiKey, atlas, buildBody } = require("./_atlas");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
-  if (!checkAccess(req, res)) return;
-  const key = apiKey(res, req);
+  if (!(await checkAccess(req, res))) return;
+  const key = apiKey(res);
   if (!key) return;
 
   const { mode, model, prompt, image_url, params } = req.body || {};

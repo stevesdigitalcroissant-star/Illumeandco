@@ -3,8 +3,8 @@ const { checkAccess, apiKey, atlas } = require("./_atlas");
 // Receives { name, type, data(base64) } and uploads it to Atlas Cloud media storage.
 module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
-  if (!checkAccess(req, res)) return;
-  const key = apiKey(res, req);
+  if (!(await checkAccess(req, res))) return;
+  const key = apiKey(res);
   if (!key) return;
 
   const { name, type, data } = req.body || {};

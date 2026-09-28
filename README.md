@@ -135,3 +135,20 @@ git push
 - **Repository:** https://github.com/stevesdigitalcroissant-star/Illumeandco
 - **Vercel project:** `illume-site` (team: Freelance Marketing)
 - **Domains:** illumeandco.online, www.illumeandco.online
+
+## Illume Studio (`/generation`)
+
+The AI generation tool. People sign in with a username and password. Each
+account's projects, reel, drafts and saved prompts are stored on the server,
+separately per person, and follow them to any device.
+
+Set up once in Vercel (project `illume-site`), then redeploy:
+
+| Setting | What it does |
+|---|---|
+| Storage → **Upstash Redis** → Connect | The accounts database (adds `KV_REST_API_URL` / `KV_REST_API_TOKEN`) |
+| `ATLASCLOUD_API_KEY` | The one studio Atlas Cloud key every account generates with. Never sent to browsers |
+| `SIGNUP_CODE` *(optional)* | When set, creating an account requires this code. Unset = anyone can sign up |
+
+The first account ever created is the owner, and only the owner sees the Atlas balance.
+`STUDIO_PASSWORD` is no longer used.

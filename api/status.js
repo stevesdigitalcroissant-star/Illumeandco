@@ -1,8 +1,8 @@
 const { checkAccess, apiKey, atlas } = require("./_atlas");
 
 module.exports = async (req, res) => {
-  if (!checkAccess(req, res)) return;
-  const key = apiKey(res, req);
+  if (!(await checkAccess(req, res))) return;
+  const key = apiKey(res);
   if (!key) return;
   const id = req.query.id;
   if (!id) return res.status(400).json({ error: "Missing id." });
