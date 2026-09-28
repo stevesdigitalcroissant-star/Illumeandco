@@ -1,0 +1,8 @@
+{
+  "name": "illume-site",
+  "private": true,
+  "description": "Static site; the only dependency is for Illume Studio accounts (api/_db.js).",
+  "dependencies": {
+    "@vercel/blob": "^2.8.0"
+  }
+}

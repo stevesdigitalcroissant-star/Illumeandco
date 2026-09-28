@@ -1307,7 +1307,7 @@ async function startStudio(user) {
   gateNeedsCode = !!info.signupCode;
   setGateMode(false);
   if (info.user) return startStudio(info.user);
-  showGate(info.ready === false ? "Accounts aren't switched on yet — the site owner needs to connect the database in Vercel." : "");
+  showGate(info.ready === false ? "Accounts aren't switched on yet — the site owner needs to connect the Blob store in Vercel." : "");
 })();
 </script>
 </body>

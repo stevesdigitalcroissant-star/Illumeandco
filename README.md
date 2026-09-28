@@ -146,9 +146,14 @@ Set up once in Vercel (project `illume-site`), then redeploy:
 
 | Setting | What it does |
 |---|---|
-| Storage → **Upstash Redis** → Connect | The accounts database (adds `KV_REST_API_URL` / `KV_REST_API_TOKEN`) |
+| Storage → **Blob** (private store) → connected to the project | Holds accounts and each person's work (adds `BLOB_READ_WRITE_TOKEN`) |
 | `ATLASCLOUD_API_KEY` | The one studio Atlas Cloud key every account generates with. Never sent to browsers |
 | `SIGNUP_CODE` *(optional)* | When set, creating an account requires this code. Unset = anyone can sign up |
+
+Files in the Blob store: `users/<name>.json` (password hash, never the password),
+`data/<name>.json` (that person's projects, reel and drafts), `owner.json`.
+Sign-ins are a signed cookie, so no Blob call is made per request.
+`package.json` exists only to install `@vercel/blob` for the functions — there is still no build step.
 
 The first account ever created is the owner, and only the owner sees the Atlas balance.
 `STUDIO_PASSWORD` is no longer used.

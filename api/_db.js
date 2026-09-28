@@ -1,43 +1,53 @@
-// Accounts, sessions and each person's saved work, in Upstash Redis.
+// Accounts and each person's saved work, in a PRIVATE Vercel Blob store.
 //
-// Talks to Upstash's REST API with plain fetch, so the site still needs no
-// package.json or build step. Connecting Upstash to the Vercel project (Storage
-// → Upstash Redis → Connect) adds KV_REST_API_URL / KV_REST_API_TOKEN; the
-// UPSTASH_REDIS_REST_* names Upstash uses directly work too.
+// Connecting the Blob store to the Vercel project adds BLOB_READ_WRITE_TOKEN,
+// which @vercel/blob reads on its own. The store must be private: nothing in it
+// is reachable without that token.
 //
-// Keys:
-//   user:<name>   → hash { hash, salt, created, role }   (role "owner" = first account)
-//   sess:<token>  → username, expires after SESSION_DAYS
-//   data:<name>   → hash, one field per saved studio key (projects, hist, drafts…)
-//   rl:<what>     → counters for rate limiting
-const { randomBytes, scrypt, timingSafeEqual } = require("crypto");
+// Files in the store:
+//   users/<name>.json → { hash, salt, created, role }   (role "owner" = first account)
+//   owner.json        → { name }  written once, by the first sign-up
+//   data/<name>.json  → { key: value, … } that person's studio work
+//
+// Blob has no counters or expiring keys, so sessions are a signed cookie
+// (HMAC — nothing stored, no Blob call per request) instead of a lookup table.
+// Blob write operations are metered, so data is saved as ONE file per person,
+// and the page batches its saves.
+const { randomBytes, scrypt, timingSafeEqual, createHmac, createHash } = require("crypto");
 
-const DB_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const DB_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+let blob = null;
+try { blob = require("@vercel/blob"); } catch {}
+
 const SESSION_DAYS = 30;
 const COOKIE = "il_sess";
+const ready = () => !!(blob && (process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID));
 
 function dbReady(res) {
-  if (DB_URL && DB_TOKEN) return true;
-  res.status(503).json({ error: "Accounts aren't set up yet: connect Upstash Redis to this project in Vercel (Storage → Upstash Redis), then redeploy." });
+  if (ready()) return true;
+  res.status(503).json({ error: "Accounts aren't set up yet: connect a private Blob store to this project in Vercel (Storage → Blob), then redeploy." });
   return false;
 }
 
-// One Redis command, e.g. cmd("GET", "user:ann").
-async function cmd(...args) {
-  const r = await fetch(DB_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${DB_TOKEN}`, "Content-Type": "application/json" },
-    body: JSON.stringify(args),
-  });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok || j.error) throw new Error("Database error: " + (j.error || r.status));
-  return j.result;
+// ---- JSON files in Blob
+async function readJson(pathname) {
+  const r = await blob.get(pathname, { access: "private", useCache: false }); // never a stale cached copy
+  if (!r || r.statusCode !== 200 || !r.stream) return null;
+  const text = await new Response(r.stream).text();
+  try { return { value: JSON.parse(text), etag: r.blob && r.blob.etag }; } catch { return null; }
 }
+// overwrite:false → fails if the file already exists (used to claim a username atomically).
+// ifMatch → only writes if nobody changed the file since it was read.
+async function writeJson(pathname, value, { overwrite = true, ifMatch } = {}) {
+  const opts = { access: "private", contentType: "application/json", addRandomSuffix: false, allowOverwrite: overwrite, cacheControlMaxAge: 60 };
+  if (ifMatch) opts.ifMatch = ifMatch;
+  return blob.put(pathname, JSON.stringify(value), opts);
+}
+// "This blob already exists…" (a write with allowOverwrite:false) or an ETag
+// mismatch (ifMatch). Careful not to match "does not exist" (missing store/file).
+const alreadyExists = e => (e && e.name === "BlobPreconditionFailedError")
+  || /already exists|precondition failed|etag mismatch/i.test(String((e && e.message) || ""));
 
-// Hashes come back from Upstash as a flat [field, value, field, value…] list.
-const pairs = list => { const o = {}; for (let i = 0; i + 1 < (list || []).length; i += 2) o[list[i]] = list[i + 1]; return o; };
-
+// ---- passwords
 const hashPassword = (password, salt) => new Promise((ok, fail) =>
   scrypt(password, salt, 64, (err, key) => (err ? fail(err) : ok(key.toString("hex")))));
 async function passwordMatches(password, user) {
@@ -50,52 +60,59 @@ const cleanName = n => String(n || "").trim().toLowerCase();
 const validName = n => /^[a-z0-9._-]{3,32}$/.test(n);
 
 async function getUser(name) {
-  const u = pairs(await cmd("HGETALL", "user:" + name));
-  return u.hash ? { name, ...u } : null;
+  const r = await readJson(`users/${name}.json`);
+  return r && r.value && r.value.hash ? { name, ...r.value } : null;
 }
 
-// Counts attempts in a window; true while under the limit.
-async function underLimit(key, max, windowSec) {
-  const n = await cmd("INCR", "rl:" + key);
-  if (n === 1) await cmd("EXPIRE", "rl:" + key, windowSec);
-  return n <= max;
+// Best-effort brake on password guessing, per server instance (Blob has no
+// atomic counters). Scrypt already makes each guess slow.
+const attempts = new Map();
+function underLimit(key, max, windowSec) {
+  const now = Date.now(), a = attempts.get(key);
+  if (!a || a.until < now) { attempts.set(key, { n: 1, until: now + windowSec * 1000 }); return true; }
+  return ++a.n <= max;
 }
+const clearLimit = key => attempts.delete(key);
 
-async function startSession(res, name) {
-  const token = randomBytes(32).toString("hex");
-  await cmd("SET", "sess:" + token, name, "EX", SESSION_DAYS * 86400);
-  res.setHeader("Set-Cookie", `${COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_DAYS * 86400}`);
+// ---- sessions: "<name>.<role>.<expires>.<signature>"
+function secret() {
+  const s = process.env.SESSION_SECRET || process.env.BLOB_READ_WRITE_TOKEN || "";
+  return createHash("sha256").update("illume-session:" + s).digest();
 }
-async function endSession(req, res) {
-  const token = sessionToken(req);
-  if (token) await cmd("DEL", "sess:" + token).catch(() => {});
+const sign = payload => createHmac("sha256", secret()).update(payload).digest("hex");
+function startSession(res, user) {
+  const expires = Date.now() + SESSION_DAYS * 86400e3;
+  const payload = `${user.name}.${user.role || "member"}.${expires}`;
+  res.setHeader("Set-Cookie", `${COOKIE}=${payload}.${sign(payload)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_DAYS * 86400}`);
+}
+function endSession(req, res) {
   res.setHeader("Set-Cookie", `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
 }
-function sessionToken(req) {
-  const c = (req.cookies && req.cookies[COOKIE]) || (String(req.headers.cookie || "").match(new RegExp(`(?:^|;\\s*)${COOKIE}=([a-f0-9]{64})`)) || [])[1];
-  return /^[a-f0-9]{64}$/.test(c || "") ? c : null;
+function sessionCookie(req) {
+  return (req.cookies && req.cookies[COOKIE]) || (String(req.headers.cookie || "").match(new RegExp(`(?:^|;\\s*)${COOKIE}=([^;]+)`)) || [])[1] || "";
 }
 
-// The signed-in person, or null. Never throws for a missing/expired session.
-async function currentUser(req) {
-  if (!DB_URL || !DB_TOKEN) return null;
-  const token = sessionToken(req); if (!token) return null;
-  const name = await cmd("GET", "sess:" + token);
-  if (!name) return null;
-  const role = await cmd("HGET", "user:" + name, "role");
-  return { name, role: role || "member" };
+// The signed-in person, or null.
+function currentUser(req) {
+  if (!ready()) return null;
+  const m = sessionCookie(req).match(/^([a-z0-9._-]{3,32})\.(owner|member)\.(\d{10,})\.([a-f0-9]{64})$/);
+  if (!m) return null;
+  const [, name, role, expires, sig] = m;
+  const good = Buffer.from(sign(`${name}.${role}.${expires}`), "hex"), given = Buffer.from(sig, "hex");
+  if (good.length !== given.length || !timingSafeEqual(good, given)) return null;
+  if (Number(expires) < Date.now()) return null;
+  return { name, role };
 }
 
 // Gate for every studio endpoint: responds 401 and returns null when signed out.
 async function requireUser(req, res) {
   if (!dbReady(res)) return null;
-  let user = null;
-  try { user = await currentUser(req); } catch (e) { res.status(503).json({ error: e.message }); return null; }
+  const user = currentUser(req);
   if (!user) { res.status(401).json({ error: "Please sign in." }); return null; }
   return user;
 }
 
 module.exports = {
-  cmd, pairs, dbReady, hashPassword, passwordMatches, cleanName, validName,
-  getUser, underLimit, startSession, endSession, currentUser, requireUser,
+  ready, dbReady, readJson, writeJson, alreadyExists, hashPassword, passwordMatches, cleanName, validName,
+  getUser, underLimit, clearLimit, startSession, endSession, currentUser, requireUser,
 };

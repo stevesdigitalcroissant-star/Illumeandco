@@ -1,5 +1,5 @@
 // Sign up, sign in, sign out, and "who am I" for Illume Studio.
-//   GET  /api/auth              → { user:{name,role}|null, signupCode:bool }
+//   GET  /api/auth              → { user:{name,role}|null, signupCode:bool, ready:bool }
 //   POST /api/auth {action:"signup", username, password, code?}
 //   POST /api/auth {action:"login",  username, password}
 //   POST /api/auth {action:"logout"}
@@ -16,53 +16,51 @@ module.exports = async (req, res) => {
   const signupCode = String(process.env.SIGNUP_CODE || "").trim();
 
   if (req.method === "GET") {
-    let user = null;
-    try { user = await db.currentUser(req); } catch {}
-    return res.status(200).json({ user, signupCode: !!signupCode, ready: !!(process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL) });
+    return res.status(200).json({ user: db.currentUser(req), signupCode: !!signupCode, ready: db.ready() });
   }
   if (req.method !== "POST") return res.status(405).json({ error: "GET or POST only" });
-  if (!db.dbReady(res)) return;
 
   const { action, username, password, code } = req.body || {};
+  if (action === "logout") { db.endSession(req, res); return res.status(200).json({ ok: true }); }
+  if (!db.dbReady(res)) return;
+
+  const name = db.cleanName(username);
+  const pw = String(password || "");
   try {
-    if (action === "logout") {
-      await db.endSession(req, res);
-      return res.status(200).json({ ok: true });
-    }
-
-    const name = db.cleanName(username);
-    const pw = String(password || "");
-
     if (action === "signup") {
       if (signupCode && String(code || "").trim() !== signupCode) return res.status(403).json({ error: "That sign-up code isn't right." });
       if (!db.validName(name)) return res.status(400).json({ error: "Username: 3–32 characters — letters, numbers, dot, dash or underscore." });
       if (pw.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters." });
-      if (!(await db.underLimit("signup:" + clientIp(req), 5, 3600))) return res.status(429).json({ error: "Too many new accounts from here — try again in an hour." });
-      // Claim the name atomically so two people can't register it at once.
-      const claimed = await db.cmd("SET", "name:" + name, "1", "NX");
-      if (claimed !== "OK") return res.status(409).json({ error: "That username is taken." });
+      if (!db.underLimit("signup:" + clientIp(req), 5, 3600)) return res.status(429).json({ error: "Too many new accounts from here — try again in an hour." });
       const salt = randomBytes(16).toString("hex");
       const hash = await db.hashPassword(pw, salt);
       // The very first account is the studio owner (sees the Atlas balance).
-      const first = (await db.cmd("SET", "owner", name, "NX")) === "OK";
-      await db.cmd("HSET", "user:" + name, "hash", hash, "salt", salt, "created", String(Date.now()), "role", first ? "owner" : "member");
-      await db.startSession(res, name);
-      return res.status(200).json({ user: { name, role: first ? "owner" : "member" }, created: true });
+      // Written without overwrite, so only one sign-up can ever claim it.
+      let role = "member";
+      if (!(await db.readJson("owner.json"))) {
+        try { await db.writeJson("owner.json", { name }, { overwrite: false }); role = "owner"; }
+        catch (e) { if (!db.alreadyExists(e)) throw e; }
+      }
+      // Creating the user file without overwrite claims the name atomically.
+      try { await db.writeJson(`users/${name}.json`, { hash, salt, created: Date.now(), role }, { overwrite: false }); }
+      catch (e) { if (db.alreadyExists(e)) return res.status(409).json({ error: "That username is taken." }); throw e; }
+      db.startSession(res, { name, role });
+      return res.status(200).json({ user: { name, role }, created: true });
     }
 
     if (action === "login") {
       if (!name || !pw) return res.status(400).json({ error: "Enter your username and password." });
-      if (!(await db.underLimit("login:" + name, 10, 900))) return res.status(429).json({ error: "Too many attempts — wait 15 minutes and try again." });
+      if (!db.underLimit("login:" + name, 10, 900)) return res.status(429).json({ error: "Too many attempts — wait 15 minutes and try again." });
       const user = await db.getUser(name);
       if (!user || !(await db.passwordMatches(pw, user))) return res.status(401).json({ error: "Wrong username or password." });
-      await db.cmd("DEL", "rl:login:" + name);
-      await db.startSession(res, name);
+      db.clearLimit("login:" + name);
+      db.startSession(res, user);
       return res.status(200).json({ user: { name, role: user.role || "member" } });
     }
 
     res.status(400).json({ error: "Unknown action." });
   } catch (e) {
     console.log("auth failed:", e.message);
-    res.status(503).json({ error: e.message });
+    res.status(503).json({ error: "Couldn't reach the accounts store: " + e.message });
   }
 };
