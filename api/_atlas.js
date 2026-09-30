@@ -125,6 +125,11 @@ function buildBody(mode, model, prompt, image_url, params) {
     m = m.replace(/\/(text-to-video|t2v)$/i, "/image-to-video"); // route to i2v
     body.model = m; body.prompt = prompt || "";
     Object.assign(body, params || {});
+    // Starting from an image, the video takes that image's shape. Seedance
+    // refuses any fixed ratio here (400: "the output aspect ratio follows the
+    // first-frame image. Set ratio to adaptive or omit it"), so never send one.
+    delete body.aspect_ratio;
+    if (/seedance/i.test(m)) body.ratio = "adaptive"; else delete body.ratio;
     body.image = urls[0]; // video takes a single start frame
     return body;
   }

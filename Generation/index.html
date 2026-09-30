@@ -849,7 +849,7 @@ function setMode(m) {
   $("refBlock").classList.toggle("hidden", m==="audio");
   $("refHint").textContent = m==="video" ? "The image that gets animated — only the first one attached is used. Empty = text-to-video." : "Optional, up to 10, for edit models";
   $("durWrap").classList.toggle("hidden", m!=="video");
-  $("aspectWrap").classList.toggle("hidden", m==="audio");
+  updateAspectWrap();
   $("resWrap").classList.toggle("hidden", m==="audio");
   updateResolutionOptions();
   $("soundWrap").classList.toggle("hidden", m!=="video");
@@ -937,7 +937,14 @@ function setDrop(src, text) {
   refUrls = src ? [{ preview:src, url:src, name:text || "reference", status:"ok" }] : [];
   renderRefPicked();
 }
+// A video made FROM an image takes the image's shape, so the aspect-ratio
+// setting doesn't apply then — hide it rather than offer a choice that's ignored.
+function updateAspectWrap() {
+  const fromImage = mode === "video" && refUrls.length > 0;
+  $("aspectWrap").classList.toggle("hidden", mode === "audio" || fromImage);
+}
 function renderRefPicked() {
+  updateAspectWrap();
   const ok = refUrls.filter(r => r.status === "ok").length;
   const pending = refUrls.some(r => r.status === "uploading");
   $("drop").classList.toggle("has", refUrls.length>0);
@@ -1041,7 +1048,7 @@ $("refsFile").onchange = async e => {
 function buildParams() {
   const params = {};
   // Seedance takes the aspect ratio as `ratio`; other models here use `aspect_ratio`.
-  if (mode==="video" && $("aspect").value) params.ratio = $("aspect").value;
+  if (mode==="video" && $("aspect").value && !refUrls.length) params.ratio = $("aspect").value; // from an image: the image sets the shape
   if (mode==="image" && $("aspect").value) params.aspect_ratio = $("aspect").value;
   if (mode!=="audio" && $("resolution").value) params.resolution = $("resolution").value;
   if (mode==="video" && $("duration").value) params.duration = Math.round(Number($("duration").value)); // Seedance needs a whole number of seconds; the server clamps to its valid range
