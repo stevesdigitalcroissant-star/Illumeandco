@@ -337,7 +337,10 @@ details > div{display:flex;flex-direction:column;gap:12px;margin-top:12px}
       <div>
         <div class="row">
           <div class="f" id="aspectWrap"><label>Aspect ratio</label>
-            <select id="aspect"><option>16:9</option><option>9:16</option><option>1:1</option><option>4:5</option><option>4:3</option><option>3:4</option><option>21:9</option><option value="">Model default</option></select>
+            <select id="aspect"><option>16:9</option><option>9:16</option><option>1:1</option><option>4:5</option><option>4:3</option><option>3:4</option><option>21:9</option><option value="" id="aspectDefault">Model default</option></select>
+          </div>
+          <div class="f hidden" id="framingWrap"><label>Framing <span class="hint">start image → your ratio</span></label>
+            <select id="framing"><option value="crop">Crop to fill</option><option value="fit">Show whole image</option></select>
           </div>
           <div class="f" id="resWrap"><label>Resolution</label>
             <select id="resolution"><option value="1k">1k</option><option value="2k" selected>2k</option><option value="4k">4k</option><option value="">Model default</option></select>
@@ -614,7 +617,7 @@ let draftTimer = null, restoringDraft = false;
 // prompt, model, references and settings — a video prompt must never appear on
 // the image tab, or vice versa. The draft is { mode, useBrief, count, modes:{
 // image:{...}, video:{...}, audio:{...} } }, one slot per mode.
-const DRAFT_FIELDS = ["prompt","aspect","resolution","duration","seed","extra"];
+const DRAFT_FIELDS = ["prompt","aspect","resolution","duration","seed","extra","framing"];
 const CLEAR_IF_ABSENT = { prompt:1, seed:1, extra:1, duration:1 }; // a fresh mode starts these empty; aspect/resolution keep the mode default
 function captureModeState() {
   const s = { model: $("model").value.trim(), genAudio: $("genAudio").checked,
@@ -847,7 +850,7 @@ function setMode(m) {
   $("prompt").placeholder = m==="audio" ? "The words to be spoken. Add tone or pacing notes if the model supports them."
     : m==="video" ? "Describe the motion and the camera: what moves, how fast, where the lens goes." : "Describe the shot: subject, lens, light, mood.";
   $("refBlock").classList.toggle("hidden", m==="audio");
-  $("refHint").textContent = m==="video" ? "The image that gets animated — only the first one attached is used. Empty = text-to-video." : "Optional, up to 10, for edit models";
+  $("refHint").textContent = m==="video" ? "The first frame of your video (only the first image is used). Pick any aspect ratio under Options — the image is reshaped to it. Empty = text-to-video." : "Optional, up to 10, for edit models";
   $("durWrap").classList.toggle("hidden", m!=="video");
   updateAspectWrap();
   $("resWrap").classList.toggle("hidden", m==="audio");
@@ -939,9 +942,41 @@ function setDrop(src, text) {
 }
 // A video made FROM an image takes the image's shape, so the aspect-ratio
 // setting doesn't apply then — hide it rather than offer a choice that's ignored.
+// Seedance makes an image-to-video the shape of its start image — it refuses
+// any other ratio. So when a start image is attached, the ratio you pick is
+// applied to the IMAGE (cropped, or fitted over a soft blurred fill) just
+// before sending, and the video comes out in the ratio you chose.
+// "Same as image" leaves the picture untouched.
 function updateAspectWrap() {
   const fromImage = mode === "video" && refUrls.length > 0;
-  $("aspectWrap").classList.toggle("hidden", mode === "audio" || fromImage);
+  $("aspectWrap").classList.toggle("hidden", mode === "audio");
+  $("aspectDefault").textContent = fromImage ? "Same as image" : "Model default";
+  $("framingWrap").classList.toggle("hidden", !fromImage || !$("aspect").value);
+}
+const reframed = new Map(); // "url|ratio|framing" → hosted URL, so re-generating doesn't re-upload
+async function reframeStartImage(url, ratio, framing) {
+  const key = url + "|" + ratio + "|" + framing;
+  if (reframed.has(key)) return reframed.get(key);
+  const [rw, rh] = ratio.split(":").map(Number);
+  // Load through our own domain so the canvas may read the pixels.
+  const img = new Image();
+  await new Promise((ok, fail) => { img.onload = ok; img.onerror = () => fail(new Error("Couldn't load the start image to reshape it.")); img.src = /^https?:/i.test(url) ? mediaSrc(url) : url; });
+  const W0 = img.naturalWidth, H0 = img.naturalHeight;
+  // Output: the chosen ratio, long edge up to 2048 and never smaller than the source detail allows.
+  const long = Math.min(2048, Math.max(W0, H0));
+  const W = rw >= rh ? long : Math.round(long * rw / rh), H = rw >= rh ? Math.round(long * rh / rw) : long;
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+  g.imageSmoothingQuality = "high";
+  const cover = Math.max(W / W0, H / H0), contain = Math.min(W / W0, H / H0);
+  const draw = sc => g.drawImage(img, (W - W0 * sc) / 2, (H - H0 * sc) / 2, W0 * sc, H0 * sc);
+  if (framing === "fit") { g.filter = "blur(40px) brightness(0.85)"; draw(cover * 1.1); g.filter = "none"; draw(contain); }
+  else draw(cover);
+  const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.92));
+  const small = await shrinkForUpload(new File([blob], "start-frame.jpg", { type: "image/jpeg" }));
+  const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:"start-frame-" + ratio.replace(":", "x") + ".jpg", type:"image/jpeg", data: small.slice(small.indexOf(",") + 1) }) });
+  if (!out.url) throw new Error("Upload of the reshaped start image returned no URL.");
+  reframed.set(key, out.url);
+  return out.url;
 }
 function renderRefPicked() {
   updateAspectWrap();
@@ -1048,7 +1083,7 @@ $("refsFile").onchange = async e => {
 function buildParams() {
   const params = {};
   // Seedance takes the aspect ratio as `ratio`; other models here use `aspect_ratio`.
-  if (mode==="video" && $("aspect").value && !refUrls.length) params.ratio = $("aspect").value; // from an image: the image sets the shape
+  if (mode==="video" && $("aspect").value && !refUrls.length) params.ratio = $("aspect").value; // from an image, the ratio is applied to the image itself (reframeStartImage)
   if (mode==="image" && $("aspect").value) params.aspect_ratio = $("aspect").value;
   if (mode!=="audio" && $("resolution").value) params.resolution = $("resolution").value;
   if (mode==="video" && $("duration").value) params.duration = Math.round(Number($("duration").value)); // Seedance needs a whole number of seconds; the server clamps to its valid range
@@ -1073,7 +1108,14 @@ $("go").onclick = async () => {
   const failed = refUrls.some(r => r.status === "failed");
   if (failed) return note("A reference image failed to upload — remove it or tap it to retry before generating.", true);
 
-  startGeneration({ mode, model, prompt, ref: refsForRequest(), params, count: Math.max(1, Math.min(MAX_COUNT, genCount)) });
+  let ref = refsForRequest();
+  if (mode === "video" && ref && ref.length && $("aspect").value) {
+    $("go").disabled = true; note(`Reshaping your start image to ${$("aspect").value}…`);
+    try { ref = [await reframeStartImage(ref[0], $("aspect").value, $("framing").value)]; }
+    catch (err) { $("go").disabled = false; reportClient("reframe", err); return note("Couldn't reshape the start image: " + err.message + " Pick “Same as image” to send it unchanged.", true); }
+    finally { $("go").disabled = false; }
+  }
+  startGeneration({ mode, model, prompt, ref, params, count: Math.max(1, Math.min(MAX_COUNT, genCount)) });
 };
 // Sends one or more variations. EVERY variation gets a tile in the reel the
 // moment it's sent — "Generating…" → the result, or a red "Failed" tile with
@@ -1133,7 +1175,8 @@ function friendlyErr(msg) {
   return msg;
 }
 // Any setting that changes what a generation actually costs re-triggers the estimate.
-["aspect","resolution","duration","seed","extra"].forEach(id => { $(id).oninput = () => { updateEstimate(); saveDraft(); }; });
+["aspect","resolution","duration","seed","extra"].forEach(id => { $(id).oninput = () => { updateEstimate(); saveDraft(); if (id === "aspect") updateAspectWrap(); }; });
+$("framing").onchange = saveDraft;
 $("genAudio").onchange = () => { updateEstimate(); saveDraft(); };
 $("prompt").addEventListener("input", saveDraft);
 $("useBrief").addEventListener("change", saveDraft);
