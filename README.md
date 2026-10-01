@@ -159,5 +159,9 @@ Work is organised as **Client → Project**. Each client has a brand kit (style 
 to every prompt, with an on/off switch, and brand photos one tap from the references);
 each project has its own reel. Every generation records its client and project.
 
+Every finished image and video is **copied into the private Blob store** (`media/<user>/…`)
+the moment it's done (`api/file.js`), because Atlas Cloud's own links expire. Only the
+signed-in owner of a file can open it; older takes are copied on the next sign-in.
+
 The first account ever created is the owner, and only the owner sees the Atlas balance.
 `STUDIO_PASSWORD` is no longer used.
