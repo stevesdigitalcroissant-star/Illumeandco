@@ -563,6 +563,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .cmpGrip:hover i,.cmpGrip.drag i{background:var(--gold);width:64px}
 .camMoves{flex-wrap:wrap;overflow:visible;-webkit-mask-image:none!important;mask-image:none!important;padding:0 2px!important}
 @media (max-width:640px){.camMoves{flex-wrap:nowrap;overflow-x:auto}}
+#soundWrap.muted .pillBtn{color:var(--faint)}
 .topUp{height:32px;padding:0 12px;font-weight:600;color:var(--gold-2);border-color:var(--gold-line);background:var(--gold-soft)}
 .balance.low{color:#FFD9D6;border-color:rgba(240,122,110,.5);background:var(--danger-soft)}
 .balance.low::before{background:var(--danger);box-shadow:0 0 8px var(--danger)}
@@ -830,7 +831,9 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
           <div class="pill" id="durWrap"><button class="pillBtn" type="button" data-pop="duration"><i class="pi pi-time"></i><span id="pillDur">Auto</span></button>
             <input type="number" id="duration" class="sr" tabindex="-1" aria-hidden="true" min="4" max="30" step="1" placeholder="Auto"></div>
         </div>
-        <div class="pill" id="soundWrap"><label class="pillBtn toggle" title="Music, effects and speech, synced automatically"><input type="checkbox" id="genAudio" checked><i class="pi pi-sound"></i>Sound</label></div>
+        <div class="pill" id="soundWrap"><button class="pillBtn" type="button" data-pop="sound" title="What the video should sound like"><i class="pi pi-sound"></i><span id="pillSound">Sound</span></button>
+          <input type="checkbox" id="genAudio" class="sr" tabindex="-1" aria-hidden="true" checked>
+          <select id="sound" class="sr" tabindex="-1" aria-hidden="true"><option value="full">Full</option><option value="nomusic">No music</option><option value="sfx">Effects only</option><option value="off">Silent</option></select></div>
         <div class="pill" id="countPill"><button class="pillBtn" type="button" data-pop="count" title="How many takes at once"><span id="pillCount">×1</span></button></div>
         <div class="pill"><label class="pillBtn toggle kitToggle hidden" id="kitToggle" title="Adds this client's style notes (Brand kit) in front of your prompt"><input type="checkbox" id="useBrief" checked><span class="kitDia">◆</span><span id="kitToggleText">Brand style</span></label></div>
         <div class="pill"><button class="pillBtn" type="button" data-pop="presets" title="Saved prompts"><span>☆ Saved</span></button></div>
@@ -1224,7 +1227,7 @@ let draftTimer = null, restoringDraft = false;
 // prompt, model, references and settings — a video prompt must never appear on
 // the image tab, or vice versa. The draft is { mode, useBrief, count, modes:{
 // image:{...}, video:{...}, audio:{...} } }, one slot per mode.
-const DRAFT_FIELDS = ["prompt","aspect","resolution","duration","seed","extra","framing"];
+const DRAFT_FIELDS = ["prompt","aspect","resolution","duration","seed","extra","framing","sound"];
 const CLEAR_IF_ABSENT = { prompt:1, seed:1, extra:1, duration:1 }; // a fresh mode starts these empty; aspect/resolution keep the mode default
 function captureModeState() {
   const s = { model: $("model").value.trim(), genAudio: $("genAudio").checked,
@@ -1241,6 +1244,8 @@ function applyModeState(s) {
   });
   if (looksLikeId(s.model)) $("model").value = s.model; // else keep setMode's per-mode default
   $("genAudio").checked = s.genAudio !== false;
+  if (!s.sound) $("sound").value = s.genAudio === false ? "off" : "full"; // drafts from before the Sound menu
+  $("genAudio").checked = $("sound").value !== "off";
   refUrls = Array.isArray(s.refs) ? s.refs.map(r => ({ preview:r.url, url:r.url, name:r.name, status:"ok" })) : [];
 }
 function loadModeState(m) {
@@ -1734,6 +1739,8 @@ $("go").onclick = async () => {
   if (!prompt) return note(mode==="audio" ? "Write the script first." : "Write a prompt first.", true);
   const style = (client().style || "").trim();
   if ($("useBrief").checked && style && mode!=="audio") prompt = style + ". " + prompt;
+  // Seedance has a single sound on/off switch — "no music" is asked for in words.
+  if (mode === "video" && SOUND_ASK[$("sound").value]) prompt = prompt.replace(/[\s.]*$/, ".") + " " + SOUND_ASK[$("sound").value];
 
   let params;
   try { params = buildParams(); } catch { return note("Extra parameters must be valid JSON.", true); }
@@ -2101,6 +2108,7 @@ document.addEventListener("click", e => {
     const opts = [...$("resolution").options].map(o => ({ value: o.value, label: o.value ? o.value.toUpperCase() : "Model default", hint: RES_HINT[o.value] || "" }));
     return listPop(btn, "Quality", opts, $("resolution").value, v => setSelect("resolution", v));
   }
+  if (kind === "sound") return listPop(btn, "Sound", SOUND_OPTS, $("sound").value, v => { $("sound").value = v; $("genAudio").checked = v !== "off"; updateEstimate(); saveDraft(); });
   if (kind === "duration") {
     const long = /seedance-2\.5/i.test($("model").value); // Seedance 2.5 goes up to 30s; other models stop at 15s
     const opts = [{ value: "", label: "Auto" }, ...[4, 5, 6, 8, 10, 12, 15, ...(long ? [20, 25, 30] : [])].map(n => ({ value: String(n), label: n + "s" }))];
@@ -2108,6 +2116,16 @@ document.addEventListener("click", e => {
   }
 });
 window.addEventListener("resize", closePops);
+const SOUND_OPTS = [
+  { value: "full", label: "Full sound", hint: "effects, music and voices" },
+  { value: "nomusic", label: "No music", hint: "effects, ambience and voices" },
+  { value: "sfx", label: "Effects only", hint: "no music, no voices" },
+  { value: "off", label: "Silent", hint: "no audio track" },
+];
+const SOUND_ASK = {
+  nomusic: "Audio: realistic sound effects, ambience and any dialogue only. No music, no soundtrack, no score, no background song.",
+  sfx: "Audio: realistic sound effects and ambience only. No music, no soundtrack, no score, no singing, no voices or speech.",
+};
 // Keep every pill's label in step with the real settings underneath.
 function refreshPills() {
   if (!$("pillAspect")) return;
@@ -2117,6 +2135,8 @@ function refreshPills() {
   $("pillFraming").textContent = $("framing").value === "fit" ? "Whole image" : "Crop";
   const r = $("resolution").value; $("pillRes").textContent = r ? r.toUpperCase() : "Auto";
   const d = $("duration").value; $("pillDur").textContent = d ? d + "s" : "Auto";
+  $("pillSound").textContent = { full: "Sound", nomusic: "No music", sfx: "Effects only", off: "Silent" }[$("sound").value] || "Sound";
+  $("soundWrap").classList.toggle("muted", $("sound").value === "off");
   $("pillCount").textContent = "×" + genCount;
   $("pillModel").textContent = $("selName").textContent || "Model";
   if (clients.length) $("kitPopTitle").textContent = client().name + " — brand photos";

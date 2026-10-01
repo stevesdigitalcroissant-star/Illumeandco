@@ -99,7 +99,7 @@ const TOOLS = [
     aspect_ratio: { type: "string", enum: ["16:9", "9:16", "1:1", "4:5", "4:3", "3:4", "21:9"], description: "Frame shape. Ignored for video with a start image (it follows the image)." },
     quality: { type: "string", enum: ["1k", "2k", "4k", "720p", "1080p"], description: "Image: 1k/2k/4k. Video: 720p/1080p/2k/4k." },
     duration_seconds: { type: "integer", minimum: 4, maximum: 30, description: "Video length in seconds: up to 30 on Seedance 2.5, up to 15 on other models." },
-    sound: { type: "boolean", description: "Video: generate music/effects/speech (default true)." },
+    sound: { type: "string", enum: ["full", "no_music", "effects_only", "silent"], description: "Video audio: full (effects, music, voices — default), no_music (effects, ambience and voices), effects_only (no music, no voices), silent." },
     camera_move: { type: "string", enum: Object.keys(CAM), description: "Video camera direction, added to the prompt." },
     reference_image_urls: { type: "array", items: { type: "string" }, description: "https image URLs. Image: references for edit models. Video: the first one is the start frame." },
     use_brand_style: { type: "boolean", description: "Put the client's brand-kit style notes in front of the prompt (default true)." },
@@ -153,7 +153,9 @@ async function callTool(user, req, name, a) {
     let userPrompt = String(a.prompt || "").trim(); if (!userPrompt) return fail("Write a prompt.");
     if (mode === "video" && a.camera_move && CAM[a.camera_move]) userPrompt = userPrompt.replace(/[.,]\s*$/, "") + ", " + CAM[a.camera_move];
     const style = (tgt.client.style || "").trim();
-    const prompt = (a.use_brand_style !== false && style && mode !== "audio") ? style + ". " + userPrompt : userPrompt;
+    let prompt = (a.use_brand_style !== false && style && mode !== "audio") ? style + ". " + userPrompt : userPrompt;
+    const ASK = { no_music: "Audio: realistic sound effects, ambience and any dialogue only. No music, no soundtrack, no score, no background song.", effects_only: "Audio: realistic sound effects and ambience only. No music, no soundtrack, no score, no singing, no voices or speech." };
+    if (mode === "video" && ASK[a.sound]) prompt = prompt.replace(/[\s.]*$/, ".") + " " + ASK[a.sound];
     const refs = (Array.isArray(a.reference_image_urls) ? a.reference_image_urls : []).filter(u => /^https:\/\//i.test(u)).slice(0, 10);
     const params = {};
     if (mode === "image") { if (a.aspect_ratio) params.aspect_ratio = a.aspect_ratio; params.resolution = /^(1k|2k|4k)$/.test(a.quality) ? a.quality : "2k"; }
@@ -161,7 +163,8 @@ async function callTool(user, req, name, a) {
       if (a.aspect_ratio && !refs.length) params.ratio = a.aspect_ratio;
       params.resolution = /^(720p|1080p|2k|4k)$/.test(a.quality) ? a.quality : "1080p";
       if (a.duration_seconds) params.duration = Math.round(a.duration_seconds);
-      params.generate_audio = a.sound !== false;
+      const snd = a.sound === false ? "silent" : (a.sound === true || !a.sound ? "full" : a.sound);
+      params.generate_audio = snd !== "silent";
     }
     const model = a.model || DEFAULT_MODEL[mode];
     const n = Math.max(1, Math.min(4, a.count || 1)), made = [];
