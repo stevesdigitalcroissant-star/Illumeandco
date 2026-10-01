@@ -149,6 +149,10 @@ Set up once in Vercel (project `illume-site`), then redeploy:
 | Storage → **Blob** (private store) → connected to the project | Holds accounts and each person's work (adds `BLOB_READ_WRITE_TOKEN`) |
 | `ATLASCLOUD_API_KEY` | The one studio Atlas Cloud key every account generates with. Never sent to browsers |
 | `SIGNUP_CODE` *(optional)* | When set, creating an account requires this code. Unset = anyone can sign up |
+| `STRIPE_SECRET_KEY` *(optional)* | Turns on **credits**: members (everyone but the owner) pay for generations in credits bought with Stripe Checkout (Settings → Credits). No webhook needed |
+| `CREDIT_MARKUP` *(optional, default `0.30`)* | A take costs `ceil(Atlas price × (1 + markup) × 100)` credits. Members only ever see credits |
+| `REFERRAL_PERCENT` *(optional, default `10`)* | Share of every pack a referred member buys, given to the referrer as credits |
+| `FREE_CREDITS` *(optional, default `0`)* | Welcome credits for each new account |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` *(optional)* | Turns on “Connect Google Drive”: each account can save every take into `Illume Studio / Client / Project` in its own Drive (`api/gdrive.js`, scope `drive.file`). OAuth redirect URI: `https://www.illumeandco.online/api/gdrive` |
 
 Files in the Blob store: `users/<name>.json` (password hash, never the password),
@@ -167,6 +171,16 @@ signed-in owner of a file can open it; older takes are copied on the next sign-i
 Each project also has a **Storyboard**: takes added as numbered shots, reordered by drag
 or arrows, and played back in order with ▶ Play all. “Continue shot” puts the next shot
 straight after the one it continues.
+
+**Settings** (⚙ in the sidebar) holds the account, credits (packs, history, owner gifts),
+the invite link, Google Drive and the **Claude connection**.
+
+**Create from Claude** (`api/mcp.js`, an MCP server at `https://www.illumeandco.online/mcp`):
+in Claude → Settings → Connectors → Add custom connector, paste that URL, Connect, sign in, Allow.
+Claude Code uses a personal key from Settings → Claude. Tools: list_clients, create_take,
+check_take, list_takes, add_to_storyboard, get_credits, list_models. Takes made from Claude
+are stored in `mcpdata/<user>.json` and appear in the Studio under their client and project.
+"Revoke all Claude access" signs out every Claude app and key at once.
 
 The first account ever created is the owner, and only the owner sees the Atlas balance.
 `STUDIO_PASSWORD` is no longer used.

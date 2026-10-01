@@ -7,7 +7,7 @@
 // studio's own keys are accepted, and the file is size-capped.
 const db = require("./_db");
 
-const ALLOWED = /^il\.(clients|projects|proj|hist|presets|pending|imported|favs4\.(image|video|audio)|model\.(image|video|audio)|draft\.[\w-]{1,40})$/;
+const ALLOWED = /^il\.(clients|mcpseen|projects|proj|hist|presets|pending|imported|favs4\.(image|video|audio)|model\.(image|video|audio)|draft\.[\w-]{1,40})$/;
 const MAX_FILE = 3 * 1024 * 1024; // a whole reel of 150 items is far below this
 
 module.exports = async (req, res) => {
@@ -17,8 +17,13 @@ module.exports = async (req, res) => {
   const file = `data/${db.fileKey(user.name)}.json`;
   try {
     if (req.method === "GET") {
-      const r = await db.readJson(file);
-      return res.status(200).json({ data: (r && r.value) || {} });
+      const mf = `mcpdata/${db.fileKey(user.name)}.json`;
+      if (req.query && req.query.only === "mcp") { const m = await db.readJson(mf).catch(() => null); return res.status(200).json({ data: { "il.mcp": (m && m.value) || null } }); }
+      const [r, m] = await Promise.all([db.readJson(file), db.readJson(mf).catch(() => null)]);
+      const data = (r && r.value) || {};
+      delete data["il.mcp"];
+      if (m && m.value) data["il.mcp"] = m.value; // takes made from Claude (read-only here)
+      return res.status(200).json({ data });
     }
     if (req.method !== "POST") return res.status(405).json({ error: "GET or POST only" });
     let body = req.body;

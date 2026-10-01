@@ -566,6 +566,58 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .topUp{height:32px;padding:0 12px;font-weight:600;color:var(--gold-2);border-color:var(--gold-line);background:var(--gold-soft)}
 .balance.low{color:#FFD9D6;border-color:rgba(240,122,110,.5);background:var(--danger-soft)}
 .balance.low::before{background:var(--danger);box-shadow:0 0 8px var(--danger)}
+
+/* ============ v7: settings, credits, invites, Claude ============ */
+.setPanel{width:min(640px,100%)}
+.setTabs{display:flex;gap:4px;padding:10px 18px 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.setTabs button{background:none;border:0;border-bottom:2px solid transparent;padding:9px 10px 11px;font:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.setTabs button:hover{color:var(--text)}
+.setTabs button.on{color:var(--gold-2);border-bottom-color:var(--gold)}
+.setSec{display:none;flex-direction:column;gap:12px}
+.setSec.on{display:flex}
+.setSec h4{margin:8px 0 0;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);display:flex;gap:10px;align-items:baseline}
+.setP{margin:0;color:var(--muted);font-size:13.5px;line-height:1.55}
+.setRow{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.setRow span{display:flex;flex-direction:column;min-width:0}
+.setRow small{font-size:11.5px;color:var(--faint)}
+.setRow b{font-size:14px;overflow:hidden;text-overflow:ellipsis}
+.tag{font-size:11px;font-weight:600;color:var(--gold-2);border:1px solid var(--gold-line);background:var(--gold-soft);border-radius:999px;padding:3px 9px}
+.btnRow{display:flex;gap:8px;flex-wrap:wrap}
+.credBig{display:flex;align-items:baseline;gap:10px}
+.credBig span{font-family:var(--display);font-weight:300;font-size:46px;line-height:1;color:var(--text)}
+.credBig small{color:var(--muted);font-size:14px}
+.packs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.pack{display:flex;flex-direction:column;align-items:flex-start;gap:3px;background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:13px 14px;cursor:pointer;color:var(--text);font:inherit;text-align:left;transition:border-color var(--ease),transform var(--ease)}
+.pack:hover{border-color:var(--gold-line);transform:translateY(-1px)}
+.pack b{font-size:18px}
+.pack small{color:var(--muted);font-size:12px}
+.pack em{font-style:normal;font-size:11px;font-weight:600;color:var(--gold-2)}
+.pack:disabled{opacity:.5;cursor:default;transform:none}
+.ledger{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ledger div{display:flex;justify-content:space-between;gap:10px;padding:9px 13px;font-size:13px;border-top:1px solid var(--line)}
+.ledger div:first-child{border-top:0}
+.ledger span{color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ledger b{white-space:nowrap}
+.ledger b.plus{color:var(--ok)}
+.ledger .empty{color:var(--faint);justify-content:center}
+.copyRow{display:flex;gap:8px;align-items:stretch}
+.copyRow input,.copyRow textarea,.giftRow input{background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 11px;outline:none}
+.copyRow input:focus,.copyRow textarea:focus,.giftRow input:focus{border-color:var(--gold-line)}
+.copyRow input,.copyRow textarea{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;resize:none}
+.ledger .empty{display:block!important;text-align:center}
+.giftRow{display:flex;gap:8px;flex-wrap:wrap}
+.giftRow input{flex:1;min-width:120px}
+.refStats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.refStats div{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:13px 14px;display:flex;flex-direction:column}
+.refStats b{font-family:var(--display);font-weight:300;font-size:30px}
+.refStats small{color:var(--muted);font-size:12px}
+.steps{margin:0;padding-left:20px;color:var(--muted);font-size:13.5px;line-height:1.7}
+.steps b{color:var(--text);font-weight:600}
+.credPill{cursor:pointer;font:inherit;font-size:12px;font-weight:600}
+.credPill:hover{border-color:var(--gold-line);color:var(--text)}
+.credPill.low{color:#FFD9D6;border-color:rgba(240,122,110,.5);background:var(--danger-soft)}
+.hist .viaClaude{position:absolute;left:8px;top:8px;z-index:4;font-size:10.5px;font-weight:600;background:rgba(10,9,7,.72);color:#F3EDE2;border:1px solid rgba(255,236,200,.2);border-radius:999px;padding:2px 8px}
+@media (max-width:640px){.credBig span{font-size:38px}.modal{padding:12px}}
 </style>
 </head>
 <body>
@@ -596,10 +648,79 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
     <button class="newproj" id="newClient">+ New client</button>
     <button class="driveBtn hidden" id="driveBtn" type="button"></button>
     <div class="railFoot" id="railFoot">
-      <button class="newproj" id="settings">Sign out</button>
+      <button class="newproj" id="settings" type="button">⚙ Settings</button>
       <button class="btn iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark mode" title="Switch to light mode">☾</button>
     </div>
   </aside>
+
+  <!-- Settings: account, credits, invites, Google Drive and Claude -->
+  <div class="modal hidden" id="setModal">
+    <div class="modal-backdrop" id="setBackdrop"></div>
+    <div class="modal-panel setPanel">
+      <div class="modal-head"><b>Settings</b><button class="modal-x" id="setClose" aria-label="Close">✕</button></div>
+      <nav class="setTabs" id="setTabs" role="tablist">
+        <button data-tab="account" role="tab">Account</button>
+        <button data-tab="credits" role="tab" id="tabCredits">Credits</button>
+        <button data-tab="invite" role="tab">Invite &amp; earn</button>
+        <button data-tab="claude" role="tab">Claude</button>
+        <button data-tab="drive" role="tab">Google Drive</button>
+      </nav>
+      <div class="modal-body">
+        <section class="setSec" data-sec="account">
+          <div class="setRow"><span><small>Signed in as</small><b id="setWho"></b></span><span class="tag" id="setRole"></span></div>
+          <p class="setP">Your clients, projects, takes and storyboards are saved to this account and follow you to any device.</p>
+          <button class="btn" id="signOut" type="button">Sign out</button>
+        </section>
+
+        <section class="setSec" data-sec="credits">
+          <div class="credBig"><span id="credNow">—</span><small id="credSub">credits</small></div>
+          <p class="setP" id="credNote"></p>
+          <div class="packs" id="packs"></div>
+          <div class="ownerGift hidden" id="ownerGift">
+            <h4>Gift credits <span class="hint">studio owner only</span></h4>
+            <div class="giftRow"><input id="giftTo" placeholder="Their email / username" autocomplete="off"><input id="giftN" type="number" step="100" placeholder="Credits"><button class="btn" id="giftGo" type="button">Gift</button></div>
+          </div>
+          <h4>History</h4>
+          <div class="ledger" id="ledger"></div>
+        </section>
+
+        <section class="setSec" data-sec="invite">
+          <p class="setP" id="refLead"></p>
+          <div class="copyRow"><input id="refLink" readonly><button class="btn" data-copy="refLink" type="button">Copy</button></div>
+          <div class="refStats"><div><b id="refFriends">0</b><small>friends joined</small></div><div><b id="refEarned">0</b><small>credits earned</small></div></div>
+        </section>
+
+        <section class="setSec" data-sec="claude">
+          <p class="setP">Create images, videos and voiceovers straight from a conversation with Claude. Takes land in the right client and project here, and are saved like any other take.</p>
+          <h4>Your connector URL</h4>
+          <div class="copyRow"><input id="mcpUrl" readonly><button class="btn" data-copy="mcpUrl" type="button">Copy</button></div>
+          <h4>Claude app (claude.ai, desktop, phone)</h4>
+          <ol class="steps">
+            <li>In Claude, open <b>Settings → Connectors</b>.</li>
+            <li>Tap <b>Add custom connector</b>, name it <b>Illume Studio</b> and paste the URL above.</li>
+            <li>Tap <b>Connect</b>, sign in with this account and press <b>Allow</b>.</li>
+            <li>In a chat, ask: <i>“Make a 9:16 video for my client … in Illume Studio.”</i></li>
+          </ol>
+          <h4>Claude Code (terminal)</h4>
+          <p class="setP">Create a personal key, then run the command it gives you. Keep the key private — it can spend your credits.</p>
+          <button class="btn" id="mcpPat" type="button">Create personal key</button>
+          <div class="hidden" id="mcpPatOut">
+            <div class="copyRow"><textarea id="mcpCmd" readonly rows="3"></textarea><button class="btn" data-copy="mcpCmd" type="button">Copy</button></div>
+            <p class="hint">Shown once. Lost it? Create another one.</p>
+          </div>
+          <h4>Disconnect</h4>
+          <p class="setP">Signs Claude out everywhere — every connected app and every personal key stops working.</p>
+          <button class="btn danger" id="mcpRevoke" type="button">Revoke all Claude access</button>
+        </section>
+
+        <section class="setSec" data-sec="drive">
+          <div class="setRow"><span><small>Google Drive</small><b id="drvState"></b></span><i class="gd" style="width:26px;height:24px"></i></div>
+          <p class="setP" id="drvNote"></p>
+          <div class="btnRow" id="drvBtns"></div>
+        </section>
+      </div>
+    </div>
+  </div>
 
   <!-- Everything about this client, out of the way until you click Brand kit. -->
   <div class="modal hidden" id="briefModal">
@@ -631,6 +752,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         <button class="activity hidden" id="activity" type="button" title="Generations in progress — click to see"></button>
         <span class="count" id="count"></span>
         <span class="balance" id="balance" title="Atlas Cloud balance — refreshes after every generation"></span>
+        <button class="balance credPill hidden" id="credPill" type="button" title="Your credits — tap to buy more"></button>
         <a class="btn topUp hidden" id="topUp" href="https://www.atlascloud.ai/console" target="_blank" rel="noopener" title="Add credit to your Atlas Cloud account (opens Atlas Cloud) — the balance updates when you come back">＋ Top up</a>
         <button class="btn" id="briefBtn" title="This client's style notes and brand photos">◆ Brand kit</button>
       </div>
@@ -823,7 +945,7 @@ const $ = id => document.getElementById(id);
 // follows them to any device and two people never see each other's work.
 // Only device conveniences (the model catalogue cache, the theme) stay in
 // this browser's localStorage.
-const isAccountKey = k => /^il\.(clients|projects|proj|hist|presets|pending|imported|favs4\.|model\.|draft\.)/.test(k);
+const isAccountKey = k => /^il\.(clients|mcpseen|projects|proj|hist|presets|pending|imported|favs4\.|model\.|draft\.)/.test(k);
 const account = {};           // this person's data, as loaded from the server
 let unsynced = {}, syncTimer = null, syncWarned = false;
 const clone = v => (v == null ? v : JSON.parse(JSON.stringify(v)));
@@ -884,7 +1006,7 @@ async function api(path, opts={}) {
   const r = await fetch(path, { ...opts, headers: headers() });
   const j = await r.json().catch(() => ({ error:"Bad response from server." }));
   if (r.status === 401) { showGate("Your session ended — sign in again. Nothing is lost."); throw new Error(j.error || "Please sign in."); }
-  if (!r.ok) throw new Error(j.error || `Error ${r.status}`);
+  if (!r.ok) { const e = new Error(j.error || `Error ${r.status}`); e.status = r.status; e.data = j; throw e; }
   return j;
 }
 // Ship real client-side errors to the server log — the browser console isn't
@@ -899,7 +1021,7 @@ function reportClient(where, err, extra) {
       ua: navigator.userAgent,
       ...(extra || {}),
     };
-    fetch("/api/clientlog", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload), keepalive: true }).catch(()=>{});
+    fetch("/api/studio?fn=clientlog", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload), keepalive: true }).catch(()=>{});
   } catch {}
 }
 window.addEventListener("error", e => reportClient("window.onerror", e.error || { message: e.message }, { src: e.filename, line: e.lineno }));
@@ -922,7 +1044,7 @@ function showGate(m="") {
 $("gateSwitch").onclick = e => { e.preventDefault(); setGateMode(!gateSignup); };
 $("gateForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const body = { action: gateSignup ? "signup" : "login", username: $("gateUser").value.trim(), password: $("gatePass").value, code: $("gateCode").value.trim() };
+  const body = { action: gateSignup ? "signup" : "login", username: $("gateUser").value.trim(), password: $("gatePass").value, code: $("gateCode").value.trim(), ref: refFromLink() };
   $("gateGo").disabled = true; $("gateMsg").textContent = "";
   try {
     const r = await fetch("/api/auth", { method:"POST", headers: headers(), body: JSON.stringify(body) });
@@ -935,7 +1057,8 @@ $("gateForm").addEventListener("submit", async e => {
   } catch (err) { $("gateMsg").textContent = err.message; }
   finally { $("gateGo").disabled = false; }
 });
-$("settings").onclick = async () => {
+$("settings").onclick = () => openSettings();
+$("signOut").onclick = async () => {
   if (!confirm(`Sign out of ${me ? me.name : "the studio"}?`)) return;
   await syncNow();
   await fetch("/api/auth", { method:"POST", headers: headers(), body: JSON.stringify({ action:"logout" }) }).catch(() => {});
@@ -1179,7 +1302,7 @@ function fillDatalist() {
 }
 async function refreshBalance() {
   try {
-    const { value, currency } = await api("/api/balance", { cache: "no-store" }); // never a cached number — it changes with every generation
+    const { value, currency } = await api("/api/studio?fn=balance", { cache: "no-store" }); // never a cached number — it changes with every generation
     const n = Number(value);
     $("balance").textContent = Number.isFinite(n) ? "Atlas Cloud · " + n.toLocaleString(undefined, { style:"currency", currency: currency||"usd" }) : "";
     const low = Number.isFinite(n) && n < 3;
@@ -1197,7 +1320,7 @@ async function loadModels(force=false) {
   catalogue = load(LS.models, []);
   if (!catalogue.length || force) {
     $("modelHint").textContent = "Loading catalogue…";
-    try { const { models } = await api("/api/models"); catalogue = models; save(LS.models, catalogue); }
+    try { const { models } = await api("/api/studio?fn=models"); catalogue = models; save(LS.models, catalogue); }
     catch (e) { $("modelHint").textContent = "Catalogue unavailable: " + e.message; }
   }
   seedFavs();
@@ -1271,9 +1394,15 @@ async function updateEstimate() {
       // moment a model's picked, not only once there's a prompt. Never sent to Atlas Cloud
       // for the real generation, only for pricing it.
       const promptForPricing = $("prompt").value.trim() || "placeholder";
-      const out = await api("/api/estimate", { method:"POST", body: JSON.stringify({
+      const out = await api("/api/studio?fn=estimate", { method:"POST", body: JSON.stringify({
         mode, model, prompt: promptForPricing, image_url: refsForRequest(), params,
       }) });
+      if (out.credits != null) {
+        const n = Number(out.credits) * genCount;
+        costEl.textContent = "≈ " + n.toLocaleString() + " credits" + (genCount > 1 ? ` (${genCount})` : "");
+        costEl.title = wallet && wallet.credits != null ? `You have ${Number(wallet.credits).toLocaleString()} credits` : "Estimated credits";
+        return;
+      }
       const price = Number(out.price);
       if (!Number.isFinite(price)) { costEl.textContent = ""; return; }
       const total = price * genCount;
@@ -1625,7 +1754,14 @@ async function startGeneration({ mode, model, prompt, userPrompt, after, ref, pa
       upsertHistory(job); addPending(id, item);
       if (!firstShown) { firstShown = true; view(job); }
       poll(id, item);
+      if (wallet && wallet.enabled && !wallet.owner) refreshCredits();
     } catch (err) {
+      if (err.status === 402) {
+        if (!startGeneration.asked) { startGeneration.asked = true; setTimeout(() => startGeneration.asked = false, 3000);
+          note(`Not enough credits — this needs ${Number(err.data.need || 0).toLocaleString()}, you have ${Number(err.data.credits || 0).toLocaleString()}. Top up to keep going.`, true);
+          openSettings("credits"); }
+        return;
+      }
       reportClient("generate", err, { mode, model, count });
       const bad = { ...item, id: "x" + Date.now() + "_" + i, status: "failed", error: friendlyErr(errText(err) || "Generation failed"), at: Date.now() };
       upsertHistory(bad);
@@ -2029,6 +2165,7 @@ function renderHistory() {
       + (item.drive ? '<span class="driveDot gd" title="In your Google Drive"></span>' : "")
       + (done ? `<span class="addBoard${inB ? " in" : ""}" role="button" title="${inB ? "In the storyboard — tap to remove" : "Add to the storyboard"}">${inB ? "✓" : "＋"}</span>` : "");
     const ab = b.querySelector(".addBoard"); if (ab) ab.onclick = e => { e.stopPropagation(); toggleBoard(item.id); };
+    if (item.via === "claude") { const v = document.createElement("span"); v.className = "viaClaude"; v.textContent = "✳ Claude"; v.title = "Made from Claude"; b.appendChild(v); }
     if (item.status !== "running") {
       const del = document.createElement("span"); del.className = "delTake"; del.setAttribute("role", "button"); del.title = "Delete this take"; del.textContent = "🗑";
       del.onclick = e => { e.stopPropagation(); deleteTakes([item.id], true); };
@@ -2163,6 +2300,7 @@ async function loadDrive() {
 }
 function renderDrive() {
   const b = $("driveBtn"); b.classList.toggle("hidden", !drive.configured);
+  if (!$("setModal").classList.contains("hidden")) renderSettings();
   b.innerHTML = drive.connected
     ? `<i class="gd"></i><span>Google Drive<small>${esc(drive.email || "connected")}</small></span><b title="Connected">✓</b>`
     : `<i class="gd"></i><span>Connect Google Drive<small>save every take into client folders</small></span>`;
@@ -2224,6 +2362,7 @@ async function deleteTakes(ids, ask) {
   }
   const set = new Set(ids);
   save(LS.hist, all.filter(h => !set.has(h.id)));
+  if (items.some(h => h.via === "claude")) { const seen = Object.assign({ ops: [], gone: [] }, load("il.mcpseen", {})); seen.gone = [...seen.gone, ...items.filter(h => h.via === "claude").map(h => h.id)].slice(-500); save("il.mcpseen", seen); }
   projects.forEach(p => { if (p.board) p.board = p.board.filter(id => !set.has(id)); }); saveProjects();
   ids.forEach(id => { removePending(id); freshIds.delete(id); });
   if (viewing && set.has(viewing)) { closeViewer(); viewing = null; current = null; }
@@ -2250,6 +2389,174 @@ let cmpH = (() => { try { return Number(localStorage.getItem("il.cmpH")) || 0; }
   grip.addEventListener("keydown", e => { if (e.key === "ArrowUp") { apply(($("prompt").offsetHeight) + 24); end(); } if (e.key === "ArrowDown") { apply(($("prompt").offsetHeight) - 24); end(); } });
   grip.tabIndex = 0;
 })();
+
+
+/* ---------- settings: account, credits, invites, Claude, Google Drive ---------- */
+let wallet = null; // GET /api/credits
+// An invite link (…/generation?ref=CODE) is remembered until you sign up.
+function refFromLink() { try { return localStorage.getItem("il.ref") || ""; } catch { return ""; } }
+(() => {
+  const r = new URLSearchParams(location.search).get("ref");
+  if (r && /^[a-zA-Z0-9]{4,16}$/.test(r)) { try { localStorage.setItem("il.ref", r); } catch {} history.replaceState(null, "", location.pathname); refFromLink.fresh = true; }
+})();
+const fmtN = n => Number(n || 0).toLocaleString();
+function renderCredPill() {
+  const pill = $("credPill"), member = wallet && wallet.enabled && !wallet.owner;
+  pill.classList.toggle("hidden", !member);
+  if (member) { pill.textContent = fmtN(wallet.credits) + " credits"; pill.classList.toggle("low", wallet.credits < 300); }
+  $("tabCredits").classList.toggle("hidden", !(wallet && (wallet.enabled || wallet.owner)));
+}
+async function loadCredits() {
+  try { wallet = await api("/api/credits", { cache: "no-store" }); } catch { wallet = null; }
+  renderCredPill(); renderSettings();
+}
+async function refreshCredits() {
+  try { const out = await api("/api/studio?fn=balance", { cache: "no-store" }); if (wallet && out.credits != null) { wallet.credits = out.credits; renderCredPill(); } } catch {}
+}
+$("credPill").onclick = () => openSettings("credits");
+let setTab = "account";
+function openSettings(tab) {
+  if (tab) setTab = tab;
+  $("setModal").classList.remove("hidden");
+  renderSettings(); loadCredits();
+}
+function closeSettings() { $("setModal").classList.add("hidden"); }
+$("setClose").onclick = closeSettings; $("setBackdrop").onclick = closeSettings;
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("setModal").classList.contains("hidden")) closeSettings(); });
+$("setTabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (b) { setTab = b.dataset.tab; renderSettings(); } };
+document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
+  const el = $(b.dataset.copy); el.select();
+  try { await navigator.clipboard.writeText(el.value); } catch { document.execCommand("copy"); }
+  const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1600);
+});
+function renderSettings() {
+  if (!me) return;
+  if (setTab === "credits" && $("tabCredits").classList.contains("hidden")) setTab = "account";
+  document.querySelectorAll("#setTabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === setTab));
+  document.querySelectorAll(".setSec").forEach(x => x.classList.toggle("on", x.dataset.sec === setTab));
+  $("setWho").textContent = me.name;
+  $("setRole").textContent = me.role === "owner" ? "Studio owner" : "Member";
+  // credits
+  const w = wallet || {};
+  $("credNow").textContent = w.owner ? "∞" : fmtN(w.credits);
+  $("credSub").textContent = w.owner ? "you generate on the studio's own account" : "credits";
+  $("credNote").textContent = w.owner
+    ? (w.canBuy ? "Members buy credits here and you're paid through Stripe. You never pay credits yourself." : "Add your Stripe secret key in Vercel (STRIPE_SECRET_KEY) to let members buy credits.")
+    : (w.canBuy ? "Every generation shows its cost in credits before you press Generate. Credits never expire." : "Buying credits isn't switched on yet — ask the studio owner.");
+  const packs = $("packs"); packs.innerHTML = "";
+  if (!w.owner) (w.packs || []).forEach(pk => {
+    const b = document.createElement("button"); b.className = "pack"; b.type = "button"; b.disabled = !w.canBuy;
+    b.innerHTML = `<b>${fmtN(pk.credits)}</b><small>credits · $${pk.usd}</small>${pk.bonus ? `<em>${esc(pk.bonus)}</em>` : ""}`;
+    b.onclick = () => buyPack(pk.id, b);
+    packs.appendChild(b);
+  });
+  $("ownerGift").classList.toggle("hidden", !w.owner);
+  const lg = $("ledger"); lg.innerHTML = "";
+  const rows = w.ledger || [];
+  if (!rows.length) lg.innerHTML = `<div class="empty">Nothing yet.</div>`;
+  rows.forEach(r => {
+    const d = document.createElement("div");
+    d.innerHTML = `<span>${esc(r.note || r.type)} · ${new Date(r.t).toLocaleDateString()}</span><b class="${r.amount > 0 ? "plus" : ""}">${r.amount > 0 ? "+" : ""}${fmtN(r.amount)}</b>`;
+    lg.appendChild(d);
+  });
+  // invites
+  const ref = w.ref || {};
+  $("refLink").value = ref.link || "";
+  $("refLead").textContent = ref.percent > 0
+    ? `Share your link. When someone signs up with it, you get ${ref.percent}% of every credit pack they buy — added to your credits automatically.`
+    : "Share your link to invite people to the studio.";
+  $("refFriends").textContent = fmtN(ref.friends); $("refEarned").textContent = fmtN(ref.earned);
+  // Claude
+  $("mcpUrl").value = location.origin + "/mcp";
+  // Google Drive
+  const dr = typeof drive === "object" && drive ? drive : { configured: false };
+  $("drvState").textContent = !dr.configured ? "Not set up" : dr.connected ? (dr.email || "Connected") : "Not connected";
+  $("drvNote").textContent = !dr.configured
+    ? "The studio owner needs to add Google sign-in keys (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET) in Vercel first."
+    : dr.connected ? "Every finished take is copied into Illume Studio / Client / Project in your Drive." : "Connect your Google Drive and every take is also saved into tidy client and project folders.";
+  const bt = $("drvBtns"); bt.innerHTML = "";
+  const mk = (t, fn, cls = "btn") => { const b = document.createElement("button"); b.className = cls; b.type = "button"; b.textContent = t; b.onclick = fn; bt.appendChild(b); };
+  if (dr.configured && !dr.connected) mk("Connect Google Drive", () => location.href = "/api/gdrive?connect=1");
+  if (dr.connected) {
+    mk("Open my folder ↗", () => window.open("https://drive.google.com/drive/search?q=" + encodeURIComponent("Illume Studio"), "_blank", "noopener"));
+    mk("Save everything now", () => driveBackfill(true));
+    mk("Disconnect", async () => {
+      if (!confirm("Disconnect Google Drive? Everything already saved there stays in your Drive.")) return;
+      await api("/api/gdrive", { method: "POST", body: JSON.stringify({ action: "disconnect" }) });
+      drive.connected = false; drive.email = null; renderDrive(); renderSettings(); note("Google Drive disconnected.");
+    }, "btn danger");
+  }
+}
+async function buyPack(pack, btn) {
+  btn.disabled = true;
+  try { const { url } = await api("/api/credits", { method: "POST", body: JSON.stringify({ action: "buy", pack }) }); await syncNow(); location.href = url; }
+  catch (err) { note(err.message, true); btn.disabled = false; }
+}
+$("giftGo").onclick = async () => {
+  const to = $("giftTo").value.trim(), n = Number($("giftN").value);
+  if (!to || !n) return note("Enter who to gift and how many credits.", true);
+  try { const out = await api("/api/credits", { method: "POST", body: JSON.stringify({ action: "grant", to, credits: n }) }); note(`Gifted ${fmtN(n)} credits to ${to} — they now have ${fmtN(out.credits)}.`); $("giftTo").value = $("giftN").value = ""; }
+  catch (err) { note(err.message, true); }
+};
+$("mcpPat").onclick = async () => {
+  try {
+    const { token, url } = await api("/api/mcp?oauth=pat", { method: "POST", body: "{}" });
+    $("mcpCmd").value = `claude mcp add --transport http illume ${url} --header "Authorization: Bearer ${token}"`;
+    $("mcpPatOut").classList.remove("hidden");
+  } catch (err) { note(err.message, true); }
+};
+$("mcpRevoke").onclick = async () => {
+  if (!confirm("Revoke all Claude access? Every connected Claude app and personal key stops working until you connect again.")) return;
+  try { await api("/api/mcp?oauth=revoke", { method: "POST", body: "{}" }); $("mcpPatOut").classList.add("hidden"); note("Claude access revoked everywhere."); }
+  catch (err) { note(err.message, true); }
+};
+// Back from Stripe Checkout.
+async function stripeReturn() {
+  const q = new URLSearchParams(location.search), c = q.get("credits");
+  if (!c) return loadCredits();
+  history.replaceState(null, "", location.pathname);
+  if (c === "cancelled") { note("Payment cancelled — no charge was made."); return loadCredits(); }
+  try {
+    const out = await api("/api/credits", { method: "POST", body: JSON.stringify({ action: "confirm", sid: q.get("sid") || "" }) });
+    note(out.paid ? (out.added ? `Payment received — ${fmtN(out.added)} credits added. You now have ${fmtN(out.credits)}.` : `Payment already added — you have ${fmtN(out.credits)} credits.`) : "Your payment is still processing — the credits appear as soon as Stripe confirms it.");
+  } catch (err) { note("Couldn't confirm the payment yet: " + err.message + " — it will be checked again automatically.", true); }
+  loadCredits();
+}
+
+/* ---------- takes made from Claude ---------- */
+// Claude writes its takes to a separate record (il.mcp); the Studio folds them
+// into the takes list and storyboards. Anything you delete stays deleted.
+function mergeMcp(m) {
+  if (!m || typeof m !== "object") return;
+  const seen = Object.assign({ ops: [], gone: [] }, load("il.mcpseen", {}));
+  const hist = load(LS.hist, []); const byId = new Map(hist.map(h => [h.id, h]));
+  let changed = false, seenChanged = false, added = 0;
+  Object.values(m.takes || {}).forEach(t => {
+    if (!t || !t.id || seen.gone.includes(t.id)) return;
+    const h = byId.get(t.id);
+    if (h && !(h.status === "running" && t.status !== "running")) return;
+    const item = { ...(h || {}), ...t };
+    if (!projects.some(p => p.id === item.proj)) item.proj = projId;
+    byId.set(t.id, item); changed = true; if (!h) added++;
+    if (item.status === "running" && !loadPending().some(x => x.id === item.id)) { addPending(item.id, item); poll(item.id, item); }
+    else if (item.status !== "running") removePending(item.id);
+  });
+  if (changed) { save(LS.hist, [...byId.values()].sort((a, b) => (b.started || b.at || 0) - (a.started || a.at || 0)).slice(0, 1000)); }
+  (m.ops || []).forEach(op => {
+    if (!op || seen.ops.includes(op.id)) return;
+    seen.ops.push(op.id); seenChanged = true;
+    const pr = projects.find(p => p.id === op.proj);
+    if (op.type === "board" && pr) { pr.board = pr.board || []; if (!pr.board.includes(op.take)) { pr.board.push(op.take); saveProjects(); changed = true; } }
+  });
+  if (seenChanged) { seen.ops = seen.ops.slice(-300); save("il.mcpseen", seen); }
+  if (changed) { renderProjects(); renderHistory(); renderBoard(); renderActivity(); }
+  if (added) note(added === 1 ? "A new take from Claude arrived." : `${added} new takes from Claude arrived.`);
+}
+async function pullMcp() {
+  try { const { data } = await api("/api/data?only=mcp", { cache: "no-store" }); mergeMcp(data && data["il.mcp"]); } catch {}
+}
+setInterval(() => { if (me && !document.hidden) pullMcp(); }, 20000);
+document.addEventListener("visibilitychange", () => { if (me && !document.hidden) pullMcp(); });
 
 /* ---------- brief modal ---------- */
 function openBrief() { $("briefModal").classList.remove("hidden"); }
@@ -2312,6 +2619,9 @@ async function startStudio(user) {
   projId = getRaw(LS.proj); if (!projects.some(p => p.id===projId)) projId = projects[0].id;
   renderPresets(); selectProject(projId); // selectProject → restoreDraft sets the mode and restores the working draft
   loadModels(); resumePending();
+  mergeMcp(account["il.mcp"]);
+  try { localStorage.removeItem("il.ref"); } catch {}
+  stripeReturn(); // also loads the credits
   setTimeout(keepBackfill, 4000); // after the page has settled
   autoGrow();
   const dq = new URLSearchParams(location.search).get("drive");
@@ -2327,7 +2637,7 @@ async function startStudio(user) {
   let info = {};
   try { info = await (await fetch("/api/auth", { cache:"no-store" })).json(); } catch {}
   gateNeedsCode = !!info.signupCode;
-  setGateMode(false);
+  setGateMode(!!refFromLink.fresh && !info.user);
   if (info.user) return startStudio(info.user);
   showGate(info.ready === false ? "Accounts aren't switched on yet — the site owner needs to connect the Blob store in Vercel." : "");
 })();

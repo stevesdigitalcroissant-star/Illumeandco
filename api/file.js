@@ -8,13 +8,11 @@
 // Files live under media/<user>/…, and only that signed-in user can read them.
 const { Readable } = require("stream");
 const db = require("./_db");
+const { keepUrl } = require("./_keep");
 
 let blob = null;
 try { blob = require("@vercel/blob"); } catch {}
 
-// Same hosts /api/media accepts: where Atlas Cloud's models deliver results.
-const ALLOWED_HOST = /(^|\.)(aliyuncs\.com|volces\.com|byteimg\.com|atlascloud\.ai|amazonaws\.com|googleapis\.com|cloudfront\.net|r2\.dev|replicate\.delivery|fal\.media)$/i;
-const EXT = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif", "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov", "audio/mpeg": "mp3", "audio/wav": "wav", "audio/x-wav": "wav", "audio/mp4": "m4a", "audio/ogg": "ogg" };
 
 module.exports = async (req, res) => {
   const user = await db.requireUser(req, res);
@@ -23,26 +21,8 @@ module.exports = async (req, res) => {
 
   if (req.method === "POST") {
     const { url, id } = req.body || {};
-    let target;
-    try { target = new URL(String(url || "")); } catch { return res.status(400).json({ error: "Bad url." }); }
-    if (target.protocol !== "https:" || !ALLOWED_HOST.test(target.hostname)) return res.status(400).json({ error: "This host isn't allowed: " + target.hostname });
-    const safeId = String(id || Date.now()).replace(/[^\w-]/g, "").slice(0, 80) || String(Date.now());
-    try {
-      const up = await fetch(target);
-      if (!up.ok || !up.body) return res.status(502).json({ error: `Atlas storage returned ${up.status} — the file may have expired.` });
-      const type = (up.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
-      const ext = EXT[type] || (target.pathname.match(/\.(\w{2,5})$/) || [, "bin"])[1].toLowerCase();
-      const size = Number(up.headers.get("content-length")) || 0;
-      const path = `${mine}${safeId}.${ext}`;
-      await blob.put(path, up.body, {
-        access: "private", contentType: type || "application/octet-stream", addRandomSuffix: false, allowOverwrite: true,
-        multipart: size > 8 * 1024 * 1024 || /^video\//.test(type), // big files go up in parts
-      });
-      return res.status(200).json({ path, size, type });
-    } catch (e) {
-      console.log("keep failed:", e.message);
-      return res.status(502).json({ error: "Couldn't save a permanent copy: " + e.message });
-    }
+    try { return res.status(200).json(await keepUrl(user, url, id)); }
+    catch (e) { console.log("keep failed:", e.message); return res.status(e.status || 502).json({ error: e.message }); }
   }
 
   const p = String(req.query.p || "");

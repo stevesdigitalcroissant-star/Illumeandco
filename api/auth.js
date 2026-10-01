@@ -8,6 +8,7 @@
 // generations are paid for by the one studio Atlas key.
 const { randomBytes } = require("crypto");
 const db = require("./_db");
+const C = require("./_credits");
 
 const clientIp = req => String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
 
@@ -20,7 +21,7 @@ module.exports = async (req, res) => {
   }
   if (req.method !== "POST") return res.status(405).json({ error: "GET or POST only" });
 
-  const { action, username, password, code } = req.body || {};
+  const { action, username, password, code, ref } = req.body || {};
   if (action === "logout") { db.endSession(req, res); return res.status(200).json({ ok: true }); }
   if (!db.dbReady(res)) return;
 
@@ -45,6 +46,7 @@ module.exports = async (req, res) => {
       try { await db.writeJson(`users/${db.fileKey(name)}.json`, { hash, salt, created: Date.now(), role }, { overwrite: false }); }
       catch (e) { if (db.alreadyExists(e)) return res.status(409).json({ error: "That username is taken." }); throw e; }
       db.startSession(res, { name, role });
+      await C.onSignup(name, ref).catch(e => console.log("signup credits failed:", e.message));
       return res.status(200).json({ user: { name, role }, created: true });
     }
 

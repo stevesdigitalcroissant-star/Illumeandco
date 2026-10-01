@@ -1,7 +1,14 @@
 const { checkAccess, apiKey, atlas } = require("./_atlas");
+const C = require("./_credits");
+// A failed take returns its credits to the member who paid for it — once.
+async function refundHold(user, id, why) {
+  if (!C.pays(user)) return;
+  await C.withWallet(user.name, w => { const n = w.holds && w.holds[id]; if (!n) return; delete w.holds[id]; w.credits += n; C.entry(w, "refund", n, why); }).catch(e => console.log("refund failed:", e.message));
+}
 
 module.exports = async (req, res) => {
-  if (!(await checkAccess(req, res))) return;
+  const user = await checkAccess(req, res);
+  if (!user) return;
   const key = apiKey(res);
   if (!key) return;
   const id = req.query.id;
@@ -27,6 +34,7 @@ module.exports = async (req, res) => {
     const outputs = [].concat(raw || [])
       .map(o => (typeof o === "string" ? o : (o?.url || o?.download_url || o?.output_url || o?.uri || null)))
       .filter(u => typeof u === "string" && /^https?:\/\//i.test(u));
+    if (d.status === "failed" || d.status === "canceled" || ((d.status === "completed" || d.status === "succeeded") && !outputs.length)) await refundHold(user, id, "Take failed — refunded");
     res.status(200).json({
       status: d.status,
       outputs,
@@ -40,6 +48,7 @@ module.exports = async (req, res) => {
     // silently retrying a doomed job for two minutes.
     const m = String(e.message || "");
     if (/returned 4\d\d/.test(m)) {
+      await refundHold(user, id, "Take failed — refunded");
       return res.status(200).json({ status: "failed", outputs: [], error: m });
     }
     res.status(502).json({ error: e.message });

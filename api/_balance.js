@@ -1,4 +1,5 @@
 const { checkAccess, apiKey, atlas, PUBLIC_BASE } = require("./_atlas");
+const C = require("./_credits");
 
 // Atlas Cloud's account balance — a different base path (/public/v1) than
 // every other endpoint here (/api/v1), so it's passed explicitly to atlas().
@@ -6,7 +7,12 @@ module.exports = async (req, res) => {
   const user = await checkAccess(req, res);
   if (!user) return;
   // The studio account's balance is only shown to the owner (the first account).
-  if (user.role !== "owner") return res.status(200).json({ value: null });
+  res.setHeader("Cache-Control", "no-store");
+  if (user.role !== "owner") {
+    if (!C.enabled()) return res.status(200).json({ value: null });
+    const w = await C.getWallet(user.name).catch(() => ({ credits: 0 }));
+    return res.status(200).json({ credits: w.credits });
+  }
   const key = apiKey(res);
   if (!key) return;
   try {
