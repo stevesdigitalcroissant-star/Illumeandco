@@ -25,7 +25,8 @@ module.exports = async (req, res) => {
     // themselves about a flat vs. nested response, so this one isn't trusted blind either.
     const d = out?.data || out;
     const price = d.price ?? d.origin_price ?? null;
-    if (C.pays(user)) return res.status(200).json({ credits: price == null ? null : C.creditsFor(price), estimated: !!d.estimated });
+    // Only the owner ever sees dollars; everyone else sees credits, even before Stripe is switched on.
+    if (user.role !== "owner") return res.status(200).json({ credits: price == null ? null : C.creditsFor(price), estimated: !!d.estimated });
     res.status(200).json({
       price,
       origin_price: d.origin_price ?? null,
