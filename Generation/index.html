@@ -662,7 +662,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         <button data-tab="account" role="tab">Account</button>
         <button data-tab="credits" role="tab" id="tabCredits">Credits</button>
         <button data-tab="invite" role="tab">Invite &amp; earn</button>
-        <button data-tab="claude" role="tab">Claude</button>
+        <button data-tab="claude" role="tab">Claude &amp; ChatGPT</button>
         <button data-tab="drive" role="tab">Google Drive</button>
       </nav>
       <div class="modal-body">
@@ -691,7 +691,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         </section>
 
         <section class="setSec" data-sec="claude">
-          <p class="setP">Create images, videos and voiceovers straight from a conversation with Claude. Takes land in the right client and project here, and are saved like any other take.</p>
+          <p class="setP">Create images, videos and voiceovers straight from a conversation with Claude or ChatGPT. Takes land in the right client and project here, and are saved like any other take.</p>
           <h4>Your connector URL</h4>
           <div class="copyRow"><input id="mcpUrl" readonly><button class="btn" data-copy="mcpUrl" type="button">Copy</button></div>
           <h4>Claude app (claude.ai, desktop, phone)</h4>
@@ -700,6 +700,12 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
             <li>Tap <b>Add custom connector</b>, name it <b>Illume Studio</b> and paste the URL above.</li>
             <li>Tap <b>Connect</b>, sign in with this account and press <b>Allow</b>.</li>
             <li>In a chat, ask: <i>“Make a 9:16 video for my client … in Illume Studio.”</i></li>
+          </ol>
+          <h4>ChatGPT</h4>
+          <ol class="steps">
+            <li>In ChatGPT, open <b>Settings → Apps &amp; Connectors</b> and turn on <b>Developer mode</b> (under Advanced) if it asks.</li>
+            <li>Create a new connector, name it <b>Illume Studio</b>, paste the same URL and choose <b>OAuth</b>.</li>
+            <li>Sign in with this account and press <b>Allow</b>. Then pick Illume Studio in a chat.</li>
           </ol>
           <h4>Claude Code (terminal)</h4>
           <p class="setP">Create a personal key, then run the command it gives you. Keep the key private — it can spend your credits.</p>
