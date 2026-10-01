@@ -593,6 +593,15 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .pack small{color:var(--muted);font-size:12px}
 .pack em{font-style:normal;font-size:11px;font-weight:600;color:var(--gold-2)}
 .pack:disabled{opacity:.5;cursor:default;transform:none}
+.pack em.off{color:var(--muted)}
+.cover{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cover div{background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:11px 13px;display:flex;flex-direction:column;min-width:0}
+.cover span{font-size:11.5px;color:var(--faint)}
+.cover b{font-size:18px}
+.cover small{font-size:11.5px;color:var(--muted)}
+.cover p{grid-column:1/-1;margin:0;font-size:12.5px;color:var(--muted)}
+.cover.warn p{color:#FFD9D6;background:var(--danger-soft);border:1px solid rgba(240,122,110,.5);border-radius:12px;padding:9px 12px}
+@media (max-width:640px){.cover{grid-template-columns:1fr 1fr}}
 .ledger{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .ledger div{display:flex;justify-content:space-between;gap:10px;padding:9px 13px;font-size:13px;border-top:1px solid var(--line)}
 .ledger div:first-child{border-top:0}
@@ -675,6 +684,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         <section class="setSec" data-sec="credits">
           <div class="credBig"><span id="credNow">—</span><small id="credSub">credits</small></div>
           <p class="setP" id="credNote"></p>
+          <div class="cover hidden" id="cover"></div>
           <div class="packs" id="packs"></div>
           <div class="ownerGift hidden" id="ownerGift">
             <h4>Gift credits <span class="hint">studio owner only</span></h4>
@@ -2449,15 +2459,30 @@ function renderSettings() {
   $("credSub").textContent = w.owner ? "you generate on the studio's own account" : "credits";
   $("credNote").textContent = w.owner
     ? (w.canBuy ? "Members buy credits here and you're paid through Stripe. You never pay credits yourself." : "Add your Stripe secret key in Vercel (STRIPE_SECRET_KEY) to let members buy credits.")
-    : (w.canBuy ? "Every generation shows its cost in credits before you press Generate. Credits never expire and are non-refundable." : "Buying credits isn't switched on yet — ask the studio owner.");
+    : (!w.canBuy ? "Buying credits isn't switched on yet — ask the studio owner."
+      : (w.packs || []).some(p => p.ok) ? "Every generation shows its cost in credits before you press Generate. Credits never expire and are non-refundable."
+      : "Credit packs are temporarily unavailable — please check back soon.");
   const packs = $("packs"); packs.innerHTML = "";
   if (!w.owner) (w.packs || []).forEach(pk => {
-    const b = document.createElement("button"); b.className = "pack"; b.type = "button"; b.disabled = !w.canBuy;
-    b.innerHTML = `<b>${fmtN(pk.credits)}</b><small>credits · $${pk.usd}</small>${pk.bonus ? `<em>${esc(pk.bonus)}</em>` : ""}`;
+    const b = document.createElement("button"); b.className = "pack"; b.type = "button"; b.disabled = !w.canBuy || !pk.ok;
+    b.innerHTML = `<b>${fmtN(pk.credits)}</b><small>credits · $${pk.usd}</small>${!pk.ok && w.canBuy ? `<em class="off">Temporarily unavailable</em>` : pk.bonus ? `<em>${esc(pk.bonus)}</em>` : ""}`;
     b.onclick = () => buyPack(pk.id, b);
     packs.appendChild(b);
   });
   $("ownerGift").classList.toggle("hidden", !w.owner);
+  // Owner: can the Atlas balance cover the credits sold? Packs pause when it can't.
+  const cv = w.cover, coverEl = $("cover");
+  coverEl.classList.toggle("hidden", !(w.owner && cv));
+  if (w.owner && cv) {
+    const usd = n => Number(n).toLocaleString(undefined, { style: "currency", currency: "usd" });
+    const smallest = Math.min(...(w.packs || []).map(p => p.credits));
+    const paused = cv.room < smallest;
+    coverEl.classList.toggle("warn", paused);
+    coverEl.innerHTML = `<div><span>Atlas balance</span><b>${usd(cv.atlasUsd)}</b><small>covers ${fmtN(cv.covers)} credits</small></div>`
+      + `<div><span>Members hold</span><b>${fmtN(cv.held)}</b><small>unspent credits</small></div>`
+      + `<div><span>Can still sell</span><b>${fmtN(cv.room)}</b><small>credits</small></div>`
+      + `<p>${paused ? `⚠ Credit sales are paused — your Atlas balance can't cover another pack. Top up at least ${usd(Math.max(25, Math.ceil((smallest - cv.room) / (cv.perUsd || 130))))} on Atlas Cloud and they reopen by themselves.` : "Packs pause automatically if your Atlas balance can't cover them, and reopen when you top up."}</p>`;
+  }
   const lg = $("ledger"); lg.innerHTML = "";
   const rows = w.ledger || [];
   if (!rows.length) lg.innerHTML = `<div class="empty">Nothing yet.</div>`;
@@ -2497,7 +2522,7 @@ function renderSettings() {
 async function buyPack(pack, btn) {
   btn.disabled = true;
   try { const { url } = await api("/api/credits", { method: "POST", body: JSON.stringify({ action: "buy", pack }) }); await syncNow(); location.href = url; }
-  catch (err) { note(err.message, true); btn.disabled = false; }
+  catch (err) { note(err.message, true); if (err.status === 409) loadCredits(); else btn.disabled = false; }
 }
 $("giftGo").onclick = async () => {
   const to = $("giftTo").value.trim(), n = Number($("giftN").value);

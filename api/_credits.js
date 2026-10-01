@@ -32,6 +32,7 @@ const pays = user => enabled() && user && user.role !== "owner";
 
 const secret = () => createHash("sha256").update("illume-ref:" + (process.env.SESSION_SECRET || process.env.BLOB_READ_WRITE_TOKEN || "")).digest();
 const refCode = name => createHmac("sha256", secret()).update(String(name)).digest("base64url").replace(/[^a-zA-Z0-9]/g, "").slice(0, 8);
+let heldCache = null; // all members' unspent credits, briefly cached
 const walletPath = name => `wallet/${db.fileKey(name)}.json`;
 const empty = () => ({ credits: 0, ledger: [], pending: [], done: [], holds: {} });
 
@@ -40,6 +41,7 @@ async function putWallet(name, w) {
   w.ledger = (w.ledger || []).slice(-200); w.done = (w.done || []).slice(-500);
   const hk = Object.keys(w.holds || {}); if (hk.length > 150) hk.slice(0, hk.length - 150).forEach(k => delete w.holds[k]);
   await db.writeJson(walletPath(name), w);
+  heldCache = null; // totals changed
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 // Run fn(wallet) with the user's wallet locked; whatever it returns is returned.
@@ -88,4 +90,38 @@ async function onSignup(name, ref) {
   });
 }
 
-module.exports = { enabled, pays, PACKS, creditsFor, MARKUP, REF_PCT, refCode, ensureRefCode, whoseCode, getWallet, withWallet, entry, onSignup };
+// ---- Can the Atlas balance cover what's been sold? ----
+// 1 credit = $1 / (100 × (1 + markup)) of Atlas spend. Credits members already
+// hold are money the studio still owes Atlas; a new pack may only be sold if the
+// Atlas balance covers those AND the new pack. Otherwise the pack is paused.
+const usdToCredits = usd => Math.floor(Number(usd || 0) * 100 * (1 + MARKUP()));
+async function creditsHeld(fresh) { // all unspent credits across every member's wallet
+  if (!fresh && heldCache && Date.now() - heldCache.t < 30000) return heldCache.v;
+  let total = 0, cursor;
+  do {
+    const r = await blob.list({ prefix: "wallet/", cursor, limit: 1000 });
+    const ws = await Promise.all(r.blobs.map(b => db.readJson(b.pathname).catch(() => null)));
+    ws.forEach(x => { if (x && x.value) total += Math.max(0, Number(x.value.credits) || 0); });
+    cursor = r.hasMore ? r.cursor : null;
+  } while (cursor);
+  heldCache = { t: Date.now(), v: total };
+  return total;
+}
+async function atlasBalanceUsd() {
+  const { atlas, PUBLIC_BASE } = require("./_atlas");
+  const key = String(process.env.ATLASCLOUD_API_KEY || "").trim();
+  const out = await atlas("/balance", key, {}, PUBLIC_BASE);
+  const d = (out && out.data) || out || {};
+  const pick = o => (o && typeof o === "object" ? o.value : o);
+  const v = Number(pick(d.available) ?? pick(d.cash) ?? d.value ?? d.balance ?? d.amount);
+  if (!Number.isFinite(v)) throw new Error("Couldn't read the Atlas balance.");
+  return v;
+}
+// → { atlasUsd, covers, held, room }  room = credits that can still be sold safely
+async function coverage(fresh) {
+  const [atlasUsd, held] = await Promise.all([atlasBalanceUsd(), creditsHeld(fresh)]);
+  const covers = usdToCredits(atlasUsd);
+  return { atlasUsd, covers, held, room: Math.max(0, covers - held), perUsd: usdToCredits(1) };
+}
+
+module.exports = { coverage, enabled, pays, PACKS, creditsFor, MARKUP, REF_PCT, refCode, ensureRefCode, whoseCode, getWallet, withWallet, entry, onSignup };

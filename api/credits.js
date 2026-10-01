@@ -62,9 +62,12 @@ module.exports = async (req, res) => {
         w = await C.getWallet(user.name);
       }
       const referrals = w.refCount || 0;
+      // Packs pause while the Atlas balance couldn't cover them (see C.coverage).
+      let cov = null; try { if (KEY()) cov = await C.coverage(); } catch (e) { console.log("coverage failed:", e.message); }
       return res.status(200).json({
         enabled: C.enabled(), canBuy: !!KEY(), owner, credits: w.credits,
-        packs: C.PACKS.map(p => ({ id: p.id, usd: p.usd, credits: p.credits, bonus: p.bonus || "" })),
+        packs: C.PACKS.map(p => ({ id: p.id, usd: p.usd, credits: p.credits, bonus: p.bonus || "", ok: !!cov && cov.room >= p.credits })),
+        ...(owner && cov ? { cover: { atlasUsd: cov.atlasUsd, covers: cov.covers, held: cov.held, room: cov.room, perUsd: cov.perUsd } } : {}),
         ref: { code, link: `${origin(req)}/generation?ref=${code}`, percent: C.REF_PCT(), earned: w.refEarned || 0, friends: referrals },
         ledger: (w.ledger || []).slice(-30).reverse(),
       });
@@ -76,6 +79,8 @@ module.exports = async (req, res) => {
       if (!KEY()) return res.status(503).json({ error: "Buying credits isn't switched on yet." });
       const pack = C.PACKS.find(p => p.id === (req.body || {}).pack);
       if (!pack) return res.status(400).json({ error: "Pick a credit pack." });
+      let cov; try { cov = await C.coverage(true); } catch (e) { console.log("coverage failed:", e.message); }
+      if (!cov || cov.room < pack.credits) return res.status(409).json({ error: "This credit pack is temporarily unavailable — please check back soon.", paused: true });
       const s = await stripe("/checkout/sessions", {
         mode: "payment",
         "line_items[0][quantity]": "1",

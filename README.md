@@ -153,6 +153,8 @@ Set up once in Vercel (project `illume-site`), then redeploy:
 | `CREDIT_MARKUP` *(optional, default `0.30`)* | A take costs `ceil(Atlas price × (1 + markup) × 100)` credits. Members only ever see credits |
 | `REFERRAL_PERCENT` *(optional, default `0` = off)* | Share of every pack a referred member buys, given to the referrer as credits. The Invite tab only shows when this is above 0 |
 | `FREE_CREDITS` *(optional, default `0`)* | Welcome credits for each new account |
+
+**Sales safety switch:** a pack can only be bought while the Atlas balance covers every credit members already hold *plus* that pack (1 credit = $1 / (100 × (1 + markup)) of Atlas). Otherwise it shows “Temporarily unavailable” and reopens by itself after an Atlas top-up. The owner sees the numbers in Settings → Credits.
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` *(optional)* | Turns on “Connect Google Drive”: each account can save every take into `Illume Studio / Client / Project` in its own Drive (`api/gdrive.js`, scope `drive.file`). OAuth redirect URI: `https://www.illumeandco.online/api/gdrive` |
 
 Files in the Blob store: `users/<name>.json` (password hash, never the password),
