@@ -18,11 +18,10 @@ try { blob = require("@vercel/blob"); } catch {}
 
 const num = (v, d) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
 const MARKUP = () => num(process.env.CREDIT_MARKUP, 0.30);
-const REF_PCT = () => num(process.env.REFERRAL_PERCENT, 10);
+const REF_PCT = () => num(process.env.REFERRAL_PERCENT, 0); // referrals off unless set
 const FREE = () => Math.max(0, Math.round(num(process.env.FREE_CREDITS, 0)));
 const enabled = () => !!(process.env.STRIPE_SECRET_KEY || process.env.CREDITS === "on");
 const PACKS = [
-  { id: "p10", usd: 10, credits: 1000 },
   { id: "p25", usd: 25, credits: 2600, bonus: "+4% bonus" },
   { id: "p50", usd: 50, credits: 5400, bonus: "+8% bonus" },
   { id: "p100", usd: 100, credits: 11000, bonus: "+10% bonus" },

@@ -151,7 +151,7 @@ Set up once in Vercel (project `illume-site`), then redeploy:
 | `SIGNUP_CODE` *(optional)* | When set, creating an account requires this code. Unset = anyone can sign up |
 | `STRIPE_SECRET_KEY` *(optional)* | Turns on **credits**: members (everyone but the owner) pay for generations in credits bought with Stripe Checkout (Settings → Credits). No webhook needed |
 | `CREDIT_MARKUP` *(optional, default `0.30`)* | A take costs `ceil(Atlas price × (1 + markup) × 100)` credits. Members only ever see credits |
-| `REFERRAL_PERCENT` *(optional, default `10`)* | Share of every pack a referred member buys, given to the referrer as credits |
+| `REFERRAL_PERCENT` *(optional, default `0` = off)* | Share of every pack a referred member buys, given to the referrer as credits. The Invite tab only shows when this is above 0 |
 | `FREE_CREDITS` *(optional, default `0`)* | Welcome credits for each new account |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` *(optional)* | Turns on “Connect Google Drive”: each account can save every take into `Illume Studio / Client / Project` in its own Drive (`api/gdrive.js`, scope `drive.file`). OAuth redirect URI: `https://www.illumeandco.online/api/gdrive` |
 

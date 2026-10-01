@@ -2411,6 +2411,7 @@ function renderCredPill() {
   pill.classList.toggle("hidden", !member);
   if (member) { pill.textContent = fmtN(wallet.credits) + " credits"; pill.classList.toggle("low", wallet.credits < 300); }
   $("tabCredits").classList.toggle("hidden", !(wallet && (wallet.enabled || wallet.owner)));
+  document.querySelector('#setTabs [data-tab="invite"]').classList.toggle("hidden", !(wallet && wallet.ref && wallet.ref.percent > 0));
 }
 async function loadCredits() {
   try { wallet = await api("/api/credits", { cache: "no-store" }); } catch { wallet = null; }
@@ -2437,7 +2438,7 @@ document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
 });
 function renderSettings() {
   if (!me) return;
-  if (setTab === "credits" && $("tabCredits").classList.contains("hidden")) setTab = "account";
+  if (document.querySelector(`#setTabs [data-tab="${setTab}"]`).classList.contains("hidden")) setTab = "account";
   document.querySelectorAll("#setTabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === setTab));
   document.querySelectorAll(".setSec").forEach(x => x.classList.toggle("on", x.dataset.sec === setTab));
   $("setWho").textContent = me.name;
