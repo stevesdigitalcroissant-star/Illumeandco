@@ -98,7 +98,7 @@ const TOOLS = [
     model: { type: "string", description: "Atlas model id (see list_models). Defaults: Nano Banana Pro (image), Seedance 2.5 (video)." },
     aspect_ratio: { type: "string", enum: ["16:9", "9:16", "1:1", "4:5", "4:3", "3:4", "21:9"], description: "Frame shape. Ignored for video with a start image (it follows the image)." },
     quality: { type: "string", enum: ["1k", "2k", "4k", "720p", "1080p"], description: "Image: 1k/2k/4k. Video: 720p/1080p/2k/4k." },
-    duration_seconds: { type: "integer", minimum: 4, maximum: 15, description: "Video length." },
+    duration_seconds: { type: "integer", minimum: 4, maximum: 30, description: "Video length in seconds: up to 30 on Seedance 2.5, up to 15 on other models." },
     sound: { type: "boolean", description: "Video: generate music/effects/speech (default true)." },
     camera_move: { type: "string", enum: Object.keys(CAM), description: "Video camera direction, added to the prompt." },
     reference_image_urls: { type: "array", items: { type: "string" }, description: "https image URLs. Image: references for edit models. Video: the first one is the start frame." },

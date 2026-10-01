@@ -828,7 +828,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
           <div class="pill" id="resWrap"><button class="pillBtn" type="button" data-pop="resolution"><i class="pi pi-hd"></i><span id="pillRes">2k</span></button>
             <select id="resolution" class="sr" tabindex="-1" aria-hidden="true"><option value="1k">1k</option><option value="2k" selected>2k</option><option value="4k">4k</option><option value="">Model default</option></select></div>
           <div class="pill" id="durWrap"><button class="pillBtn" type="button" data-pop="duration"><i class="pi pi-time"></i><span id="pillDur">Auto</span></button>
-            <input type="number" id="duration" class="sr" tabindex="-1" aria-hidden="true" min="4" max="15" step="1" placeholder="Auto"></div>
+            <input type="number" id="duration" class="sr" tabindex="-1" aria-hidden="true" min="4" max="30" step="1" placeholder="Auto"></div>
         </div>
         <div class="pill" id="soundWrap"><label class="pillBtn toggle" title="Music, effects and speech, synced automatically"><input type="checkbox" id="genAudio" checked><i class="pi pi-sound"></i>Sound</label></div>
         <div class="pill" id="countPill"><button class="pillBtn" type="button" data-pop="count" title="How many takes at once"><span id="pillCount">×1</span></button></div>
@@ -1378,6 +1378,7 @@ function renderCountChips() {
 }
 function updateSel() {
   const id = $("model").value.trim();
+  if (Number($("duration").value) > 15 && !/seedance-2\.5/i.test(id)) { $("duration").value = "15"; saveDraft(); } // only Seedance 2.5 goes past 15s
   const hit = catalogue.find(x => x.id===id);
   $("sel").classList.toggle("none", !id);
   $("selName").textContent = id ? (hit ? shortName(hit.name) : id) : "No model chosen";
@@ -2101,7 +2102,8 @@ document.addEventListener("click", e => {
     return listPop(btn, "Quality", opts, $("resolution").value, v => setSelect("resolution", v));
   }
   if (kind === "duration") {
-    const opts = [{ value: "", label: "Auto" }, ...[4, 5, 6, 8, 10, 12, 15].map(n => ({ value: String(n), label: n + "s" }))];
+    const long = /seedance-2\.5/i.test($("model").value); // Seedance 2.5 goes up to 30s; other models stop at 15s
+    const opts = [{ value: "", label: "Auto" }, ...[4, 5, 6, 8, 10, 12, 15, ...(long ? [20, 25, 30] : [])].map(n => ({ value: String(n), label: n + "s" }))];
     return listPop(btn, "Length", opts, $("duration").value, v => { $("duration").value = v; $("duration").dispatchEvent(new Event("input")); }, true);
   }
 });
