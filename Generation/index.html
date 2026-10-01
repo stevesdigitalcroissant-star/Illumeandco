@@ -473,6 +473,82 @@ html[data-theme="light"] .composer{background:rgba(255,253,249,.92)}
   .pillBtn{height:34px;padding:0 10px;font-size:12.5px}
   .hist{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* ============ v4: polish + storyboard ============ */
+.head{position:static!important;margin-top:0!important;padding:4px 0 0!important;background:none!important}
+.balance::before{background:var(--gold);box-shadow:0 0 8px rgba(232,181,75,.7)}
+.railFoot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:12px;border-top:1px solid var(--line)}
+.railFoot #settings{border:0;padding:8px 6px;color:var(--faint)}
+.railFoot #settings:hover{background:transparent;color:var(--text)}
+.rail{gap:12px}
+/* toast */
+.toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-8px);z-index:40;max-width:min(560px,calc(100vw - 32px));padding:10px 16px;border-radius:14px;background:rgba(27,24,20,.95);border:1px solid var(--line-2);color:var(--text);font-size:13.5px;box-shadow:var(--sh-md);backdrop-filter:blur(12px);opacity:0;pointer-events:none;transition:opacity 260ms ease,transform 260ms ease}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast.err{color:#FFD9D6;background:rgba(60,20,16,.96);border-color:rgba(240,122,110,.4)}
+html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
+.msg:empty{display:block}
+/* composer rows line up */
+.cmpTop{min-height:34px}
+.camMoves{-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent);padding-right:24px}
+.pillBtn{height:40px}
+.composer .go{height:44px;padding:0 18px;min-width:220px}
+.kitToggle.pillBtn{border-radius:12px;padding:0 13px;font-size:13px;font-weight:500;letter-spacing:0;text-transform:none}
+.kitToggle .kitDia{font-size:11px}
+/* gallery: every card keeps its real shape (masonry) */
+.hist{grid-auto-rows:4px;row-gap:0;align-items:start}
+.hist button{aspect-ratio:var(--ar,4/5)!important;margin-bottom:14px;height:auto}
+.hist .addBoard{position:absolute;right:8px;bottom:8px;z-index:4;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(10,9,7,.7);border:1px solid rgba(255,236,200,.2);color:#F3EDE2;font-size:16px;opacity:0;transform:scale(.9);transition:opacity var(--ease),transform var(--ease),background var(--ease)}
+.hist button:hover .addBoard,.hist .addBoard.in{opacity:1;transform:none}
+.hist .addBoard.in{background:var(--gold);color:var(--gold-ink);border-color:transparent}
+.hist .addBoard:hover{background:var(--gold);color:var(--gold-ink)}
+.hist .keepDot{right:auto;left:10px;bottom:10px}
+@media (hover:none){.hist .addBoard{opacity:1;transform:none}}
+/* view tabs */
+.galleryHead{align-items:center;text-transform:none;letter-spacing:0}
+.viewTabs{display:flex;gap:4px;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:3px}
+.viewTabs button{background:transparent;border:0;border-radius:9px;padding:6px 12px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;display:flex;gap:7px;align-items:center;transition:color var(--ease),background var(--ease)}
+.viewTabs button[aria-selected="true"]{background:var(--raised);color:var(--text);box-shadow:var(--sh-sm)}
+.viewTabs i{font-style:normal;font-size:11px;color:var(--faint);background:var(--panel-2);border-radius:999px;padding:1px 7px}
+.viewTabs i:empty{display:none}
+.ghRight{display:flex;align-items:center;gap:10px}
+.ghLink{background:none;border:0;color:var(--faint);cursor:pointer;font-size:12px}
+.ghLink:hover{color:var(--danger)}
+.boardInfo{font-size:12.5px;color:var(--muted)}
+#playAll{background:linear-gradient(180deg,var(--gold-2),var(--gold));color:var(--gold-ink);border-color:transparent;font-weight:600}
+/* storyboard */
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;align-items:start}
+.board.hidden{display:none}
+.shot{position:relative;background:var(--panel-2);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;cursor:grab;transition:transform var(--ease),border-color var(--ease),box-shadow var(--ease);animation:pop 300ms both}
+.shot:hover{border-color:var(--line-2);box-shadow:var(--sh-md)}
+.shot.dragging{opacity:.45}
+.shot.over{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.shot.on{border-color:var(--gold)}
+.shot .frame{aspect-ratio:16/9;background:var(--stage);position:relative;cursor:pointer;overflow:hidden}
+.shot .frame img,.shot .frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.shot .num{position:absolute;left:10px;top:10px;z-index:2;font-family:var(--display);font-size:15px;color:var(--gold-ink);background:var(--gold);border-radius:8px;padding:1px 9px;min-width:28px;text-align:center}
+.shot .dur{position:absolute;right:10px;top:10px;z-index:2;font-size:11px;font-weight:600;background:rgba(10,9,7,.7);color:#F3EDE2;border-radius:999px;padding:3px 8px}
+.shot .txt{padding:10px 12px 4px;font-size:12.5px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:44px}
+.shot .ctl{display:flex;gap:4px;padding:6px 8px 10px;justify-content:flex-end}
+.shot .ctl button{width:32px;height:30px;border-radius:9px;border:1px solid var(--line);background:var(--raised);color:var(--muted);cursor:pointer;font-size:14px}
+.shot .ctl button:hover{color:var(--text);border-color:var(--gold-line)}
+.shot .ctl .rm:hover{color:var(--danger)}
+.shot .ctl .grip{margin-right:auto;border:0;background:transparent;cursor:grab;color:var(--faint);letter-spacing:-2px}
+.boardEmpty{grid-column:1/-1;border:1px dashed var(--line-2);border-radius:18px;padding:28px;text-align:center;color:var(--muted)}
+.boardEmpty b{display:block;font-family:var(--display);font-weight:300;font-size:26px;color:var(--text);margin-bottom:6px}
+#toBoard.in{border-color:var(--gold-line);color:var(--gold-2);background:var(--gold-soft)}
+.viewer .playing{color:var(--gold-2)}
+@media (max-width:640px){.composer .go{min-width:0}.board{grid-template-columns:1fr}}
+
+/* ============ v5: Google Drive ============ */
+.driveBtn{margin-top:auto;display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:10px 12px;color:var(--text);cursor:pointer;transition:border-color var(--ease),background var(--ease)}
+.driveBtn:hover{border-color:var(--gold-line)}
+.driveBtn span{flex:1;min-width:0;display:flex;flex-direction:column;font-size:13px;font-weight:600}
+.driveBtn small{font-size:11.5px;font-weight:400;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.driveBtn b{color:var(--ok);font-size:13px}
+.driveBtn .gd{width:20px;height:18px;flex-shrink:0}
+.gd{background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 87.3 78'%3E%3Cpath d='M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3L27.5 53H0c0 1.55.4 3.1 1.2 4.5z' fill='%230066da'/%3E%3Cpath d='M43.65 25L29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3L1.2 48.5C.4 49.9 0 51.45 0 53h27.5z' fill='%2300ac47'/%3E%3Cpath d='M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.8L65.65 64.5z' fill='%23ea4335'/%3E%3Cpath d='M43.65 25L57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.45-4.5 1.2z' fill='%2300832d'/%3E%3Cpath d='M59.8 53H27.5L13.75 76.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z' fill='%232684fc'/%3E%3Cpath d='M73.4 26.5l-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.8 53h27.45c0-1.55-.4-3.1-1.2-4.5z' fill='%23ffba00'/%3E%3C/svg%3E")}
+.driveBtn + .railFoot{margin-top:0}
+.hist .driveDot{position:absolute;left:24px;bottom:9px;z-index:3;width:10px;height:10px;background:no-repeat center/contain;opacity:.9}
 </style>
 </head>
 <body>
@@ -501,7 +577,11 @@ html[data-theme="light"] .composer{background:rgba(255,253,249,.92)}
     <h2>Clients</h2>
     <div class="ctree" id="projects"></div>
     <button class="newproj" id="newClient">+ New client</button>
-    <button class="newproj" id="settings">Sign out</button>
+    <button class="driveBtn hidden" id="driveBtn" type="button"></button>
+    <div class="railFoot" id="railFoot">
+      <button class="newproj" id="settings">Sign out</button>
+      <button class="btn iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark mode" title="Switch to light mode">☾</button>
+    </div>
   </aside>
 
   <!-- Everything about this client, out of the way until you click Brand kit. -->
@@ -534,20 +614,31 @@ html[data-theme="light"] .composer{background:rgba(255,253,249,.92)}
         <button class="activity hidden" id="activity" type="button" title="Generations in progress — click to see"></button>
         <span class="count" id="count"></span>
         <span class="balance" id="balance" title="Atlas Cloud balance — refreshes after every generation"></span>
-        <button class="btn iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark mode" title="Switch to light mode">☾</button>
         <button class="btn" id="briefBtn" title="This client's style notes and brand photos">◆ Brand kit</button>
       </div>
     </div>
 
     <!-- the work: every take, newest first; progress shows on the card itself -->
     <section class="gallery">
-      <div class="galleryHead"><span>Takes</span><button id="clearHist" type="button">Clear this project's takes</button></div>
+      <div class="galleryHead">
+        <div class="viewTabs" role="tablist" aria-label="View">
+          <button type="button" role="tab" id="tabTakes" aria-selected="true">Takes <i id="nTakes"></i></button>
+          <button type="button" role="tab" id="tabBoard" aria-selected="false">Storyboard <i id="nBoard"></i></button>
+        </div>
+        <div class="ghRight">
+          <span class="boardInfo hidden" id="boardInfo"></span>
+          <button class="btn hidden" id="playAll" type="button">▶ Play all</button>
+          <button class="ghLink" id="clearHist" type="button">Clear takes</button>
+        </div>
+      </div>
       <div class="hist" id="hist"></div>
+      <div class="board hidden" id="board"></div>
     </section>
+
+    <div class="toast msg" id="msg" role="status" aria-live="polite"></div>
 
     <!-- composer: everything for making the next take, docked at the bottom -->
     <div class="composer" id="composer">
-      <div class="msg" id="msg" role="status"></div>
       <div class="cmpTop">
         <div class="tabs" role="tablist" aria-label="Output type">
           <button role="tab" data-mode="image" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>Image</button>
@@ -555,7 +646,6 @@ html[data-theme="light"] .composer{background:rgba(255,253,249,.92)}
           <button role="tab" data-mode="audio" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/></svg>Voice</button>
         </div>
         <div class="camMoves hidden" id="camMoves" aria-label="Camera moves"></div>
-        <label class="kitToggle hidden" id="kitToggle" title="Adds this client's style notes (Brand kit) in front of your prompt"><input type="checkbox" id="useBrief" checked> <span id="kitToggleText">Brand style</span></label>
       </div>
 
       <div class="cmpMain">
@@ -584,7 +674,8 @@ html[data-theme="light"] .composer{background:rgba(255,253,249,.92)}
         </div>
         <div class="pill" id="soundWrap"><label class="pillBtn toggle" title="Music, effects and speech, synced automatically"><input type="checkbox" id="genAudio" checked><i class="pi pi-sound"></i>Sound</label></div>
         <div class="pill" id="countPill"><button class="pillBtn" type="button" data-pop="count" title="How many takes at once"><span id="pillCount">×1</span></button></div>
-        <div class="pill"><button class="pillBtn ghost" type="button" data-pop="presets" title="Saved prompts"><span>☆</span></button></div>
+        <div class="pill"><label class="pillBtn toggle kitToggle hidden" id="kitToggle" title="Adds this client's style notes (Brand kit) in front of your prompt"><input type="checkbox" id="useBrief" checked><span class="kitDia">◆</span><span id="kitToggleText">Brand style</span></label></div>
+        <div class="pill"><button class="pillBtn" type="button" data-pop="presets" title="Saved prompts"><span>☆ Saved</span></button></div>
         <span class="spacer"></span>
         <button class="go" id="go"><span id="goLabel">Generate</span><span class="goCost" id="goCost"></span></button>
       </div>
@@ -638,6 +729,8 @@ html[data-theme="light"] .composer{background:rgba(255,253,249,.92)}
     <button class="btn hidden" id="animate" type="button">▶ Animate</button>
     <button class="btn hidden" id="asRef" type="button">＋ Use as reference</button>
     <button class="btn hidden" id="reuse" type="button">↺ Reuse prompt</button>
+    <button class="btn hidden" id="toBoard" type="button">＋ Storyboard</button>
+    <a class="btn hidden" id="inDrive" target="_blank" rel="noopener">Open in Google Drive ↗</a>
     <span class="keptNote" id="keptNote"></span>
   </div>
 </div>
@@ -754,7 +847,12 @@ const shortName = (name, m=mode) => { const re = REDUNDANT_SUFFIX[m]; return re 
 // a whole track from a style description. They need different prompt wording,
 // and — see api/generate.js — a different request body field entirely.
 const isSongModel = idOrName => /suno|chirp|music|udio/i.test(String(idOrName || ""));
-const note = (t, err=false) => { $("msg").textContent = t; $("msg").classList.toggle("err", err); };
+let noteTimer = null;
+const note = (t, err=false) => {
+  const el = $("msg"); el.textContent = t; el.classList.toggle("err", err); el.classList.toggle("show", !!t);
+  clearTimeout(noteTimer); if (t) noteTimer = setTimeout(() => el.classList.remove("show"), err ? 12000 : 5000);
+};
+$("msg").onclick = () => $("msg").classList.remove("show");
 
 /* ---------- access ---------- */
 // Signed in with a session cookie (HttpOnly, set by /api/auth) — the browser
@@ -1037,7 +1135,7 @@ function selectProject(id) {
   current = null; setStage(null); $("metaText").textContent = "";
   ["dl","animate","asRef","reuse"].forEach(i => $(i).classList.add("hidden"));
   restoreDraft();
-  renderProjects(); renderHistory(); renderRefGrid(); renderActivity();
+  renderProjects(); renderHistory(); renderRefGrid(); renderActivity(); renderBoard(); renderViewTabs();
 }
 $("projName").onchange = () => { const p = proj(); p.name = $("projName").value.trim() || "General"; saveProjects(); refreshTitles(); renderProjects(); };
 $("clientName").onchange = () => { const c = client(); c.name = $("clientName").value.trim() || c.name; saveClients(); refreshTitles(); renderProjects(); };
@@ -1457,6 +1555,7 @@ function buildParams() {
 }
 $("go").onclick = async () => {
   let prompt = $("prompt").value.trim();
+  const userPrompt = prompt;
   const model = $("model").value.trim();
   if (!model) return note("Choose a model.", true);
   if (!looksLikeId(model)) return note("That model didn't load properly — pick one from the list again (or Refresh catalogue).", true);
@@ -1479,20 +1578,21 @@ $("go").onclick = async () => {
     catch (err) { $("go").disabled = false; reportClient("reframe", err); return note("Couldn't reshape the start image: " + err.message + " Pick “Same as image” to send it unchanged.", true); }
     finally { $("go").disabled = false; }
   }
-  startGeneration({ mode, model, prompt, ref, params, count: Math.max(1, Math.min(MAX_COUNT, genCount)) });
+  const after = continueFrom; continueFrom = null;
+  startGeneration({ mode, model, prompt, userPrompt, after, ref, params, count: Math.max(1, Math.min(MAX_COUNT, genCount)) });
 };
 // Sends one or more variations. EVERY variation gets a tile in the reel the
 // moment it's sent — "Generating…" → the result, or a red "Failed" tile with
 // Atlas's reason — so nothing can ever vanish without a trace. The newest
 // result always opens on the stage.
-async function startGeneration({ mode, model, prompt, ref, params, count = 1 }) {
+async function startGeneration({ mode, model, prompt, userPrompt, after, ref, params, count = 1 }) {
   $("go").disabled = true; note(count > 1 ? `Sending ${count} to Atlas Cloud…` : "Sent to Atlas Cloud.");
   closePops(); window.scrollTo({ top: 0, behavior: "smooth" }); // new takes appear first in the gallery
   let firstShown = false;
   await Promise.all(Array.from({ length: count }, async (_, i) => {
     const p = { ...params };
     if (p.seed != null) p.seed = Number(p.seed) + i;
-    const item = { mode, model, prompt, ref, params: p, proj: projId, client: (proj() || {}).client, started: Date.now() };
+    const item = { mode, model, prompt, userPrompt: userPrompt || prompt, after: i === 0 ? after : null, ref, params: p, proj: projId, client: (proj() || {}).client, started: Date.now() };
     try {
       const { id } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: ref, params: p }) });
       const job = { ...item, id, status: "running" };
@@ -1590,6 +1690,7 @@ function poll(id, item) {
       const done = { ...item, id, url: s.outputs[0], status: "done", at: Date.now() };
       freshIds.add(id); setTimeout(() => { freshIds.delete(id); renderHistory(); }, 30000);
       upsertHistory(done);
+      if (item.after) placeAfterInBoard(item.proj, item.after, id);
       if (me && me.role === "owner") refreshBalance();
       if (item.proj === projId) note(`Done in ${Math.round((Date.now() - (item.started||Date.now()))/1000)}s — it's first in your takes. Tap it to open.`);
       else note(`A take finished in “${projName(item.proj)}” — it's in that project's takes.`);
@@ -1660,7 +1761,7 @@ function view(item, open) {
     current = null; setStage(null); $("stageEmpty").classList.add("hidden");
     $("stageFailMsg").textContent = item.error || "Generation failed."; $("stageFail").classList.remove("hidden");
     $("metaText").innerHTML = `<b>Failed · ${esc(modelLabel(item.model, item.mode))}</b> — ${esc(item.prompt)}`;
-    ["dl","animate","asRef","continueShot"].forEach(i => $(i).classList.add("hidden")); $("reuse").classList.remove("hidden");
+    ["dl","animate","asRef","continueShot","inDrive"].forEach(i => $(i).classList.add("hidden")); $("reuse").classList.remove("hidden");
     $("keptNote").textContent = "";
     failedView = item; renderHistory(); return;
   }
@@ -1670,11 +1771,13 @@ let failedView = null;
 $("retry").onclick = () => {
   const f = failedView; if (!f) return;
   closeViewer();
-  startGeneration({ mode: f.mode, model: f.model, prompt: f.prompt, ref: f.ref, params: f.params || {}, count: 1 });
+  startGeneration({ mode: f.mode, model: f.model, prompt: f.prompt, userPrompt: f.userPrompt, after: f.after, ref: f.ref, params: f.params || {}, count: 1 });
 };
 function show(item) {
   current = item; viewing = item.id; setStage(item);
-  $("metaText").innerHTML = `<b>${{image:"Image",video:"Video",audio:"Voice"}[item.mode]} · ${esc(modelLabel(item.model, item.mode))}</b> — ${esc(item.prompt)}`;
+  $("metaText").innerHTML = (playing ? `<span class="playing">▶ Shot ${playing.i + 1} of ${playing.list.length}</span> · ` : "") + `<b>${{image:"Image",video:"Video",audio:"Voice"}[item.mode]} · ${esc(modelLabel(item.model, item.mode))}</b> — ${esc(item.userPrompt || item.prompt)}`;
+  const inB = board(item.proj).includes(item.id);
+  $("toBoard").classList.remove("hidden"); $("toBoard").classList.toggle("in", inB); $("toBoard").textContent = inB ? "✓ In storyboard" : "＋ Storyboard";
   // Download goes through our own domain: the download attribute only works
   // same-origin (a direct storage link just opens the file), and it gets a real filename.
   const path = decodeURIComponent(item.url.split("?p=")[1] || item.url.split("?")[0]);
@@ -1687,14 +1790,15 @@ function show(item) {
   $("asRef").classList.toggle("hidden", item.mode!=="image");
   $("continueShot").classList.toggle("hidden", !isVideoItem(item));
   const kept = /^\/api\/file/.test(item.url);
-  $("keptNote").textContent = kept ? "✓ Saved permanently" : "Saving a permanent copy…";
+  $("inDrive").classList.toggle("hidden", !item.drive); if (item.drive) $("inDrive").href = item.drive.link;
+  $("keptNote").textContent = kept ? (item.drive ? "✓ Saved permanently · in your Google Drive" : "✓ Saved permanently") : "Saving a permanent copy…";
   $("keptNote").classList.toggle("ok", kept);
   renderHistory();
 }
 $("reuse").onclick = () => {
   const it = current || failedView || load(LS.hist, []).find(h => h.id === viewing);
   closeViewer();
-  if (it) { if (it.mode !== mode) setMode(it.mode); $("prompt").value = it.prompt; $("prompt").dispatchEvent(new Event("input")); }
+  if (it) { if (it.mode !== mode) setMode(it.mode); $("prompt").value = it.userPrompt || it.prompt; $("prompt").dispatchEvent(new Event("input")); }
   $("prompt").focus();
 };
 $("asRef").onclick = () => { if (current) { const u = current.url; closeViewer(); addRef(u, "From takes"); } };
@@ -1703,11 +1807,12 @@ $("animate").onclick = () => { if (!current) return; const u = current.url; clos
 // ---- full-screen viewer
 function openViewer() { $("viewer").classList.remove("hidden"); document.body.style.overflow = "hidden"; closePops(); }
 function closeViewer() {
+  playing = null;
   $("viewer").classList.add("hidden"); document.body.style.overflow = "";
   $("stage").querySelectorAll("video,audio").forEach(v => v.pause());
 }
 function stepViewer(dir) {
-  const list = projTakes().filter(x => x.status !== "running"); const i = list.findIndex(x => x.id === viewing);
+  const list = viewMode === "board" ? boardItems() : projTakes().filter(x => x.status !== "running"); const i = list.findIndex(x => x.id === viewing);
   const next = list[i + dir]; if (next) view(next, true);
 }
 $("vClose").onclick = closeViewer;
@@ -1732,6 +1837,7 @@ $("continueShot").onclick = async () => {
     const small = await shrinkForUpload(new File([blob], "last-frame.jpg", { type: "image/jpeg" }));
     const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name: "last-frame.jpg", type: "image/jpeg", data: small.slice(small.indexOf(",") + 1) }) });
     if (!out.url) throw new Error("upload returned no URL");
+    continueFrom = it.id; // when the next shot finishes, it's placed right after this one in the storyboard
     closeViewer(); setMode("video"); setDrop(out.url, "Last frame of the previous shot");
     $("aspect").value = ""; $("aspect").dispatchEvent(new Event("input")); // keep the same shape as the shot it continues
     $("prompt").value = ""; $("prompt").focus();
@@ -1751,6 +1857,7 @@ async function keepForever(item) {
     const kept = { ...cur, src: cur.url, url: "/api/file?p=" + encodeURIComponent(out.path), size: out.size || 0, keptAt: Date.now() };
     upsertHistory(kept);
     if (viewing === item.id && current) { current = kept; $("keptNote").textContent = "✓ Saved permanently"; $("keptNote").classList.add("ok"); }
+    saveToDrive(kept);
     return true;
   } catch (err) {
     const cur = load(LS.hist, []).find(x => x.id === item.id);
@@ -1873,7 +1980,7 @@ function renderHistory() {
   const h = projTakes(); const box = $("hist"); box.innerHTML = "";
   const n = h.filter(x => x.status !== "failed").length;
   $("count").textContent = n ? `${n} take${n>1?"s":""}` : "";
-  if (!h.length) { box.innerHTML = `<div class="none"><b>Roll camera.</b>Write the shot below and press Generate — every take for ${esc((clients.length && client().name) || "this client")} lands here, first in line.</div>`; return; }
+  if (!h.length) { renderViewTabs(); box.innerHTML = `<div class="none"><b>Roll camera.</b>Write the shot below and press Generate — every take for ${esc((clients.length && client().name) || "this client")} lands here, first in line.</div>`; return; }
   h.forEach(item => {
     const b = document.createElement("button"); b.dataset.id = item.id;
     b.className = (viewing===item.id ? "on" : "") + (item.status==="failed" ? " failed" : "") + (freshIds.has(item.id) ? " fresh" : "");
@@ -1883,17 +1990,188 @@ function renderHistory() {
     else if (item.status === "failed") inner = `<div class="fail"><b>✕ Failed</b><small>${esc(item.error || "")}</small></div>`;
     else inner = isVideoItem(item) ? `<video src="${mediaSrc(item.url)}" muted playsinline loop preload="metadata"></video>`
       : (item.mode==="audio" && !isImageUrl(item.url)) ? `<div class="aud">♪</div>` : `<img src="${item.url}" alt="" loading="lazy" onerror="mediaFallback(this)">`;
-    const ov = !item.status || item.status === "done" ? `<span class="ov"><b>${esc(modelLabel(item.model, item.mode))}</b><span>${esc(item.prompt || "")}</span></span>` : "";
-    b.innerHTML = inner + `<span class="tag">${kind}</span>` + ov + (freshIds.has(item.id) ? '<span class="newBadge">NEW</span>' : "") + (/^\/api\/file/.test(item.url || "") ? '<span class="keepDot" title="Saved permanently"></span>' : "");
-    b.title = item.status === "failed" ? `Failed: ${item.error || ""}\n\n${item.prompt}` : item.prompt;
+    const done = !item.status || item.status === "done";
+    const ov = done ? `<span class="ov"><b>${esc(modelLabel(item.model, item.mode))}</b><span>${esc(item.userPrompt || item.prompt || "")}</span></span>` : "";
+    const inB = done && board().includes(item.id);
+    b.style.setProperty("--ar", ratioOf(item));
+    b.innerHTML = inner + (item.mode !== "image" ? `<span class="tag">${kind}</span>` : "") + ov + (freshIds.has(item.id) ? '<span class="newBadge">NEW</span>' : "")
+      + (/^\/api\/file/.test(item.url || "") ? `<span class="keepDot" title="Saved permanently${item.drive ? " · in Google Drive" : ""}"></span>` : "")
+      + (item.drive ? '<span class="driveDot gd" title="In your Google Drive"></span>' : "")
+      + (done ? `<span class="addBoard${inB ? " in" : ""}" role="button" title="${inB ? "In the storyboard — tap to remove" : "Add to the storyboard"}">${inB ? "✓" : "＋"}</span>` : "");
+    const ab = b.querySelector(".addBoard"); if (ab) ab.onclick = e => { e.stopPropagation(); toggleBoard(item.id); };
+    const media = b.querySelector("img,video");
+    if (media) media.addEventListener(media.tagName === "VIDEO" ? "loadedmetadata" : "load", () => {
+      const w = media.videoWidth || media.naturalWidth, h = media.videoHeight || media.naturalHeight;
+      if (w && h) { ratios.set(item.id, w / h); if (media.duration) durations.set(item.id, media.duration); b.style.setProperty("--ar", w / h); layoutMasonry(); }
+    }, { once: true });
+    b.title = item.status === "failed" ? `Failed: ${item.error || ""}\n\n${item.userPrompt || item.prompt}` : (item.userPrompt || item.prompt);
     b.onclick = () => view(item, true);
     const vid = b.querySelector("video");
     if (vid) { b.onmouseenter = () => vid.play().catch(() => {}); b.onmouseleave = () => { vid.pause(); vid.currentTime = 0; }; }
     box.appendChild(b);
   });
+  layoutMasonry(); renderViewTabs();
 }
 setInterval(() => document.querySelectorAll("#hist .tick").forEach(el => { el.textContent = clock(Number(el.dataset.t)); }), 1000);
 $("clearHist").onclick = () => { if (confirm("Remove this project's takes from the list? (Files already saved permanently stay in storage.)")) { save(LS.hist, load(LS.hist, []).filter(x => x.proj!==projId)); renderHistory(); renderProjects(); } };
+
+
+/* ---------- masonry: cards keep their real shape ---------- */
+const ratios = new Map(), durations = new Map();
+function ratioOf(item) {
+  if (ratios.has(item.id)) return ratios.get(item.id);
+  const r = (item.params && (item.params.aspect_ratio || item.params.ratio)) || "";
+  const m = String(r).match(/^(\d+(?:\.\d+)?):(\d+(?:\.\d+)?)$/);
+  return m ? (+m[1] / +m[2]) : (item.mode === "video" ? 16 / 9 : 4 / 5);
+}
+function layoutMasonry() {
+  const tiles = [...document.querySelectorAll("#hist > button")]; if (!tiles.length) return;
+  const w = tiles[0].getBoundingClientRect().width; if (!w) return;
+  tiles.forEach(t => { const ar = parseFloat(getComputedStyle(t).getPropertyValue("--ar")) || 0.8; t.style.gridRowEnd = "span " + Math.ceil((w / ar + 14) / 4); });
+}
+window.addEventListener("resize", () => { clearTimeout(layoutMasonry.t); layoutMasonry.t = setTimeout(layoutMasonry, 120); });
+
+/* ---------- storyboard: a project's shots, in order ---------- */
+// Stored on the project (project.board = [take ids]) so it syncs with the account.
+let viewMode = (() => { try { return localStorage.getItem("il.viewMode") === "board" ? "board" : "takes"; } catch { return "takes"; } })();
+let continueFrom = null, playing = null;
+function board(pid) { const p = projects.find(x => x.id === (pid || projId)); if (!p) return []; return p.board || (p.board = []); }
+function boardItems() { const h = load(LS.hist, []); return board().map(id => h.find(x => x.id === id)).filter(x => x && x.url && (!x.status || x.status === "done")); }
+function toggleBoard(id) {
+  const b = board(); const i = b.indexOf(id);
+  if (i >= 0) b.splice(i, 1); else b.push(id);
+  saveProjects(); renderHistory(); renderBoard();
+  if (current && current.id === id) show(current);
+  note(i >= 0 ? "Removed from the storyboard." : `Added to the storyboard as shot ${b.length}.`);
+}
+function placeAfterInBoard(pid, afterId, id) {
+  const b = board(pid); if (b.includes(id)) return;
+  let i = b.indexOf(afterId); if (i < 0) { b.push(afterId); i = b.length - 1; }
+  b.splice(i + 1, 0, id); saveProjects(); renderBoard();
+  if (pid === projId) note(`The new shot is in the storyboard as shot ${i + 2}, right after the one it continues.`);
+}
+function moveShot(id, to) { const b = board(); const i = b.indexOf(id); if (i < 0 || to < 0 || to >= b.length) return; b.splice(i, 1); b.splice(to, 0, id); saveProjects(); renderBoard(); }
+const fmtDur = s => { s = Math.round(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const shotSeconds = it => it.mode === "image" ? 3 : (durations.get(it.id) || Number(it.params && it.params.duration) || 5);
+function renderViewTabs() {
+  const n = projTakes().filter(x => x.status !== "failed").length, items = boardItems();
+  $("nTakes").textContent = n || ""; $("nBoard").textContent = items.length || "";
+  $("tabTakes").setAttribute("aria-selected", viewMode === "takes"); $("tabBoard").setAttribute("aria-selected", viewMode === "board");
+  $("hist").classList.toggle("hidden", viewMode !== "takes"); $("board").classList.toggle("hidden", viewMode !== "board");
+  $("clearHist").classList.toggle("hidden", viewMode !== "takes");
+  const total = items.reduce((t, it) => t + shotSeconds(it), 0);
+  $("boardInfo").textContent = items.length ? `${items.length} shot${items.length > 1 ? "s" : ""} · ≈ ${fmtDur(total)}` : "";
+  $("boardInfo").classList.toggle("hidden", viewMode !== "board" || !items.length);
+  $("playAll").classList.toggle("hidden", viewMode !== "board" || !items.length);
+}
+function setViewMode(m) { viewMode = m; try { localStorage.setItem("il.viewMode", m); } catch {} renderViewTabs(); if (m === "board") renderBoard(); else layoutMasonry(); }
+$("tabTakes").onclick = () => setViewMode("takes");
+$("tabBoard").onclick = () => setViewMode("board");
+let dragId = null;
+function renderBoard() {
+  const box = $("board"); box.innerHTML = ""; const items = boardItems();
+  if (!items.length) {
+    box.innerHTML = `<div class="boardEmpty"><b>Build your sequence.</b>Tap ＋ on any take (or “＋ Storyboard” when it's open) to add it as a shot. Drag shots to reorder, then ▶ Play all to watch the cut. <br>Tip: <em>⏭ Continue shot</em> on a video drops the next shot right after it.</div>`;
+    renderViewTabs(); return;
+  }
+  items.forEach((it, i) => {
+    const el = document.createElement("div"); el.className = "shot" + (viewing === it.id ? " on" : ""); el.draggable = true; el.dataset.id = it.id;
+    const media = isVideoItem(it) ? `<video src="${mediaSrc(it.url)}" muted playsinline preload="metadata"></video>` : (it.mode === "audio" && !isImageUrl(it.url)) ? `<div class="aud" style="height:100%;display:grid;place-items:center;color:var(--gold);font-size:30px">♪</div>` : `<img src="${it.url}" alt="" loading="lazy" onerror="mediaFallback(this)">`;
+    el.innerHTML = `<div class="frame"><span class="num">${i + 1}</span><span class="dur">${it.mode === "image" ? "still" : fmtDur(shotSeconds(it))}</span>${media}</div>
+      <div class="txt">${esc(it.userPrompt || it.prompt || "")}</div>
+      <div class="ctl"><button class="grip" type="button" title="Drag to reorder" aria-label="Drag to reorder">⋮⋮</button><button type="button" class="l" title="Move earlier" aria-label="Move earlier">‹</button><button type="button" class="r" title="Move later" aria-label="Move later">›</button><button type="button" class="rm" title="Remove from the storyboard" aria-label="Remove">✕</button></div>`;
+    el.querySelector(".frame").onclick = () => view(it, true);
+    el.querySelector(".l").onclick = () => moveShot(it.id, i - 1);
+    el.querySelector(".r").onclick = () => moveShot(it.id, i + 1);
+    el.querySelector(".rm").onclick = () => toggleBoard(it.id);
+    const v = el.querySelector("video");
+    if (v) { v.addEventListener("loadedmetadata", () => { if (v.duration && !durations.has(it.id)) { durations.set(it.id, v.duration); el.querySelector(".dur").textContent = fmtDur(v.duration); renderViewTabs(); } }, { once: true });
+      el.onmouseenter = () => v.play().catch(() => {}); el.onmouseleave = () => { v.pause(); v.currentTime = 0; }; }
+    el.addEventListener("dragstart", e => { dragId = it.id; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+    el.addEventListener("dragend", () => { dragId = null; el.classList.remove("dragging"); box.querySelectorAll(".over").forEach(x => x.classList.remove("over")); });
+    el.addEventListener("dragover", e => { if (dragId && dragId !== it.id) { e.preventDefault(); el.classList.add("over"); } });
+    el.addEventListener("dragleave", () => el.classList.remove("over"));
+    el.addEventListener("drop", e => { e.preventDefault(); if (dragId && dragId !== it.id) moveShot(dragId, board().indexOf(it.id)); });
+    box.appendChild(el);
+  });
+  renderViewTabs();
+}
+$("toBoard").onclick = () => { const it = current; if (it) toggleBoard(it.id); };
+// ▶ Play all: the shots in order, full screen — videos play through, stills hold 3s.
+$("playAll").onclick = async () => {
+  const list = boardItems(); if (!list.length) return;
+  const run = playing = { list, i: 0 };
+  openViewer();
+  for (let i = 0; i < list.length; i++) {
+    if (playing !== run) return; run.i = i;
+    view(list[i], true);
+    const v = $("stage").querySelector("video,audio");
+    if (v && v.tagName === "VIDEO") { v.loop = false; v.muted = false; v.currentTime = 0; v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); }
+    await new Promise(done => {
+      if (v) { v.onended = done; v.onerror = done; setTimeout(done, ((v.duration || shotSeconds(list[i])) + 2) * 1000); }
+      else setTimeout(done, 3000);
+    });
+  }
+  if (playing === run) { playing = null; closeViewer(); note("That's the cut."); }
+};
+
+
+/* ---------- Google Drive: every take also saved into Illume Studio / Client / Project ---------- */
+let drive = { configured: false, connected: false, email: null };
+async function loadDrive() {
+  try { drive = await api("/api/gdrive?status=1", { cache: "no-store" }); } catch { drive = { configured: false }; }
+  renderDrive();
+  if (drive.connected) setTimeout(driveBackfill, 6000);
+}
+function renderDrive() {
+  const b = $("driveBtn"); b.classList.toggle("hidden", !drive.configured);
+  b.innerHTML = drive.connected
+    ? `<i class="gd"></i><span>Google Drive<small>${esc(drive.email || "connected")}</small></span><b title="Connected">✓</b>`
+    : `<i class="gd"></i><span>Connect Google Drive<small>save every take into client folders</small></span>`;
+}
+$("driveBtn").onclick = e => {
+  if (!drive.connected) { location.href = "/api/gdrive?connect=1"; return; }
+  showMenu(e.currentTarget, [
+    { text: "Open my Illume Studio folder ↗", run: () => window.open("https://drive.google.com/drive/search?q=" + encodeURIComponent("Illume Studio"), "_blank", "noopener") },
+    { text: "Save everything to Drive now", run: () => driveBackfill(true) },
+    "-",
+    { text: "Disconnect Google Drive", danger: true, run: async () => {
+      if (!confirm("Disconnect Google Drive? Everything already saved there stays in your Drive.")) return;
+      await api("/api/gdrive", { method: "POST", body: JSON.stringify({ action: "disconnect" }) });
+      drive.connected = false; drive.email = null; renderDrive(); note("Google Drive disconnected.");
+    } },
+  ]);
+};
+const savingDrive = new Set();
+async function saveToDrive(item) {
+  if (!drive.connected || !item || !/^\/api\/file\?p=/.test(item.url || "") || item.drive || savingDrive.has(item.id) || (item.driveTries || 0) >= 3) return false;
+  savingDrive.add(item.id);
+  try {
+    const path = decodeURIComponent(item.url.split("?p=")[1]);
+    const c = client(item.client) || client(), pr = projects.find(x => x.id === item.proj);
+    const ext = (path.match(/\.(\w{2,5})$/) || [, "jpg"])[1];
+    const when = new Date(item.at || item.started || Date.now()).toISOString().slice(0, 16).replace("T", " ").replace(":", "h");
+    const slug = String(item.userPrompt || item.prompt || "take").replace(/[^\w\s-]+/g, "").trim().slice(0, 60) || "take";
+    const out = await api("/api/gdrive", { method: "POST", body: JSON.stringify({ action: "save", path, client: c ? c.name : "Unsorted", project: pr ? pr.name : "General", name: `${when} — ${slug}.${ext}` }) });
+    const cur = load(LS.hist, []).find(x => x.id === item.id);
+    if (cur) { const d = { ...cur, drive: { id: out.id, link: out.link } }; delete d.driveTries; upsertHistory(d); if (current && current.id === item.id) { current = d; show(d); } }
+    return true;
+  } catch (err) {
+    const cur = load(LS.hist, []).find(x => x.id === item.id);
+    if (cur) upsertHistory({ ...cur, driveTries: (cur.driveTries || 0) + 1 });
+    reportClient("drive", err, { id: item.id });
+    return false;
+  } finally { savingDrive.delete(item.id); }
+}
+async function driveBackfill(loud) {
+  if (!drive.connected) return;
+  const todo = load(LS.hist, []).filter(h => /^\/api\/file\?p=/.test(h.url || "") && !h.drive && (loud || (h.driveTries || 0) < 3));
+  if (loud) todo.forEach(t => { delete t.driveTries; });
+  if (!todo.length) { if (loud) note("Everything is already in your Google Drive."); return; }
+  if (loud) note(`Saving ${todo.length} take${todo.length > 1 ? "s" : ""} to Google Drive…`);
+  let n = 0; for (const it of todo) if (await saveToDrive(loud ? { ...it, driveTries: 0 } : it)) n++;
+  if (n) note(`${n} take${n > 1 ? "s" : ""} saved to Google Drive · Illume Studio folder.`);
+}
 
 /* ---------- brief modal ---------- */
 function openBrief() { $("briefModal").classList.remove("hidden"); }
@@ -1957,6 +2235,12 @@ async function startStudio(user) {
   renderPresets(); selectProject(projId); // selectProject → restoreDraft sets the mode and restores the working draft
   loadModels(); resumePending();
   setTimeout(keepBackfill, 4000); // after the page has settled
+  const dq = new URLSearchParams(location.search).get("drive");
+  if (dq) {
+    history.replaceState(null, "", location.pathname);
+    note({ connected: "Google Drive connected — every take now goes into Illume Studio / client / project folders.", cancelled: "Google Drive wasn't connected (cancelled).", expired: "That Google sign-in took too long — try Connect Google Drive again.", norefresh: "Google didn't grant lasting access — remove Illume Studio at myaccount.google.com/permissions, then connect again.", failed: "Couldn't connect Google Drive — please try again." }[dq] || "", dq !== "connected");
+  }
+  loadDrive();
   if (me.role === "owner") refreshBalance();
   renderActivity();
 }

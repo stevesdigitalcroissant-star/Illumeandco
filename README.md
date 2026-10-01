@@ -149,6 +149,7 @@ Set up once in Vercel (project `illume-site`), then redeploy:
 | Storage → **Blob** (private store) → connected to the project | Holds accounts and each person's work (adds `BLOB_READ_WRITE_TOKEN`) |
 | `ATLASCLOUD_API_KEY` | The one studio Atlas Cloud key every account generates with. Never sent to browsers |
 | `SIGNUP_CODE` *(optional)* | When set, creating an account requires this code. Unset = anyone can sign up |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` *(optional)* | Turns on “Connect Google Drive”: each account can save every take into `Illume Studio / Client / Project` in its own Drive (`api/gdrive.js`, scope `drive.file`). OAuth redirect URI: `https://www.illumeandco.online/api/gdrive` |
 
 Files in the Blob store: `users/<name>.json` (password hash, never the password),
 `data/<name>.json` (that person's projects, reel and drafts), `owner.json`.
@@ -162,6 +163,10 @@ each project has its own reel. Every generation records its client and project.
 Every finished image and video is **copied into the private Blob store** (`media/<user>/…`)
 the moment it's done (`api/file.js`), because Atlas Cloud's own links expire. Only the
 signed-in owner of a file can open it; older takes are copied on the next sign-in.
+
+Each project also has a **Storyboard**: takes added as numbered shots, reordered by drag
+or arrows, and played back in order with ▶ Play all. “Continue shot” puts the next shot
+straight after the one it continues.
 
 The first account ever created is the owner, and only the owner sees the Atlas balance.
 `STUDIO_PASSWORD` is no longer used.
