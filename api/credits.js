@@ -84,6 +84,7 @@ module.exports = async (req, res) => {
         "line_items[0][price_data][product_data][name]": `Illume Studio — ${pack.credits.toLocaleString()} credits`,
         "metadata[user]": user.name, "metadata[credits]": String(pack.credits), "metadata[pack]": pack.id,
         client_reference_id: db.fileKey(user.name),
+        "custom_text[submit][message]": "Credits are added to your Illume Studio account right after payment. Credits never expire and are non-refundable.",
         success_url: `${origin(req)}/generation?credits=paid&sid={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin(req)}/generation?credits=cancelled`,
       });

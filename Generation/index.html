@@ -2449,7 +2449,7 @@ function renderSettings() {
   $("credSub").textContent = w.owner ? "you generate on the studio's own account" : "credits";
   $("credNote").textContent = w.owner
     ? (w.canBuy ? "Members buy credits here and you're paid through Stripe. You never pay credits yourself." : "Add your Stripe secret key in Vercel (STRIPE_SECRET_KEY) to let members buy credits.")
-    : (w.canBuy ? "Every generation shows its cost in credits before you press Generate. Credits never expire." : "Buying credits isn't switched on yet — ask the studio owner.");
+    : (w.canBuy ? "Every generation shows its cost in credits before you press Generate. Credits never expire and are non-refundable." : "Buying credits isn't switched on yet — ask the studio owner.");
   const packs = $("packs"); packs.innerHTML = "";
   if (!w.owner) (w.packs || []).forEach(pk => {
     const b = document.createElement("button"); b.className = "pack"; b.type = "button"; b.disabled = !w.canBuy;
