@@ -4,6 +4,7 @@
 // finishes the page asks this endpoint to copy it into our own storage:
 //   POST /api/file { url, id }  → { path, size, type }   (copy, then serve from us forever)
 //   GET  /api/file?p=<path>[&download=1&name=x.jpg]       (stream it back; Range for video)
+//   DELETE /api/file?p=<path>                              (delete it)
 // Files live under media/<user>/…, and only that signed-in user can read them.
 const { Readable } = require("stream");
 const db = require("./_db");
@@ -44,8 +45,13 @@ module.exports = async (req, res) => {
     }
   }
 
-  if (req.method !== "GET" && req.method !== "HEAD") return res.status(405).end();
   const p = String(req.query.p || "");
+  if (req.method === "DELETE") {   // delete a take's permanent copy (only your own)
+    if (!p.startsWith(mine) || p.includes("..")) return res.status(404).json({ error: "Not found." });
+    try { await blob.del(p); return res.status(200).json({ ok: true }); }
+    catch (e) { console.log("file delete failed:", e.message); return res.status(502).json({ error: e.message }); }
+  }
+  if (req.method !== "GET" && req.method !== "HEAD") return res.status(405).end();
   if (!p.startsWith(mine) || p.includes("..")) return res.status(404).end(); // only your own files
   try {
     const range = req.headers.range;
