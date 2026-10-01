@@ -7,7 +7,7 @@
 // studio's own keys are accepted, and the file is size-capped.
 const db = require("./_db");
 
-const ALLOWED = /^il\.(projects|proj|hist|presets|pending|imported|favs4\.(image|video|audio)|model\.(image|video|audio)|draft\.[\w-]{1,40})$/;
+const ALLOWED = /^il\.(clients|projects|proj|hist|presets|pending|imported|favs4\.(image|video|audio)|model\.(image|video|audio)|draft\.[\w-]{1,40})$/;
 const MAX_FILE = 3 * 1024 * 1024; // a whole reel of 150 items is far below this
 
 module.exports = async (req, res) => {

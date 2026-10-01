@@ -155,5 +155,9 @@ Files in the Blob store: `users/<name>.json` (password hash, never the password)
 Sign-ins are a signed cookie, so no Blob call is made per request.
 `package.json` exists only to install `@vercel/blob` for the functions — there is still no build step.
 
+Work is organised as **Client → Project**. Each client has a brand kit (style notes added
+to every prompt, with an on/off switch, and brand photos one tap from the references);
+each project has its own reel. Every generation records its client and project.
+
 The first account ever created is the owner, and only the owner sees the Atlas balance.
 `STUDIO_PASSWORD` is no longer used.

@@ -60,7 +60,7 @@ a{color:var(--gold)}
 ::-webkit-scrollbar-track{background:transparent}
 
 /* ---------- shell ---------- */
-.app{display:grid;grid-template-columns:232px 400px minmax(0,1fr);min-height:100vh}
+.app{display:grid;grid-template-columns:252px 400px minmax(0,1fr);min-height:100vh}
 .rail,.controls,.main{min-width:0}
 @media (max-width:1180px){.app{grid-template-columns:minmax(0,1fr)}}
 
@@ -69,8 +69,6 @@ a{color:var(--gold)}
 .wordmark{font-family:var(--display);font-size:22px;font-weight:400;letter-spacing:-.01em;padding:0 8px;display:flex;align-items:center;gap:10px}
 .wordmark i{display:inline-block;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--gold-2),var(--gold) 60%,#9A7020);box-shadow:0 0 18px rgba(232,181,75,.7)}
 .whoami{font-size:12px;color:var(--faint);padding:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.railart{height:116px;border-radius:var(--r-lg);background-size:cover;background-position:center 25%;position:relative;overflow:hidden;box-shadow:var(--sh-md)}
-.railart::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.55));border-radius:inherit;box-shadow:inset 0 0 0 1px var(--line)}
 .rail h2{font-size:11px;font-weight:600;color:var(--faint);margin:10px 8px 0;letter-spacing:.14em;text-transform:uppercase}
 .projects{display:flex;flex-direction:column;gap:2px}
 .projects button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;background:transparent;border:0;border-radius:10px;padding:9px 10px;color:var(--muted);cursor:pointer;transition:background var(--ease),color var(--ease),transform var(--ease)}
@@ -85,13 +83,59 @@ a{color:var(--gold)}
 #settings:hover{border-color:var(--line-2);background:var(--raised)}
 @media (max-width:1180px){
   .rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:14px 16px}
-  .railart,.rail h2{display:none}
+  .rail h2{display:none}
+  .ctree{max-height:240px;overflow:auto}
   .projects{flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:2px}
   .projects button{width:auto;white-space:nowrap;background:var(--raised)}
   .railrow{display:flex;gap:6px;align-items:center;min-width:0}
   .railrow .projects{flex:1;min-width:0}
   .newproj{white-space:nowrap}
 }
+
+/* client tree */
+.ctree{display:flex;flex-direction:column;gap:2px}
+.crow{display:flex;align-items:center;gap:2px;border-radius:10px;transition:background var(--ease)}
+.crow:hover{background:var(--raised)}
+.crow > button.pick{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:transparent;border:0;padding:9px 6px 9px 10px;color:var(--muted);cursor:pointer;text-align:left;border-radius:10px}
+.crow > button.pick span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow > button.pick small{color:var(--faint);font-size:11px;background:var(--raised);border-radius:999px;padding:1px 7px}
+.crow > button.pick small:empty{display:none}
+.crow .dotc{width:22px;height:22px;flex-shrink:0;border-radius:7px;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--gold-ink);background:linear-gradient(135deg,var(--gold-2),var(--gold))}
+.crow.client.open > button.pick{color:var(--text);font-weight:600}
+.crow.client:not(.open) .dotc{background:var(--raised);color:var(--muted)}
+.crow.proj{margin-left:20px;position:relative}
+.crow.proj::before{content:"";position:absolute;left:-9px;top:0;bottom:0;border-left:1px solid var(--line-2)}
+.crow.proj > button.pick{padding:7px 6px 7px 10px;font-size:13.5px}
+.crow.proj.on{background:linear-gradient(90deg,var(--gold-soft),transparent);box-shadow:inset 2px 0 0 var(--gold)}
+.crow.proj.on > button.pick{color:var(--text);font-weight:500}
+.crow .more{opacity:0;background:transparent;border:0;color:var(--faint);cursor:pointer;width:26px;height:26px;border-radius:8px;font-size:15px;line-height:1;flex-shrink:0;transition:opacity var(--ease),background var(--ease)}
+.crow:hover .more,.crow .more:focus-visible,.crow.on .more{opacity:1}
+.crow .more:hover{background:var(--panel-2);color:var(--text)}
+@media (hover:none){.crow .more{opacity:1}}
+.crow.add > button.pick{color:var(--faint);font-size:13px}
+.crow.add > button.pick:hover{color:var(--gold-2)}
+.menu{position:fixed;z-index:20;min-width:200px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:14px;padding:6px;box-shadow:var(--sh-md);animation:pop 200ms cubic-bezier(.2,.8,.2,1) both}
+.menu button,.menu .mlabel{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:9px;padding:8px 10px;color:var(--text);cursor:pointer;font-size:13.5px}
+.menu button:hover{background:var(--raised)}
+.menu button.danger{color:var(--danger)}
+.menu .mlabel{color:var(--faint);font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:default;padding-top:10px}
+.menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+/* header titles */
+.titles{flex:1;min-width:220px;display:flex;flex-direction:column;gap:2px}
+.titles input{font:inherit;color:inherit;background:transparent;border:0;border-bottom:1px solid transparent;border-radius:0;padding:0;width:100%;box-shadow:none}
+.titles input:hover,.titles input:focus{border-bottom-color:var(--line-2);box-shadow:none}
+.clientTitle{font-family:var(--display)!important;font-weight:300!important;font-size:32px!important;letter-spacing:-.015em;line-height:1.15!important}
+.projLine{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px}
+.projLine .lbl{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+/* brand kit toggle + picks */
+.kitToggle{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--muted);background:var(--raised);border:1px solid var(--line);border-radius:999px;padding:4px 10px 4px 6px;transition:all var(--ease)}
+.kitToggle:has(input:checked){color:var(--gold-2);border-color:var(--gold-line);background:var(--gold-soft)}
+.kitToggle input{margin:0}
+.kitPicks{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel-2)}
+.kitPicks .refthumb{width:52px;height:52px}
+.kitPicks .refthumb .rm{display:none}
+.fmt{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fmt .f > label{font-size:11px}
 
 /* ---------- control panel ---------- */
 .controls{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
@@ -354,13 +398,10 @@ details.modelMore summary{font-weight:500;color:var(--muted)}
   <aside class="rail">
     <div class="wordmark"><i></i>Illume Studio</div>
     <div class="whoami" id="whoami"></div>
-    <div class="railart" style="background-image:url(/Generation/images/brand-texture-1.webp)"></div>
-    <h2>Projects</h2>
-    <div class="railrow">
-      <div class="projects" id="projects"></div>
-      <button class="newproj" id="newProj">+ New project</button>
-      <button class="newproj" id="settings">Sign out</button>
-    </div>
+    <h2>Clients</h2>
+    <div class="ctree" id="projects"></div>
+    <button class="newproj" id="newClient">+ New client</button>
+    <button class="newproj" id="settings">Sign out</button>
   </aside>
 
   <!-- controls -->
@@ -375,22 +416,10 @@ details.modelMore summary{font-weight:500;color:var(--muted)}
     <div class="f">
       <label><b>Model</b></label>
       <div class="chips" id="favs"></div>
-      <details class="modelMore">
-        <summary>Use a different model <span class="hint" id="modelHint">Loading catalogue…</span></summary>
-        <div>
-          <input type="text" id="model" list="modelList" placeholder="Search all Atlas models, or paste a model ID…" autocomplete="off">
-          <datalist id="modelList"></datalist>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="btn" id="favAdd">Pin model</button>
-            <button class="btn" id="modelsRefresh">Refresh catalogue</button>
-            <a class="btn" href="https://www.atlascloud.ai/models" target="_blank" rel="noopener">Prices</a>
-          </div>
-        </div>
-      </details>
     </div>
 
     <div class="f">
-      <label><span id="promptLabel">Prompt</span> <span class="hint"><label style="display:inline-flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="useBrief" style="width:auto;margin:0"> prefix with project brief</label></span></label>
+      <label><span id="promptLabel">Prompt</span> <label class="kitToggle hidden" id="kitToggle" title="Adds this client's style notes (Brand kit) in front of your prompt"><input type="checkbox" id="useBrief" checked> <span id="kitToggleText">Brand style</span></label></label>
       <textarea id="prompt" placeholder="Describe the shot: subject, lens, light, mood. For video, describe the motion and the camera."></textarea>
       <div class="chips" id="presets"></div>
       <div class="ghostRow">
@@ -406,6 +435,7 @@ details.modelMore summary{font-weight:500;color:var(--muted)}
         <span id="dropText">Drop images or tap to choose — up to 10</span>
       </div>
       <div class="refgrid" id="refPicked"></div>
+      <div class="kitPicks hidden" id="kitPicksWrap"><span class="hint" id="kitPicksLabel">From the brand kit — tap to use</span><div class="refgrid" id="kitPicks"></div></div>
     </div>
 
     <div class="f" id="soundWrap">
@@ -415,10 +445,9 @@ details.modelMore summary{font-weight:500;color:var(--muted)}
       </label>
     </div>
 
-    <details>
-      <summary>Options</summary>
-      <div>
-        <div class="row">
+    <div class="f" id="formatBlock">
+      <label>Format</label>
+        <div class="fmt">
           <div class="f" id="aspectWrap"><label>Aspect ratio</label>
             <select id="aspect"><option>16:9</option><option>9:16</option><option>1:1</option><option>4:5</option><option>4:3</option><option>3:4</option><option>21:9</option><option value="" id="aspectDefault">Model default</option></select>
           </div>
@@ -430,6 +459,23 @@ details.modelMore summary{font-weight:500;color:var(--muted)}
           </div>
           <div class="f" id="durWrap"><label>Duration (s)</label><input type="number" id="duration" min="4" max="15" step="1" placeholder="Auto"></div>
         </div>
+    </div>
+
+    <details id="advanced">
+      <summary>Advanced <span class="hint">other models, seed, extra parameters</span></summary>
+      <div>
+      <details class="modelMore" open>
+        <summary>Use a different model <span class="hint" id="modelHint">Loading catalogue…</span></summary>
+        <div>
+          <input type="text" id="model" list="modelList" placeholder="Search all Atlas models, or paste a model ID…" autocomplete="off">
+          <datalist id="modelList"></datalist>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn" id="favAdd">Pin model</button>
+            <button class="btn" id="modelsRefresh">Refresh catalogue</button>
+            <a class="btn" href="https://www.atlascloud.ai/models" target="_blank" rel="noopener">Prices</a>
+          </div>
+        </div>
+      </details>
         <div class="f"><label>Seed <span class="hint">same seed + prompt = same result</span></label><input type="number" id="seed" placeholder="Random"></div>
         <div class="f"><label>Extra parameters (JSON) <span class="hint">from the model's page</span></label><input type="text" id="extra" placeholder='{"cfg_scale":0.5}'></div>
       </div>
@@ -441,7 +487,7 @@ details.modelMore summary{font-weight:500;color:var(--muted)}
       <label>Variations <span class="hint">each is a separate take — all land in the reel</span></label>
       <div class="chips" id="countChips"></div>
     </div>
-    <div class="sel none" id="sel"><span class="k">Model</span><span class="v" id="selName">No model chosen</span><span class="id" id="selId"></span></div>
+    <div class="sel none hidden" id="sel"><span class="k">Model</span><span class="v" id="selName">No model chosen</span><span class="id" id="selId"></span></div>
     <button class="go" id="go"><span id="goLabel">Generate image</span><span class="goCost" id="goCost"></span></button>
     <div class="msg" id="msg"></div>
    </div>
@@ -451,12 +497,12 @@ details.modelMore summary{font-weight:500;color:var(--muted)}
   <div class="modal hidden" id="briefModal">
     <div class="modal-backdrop" id="briefBackdrop"></div>
     <div class="modal-panel">
-      <div class="modal-head"><b>Project brief</b><button class="modal-x" id="briefClose" aria-label="Close">✕</button></div>
+      <div class="modal-head"><b id="kitTitle">Brand kit</b><button class="modal-x" id="briefClose" aria-label="Close">✕</button></div>
       <div class="modal-body">
-        <div class="f"><label>Style notes <span class="hint">e.g. palette, lens, brand tone</span></label>
+        <div class="f"><label>Style notes <span class="hint">added in front of every prompt for this client (you can switch it off per generation)</span></label>
           <textarea id="brief" placeholder="Warm tungsten light, 35mm, muted olive and cream palette, no text overlays."></textarea></div>
         <div class="f">
-          <label>Brand references <span class="hint">screenshots and photos from the client — stays in this project</span></label>
+          <label>Brand photos <span class="hint">logo, products, past work — one tap to use as a reference, for every project of this client</span></label>
           <div class="drop" id="refsDrop">
             <input type="file" id="refsFile" accept="image/png,image/jpeg,image/webp" multiple>
             <span id="refsDropText">Drop client screenshots or photos, or tap to choose — add as many as you like</span>
@@ -470,13 +516,16 @@ details.modelMore summary{font-weight:500;color:var(--muted)}
   <!-- stage -->
   <main class="main">
     <div class="head">
-      <h1><input id="projName" value="Untitled project" aria-label="Project name"></h1>
+      <div class="titles">
+        <input class="clientTitle" id="clientName" value="" aria-label="Client name" title="Client — click to rename">
+        <div class="projLine"><span class="lbl">Project</span><input id="projName" value="General" aria-label="Project name" title="Project — click to rename"></div>
+      </div>
       <div style="display:flex;align-items:center;gap:12px">
         <button class="activity hidden" id="activity" type="button" title="Generations in progress — click to view"></button>
         <span class="count" id="count"></span>
         <span class="balance" id="balance" title="Atlas Cloud balance — refreshes after every generation"></span>
         <button class="btn iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark mode" title="Switch to dark mode">☾</button>
-        <button class="btn" id="briefBtn">Brief</button>
+        <button class="btn" id="briefBtn" title="This client's style notes and brand photos">◆ Brand kit</button>
       </div>
     </div>
 
@@ -529,7 +578,7 @@ const DEFAULT_FAVS = {
     { match:"suno", name:"Suno", desc:"Full custom songs and jingles, not spoken voice" },
   ],
 };
-const LS = { key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist", model:"il.model.", favs:"il.favs4.", models:"il.models", projects:"il.projects", proj:"il.proj", pending:"il.pending", draft:"il.draft." };
+const LS = { clients:"il.clients", key:"il.key", atlas:"il.atlas", presets:"il.presets", hist:"il.hist", model:"il.model.", favs:"il.favs4.", models:"il.models", projects:"il.projects", proj:"il.proj", pending:"il.pending", draft:"il.draft." };
 // A real Atlas model id has no spaces (e.g. google/nano-banana-pro/text-to-image).
 // A display name like "seedream 5.0 pro" does — never send one as the model.
 const looksLikeId = v => !!v && !/\s/.test(v);
@@ -553,7 +602,7 @@ function updateResolutionOptions() {
     + `<option value=""${keep===""?" selected":""}>Model default</option>`;
 }
 let catalogue = [];
-let projects = [], projId = null;
+let projects = [], projId = null, clients = [];
 
 const $ = id => document.getElementById(id);
 // Everything that is a person's WORK — projects, reel, drafts, saved prompts,
@@ -562,7 +611,7 @@ const $ = id => document.getElementById(id);
 // follows them to any device and two people never see each other's work.
 // Only device conveniences (the model catalogue cache, the theme) stay in
 // this browser's localStorage.
-const isAccountKey = k => /^il\.(projects|proj|hist|presets|pending|imported|favs4\.|model\.|draft\.)/.test(k);
+const isAccountKey = k => /^il\.(clients|projects|proj|hist|presets|pending|imported|favs4\.|model\.|draft\.)/.test(k);
 const account = {};           // this person's data, as loaded from the server
 let unsynced = {}, syncTimer = null, syncWarned = false;
 const clone = v => (v == null ? v : JSON.parse(JSON.stringify(v)));
@@ -676,24 +725,139 @@ $("settings").onclick = async () => {
   location.reload();
 };
 
-/* ---------- projects ---------- */
+/* ---------- clients & projects ---------- */
+// Everything is organised as Client → Project. A client owns its brand kit
+// (style notes + brand photos), shared by all of its projects; each project
+// has its own reel and draft. Every generation records both ids.
 function proj() { return projects.find(p => p.id === projId); }
-// A brand reference still uploading holds the full photo as a data: URL (often
-// several MB). Never write that to storage — it alone can fill it.
-function saveProjects() {
-  save(LS.projects, projects.map(p => p.refs ? { ...p, refs: p.refs.filter(r => !/^data:/i.test(r.url)) } : p));
-  setRaw(LS.proj, projId);
-}
+function client(id) { return clients.find(c => c.id === (id || (proj() || {}).client)) || clients[0]; }
+const cleanRefs = refs => (refs || []).filter(r => !/^data:/i.test(r.url)); // never store a multi-MB local preview
+function saveProjects() { save(LS.projects, projects); setRaw(LS.proj, projId); }
+function saveClients() { save(LS.clients, clients.map(c => ({ ...c, refs: cleanRefs(c.refs) }))); }
+const histCount = pids => { const set = new Set(pids); return load(LS.hist, []).filter(h => set.has(h.proj) && h.status !== "failed").length; };
+const initials = n => (String(n).trim().match(/\S/g) || ["?"]).slice(0, 1).join("").toUpperCase();
+let openClients = new Set();
 function renderProjects() {
   const box = $("projects"); box.innerHTML = "";
-  projects.forEach(p => {
-    const n = load(LS.hist, []).filter(h => h.proj === p.id).length;
-    const b = document.createElement("button"); b.className = p.id===projId ? "on" : "";
-    b.innerHTML = `<span>${esc(p.name)}</span><small>${n||""}</small>`;
-    b.onclick = () => selectProject(p.id);
-    b.oncontextmenu = e => { e.preventDefault(); if (projects.length>1 && confirm(`Delete “${p.name}” and its reel?`)) { projects = projects.filter(x => x.id!==p.id); save(LS.hist, load(LS.hist, []).filter(h => h.proj!==p.id)); selectProject(projects[0].id); } };
-    box.appendChild(b);
+  const cur = proj(); if (cur) openClients.add(cur.client);
+  clients.forEach(c => {
+    const mine = projects.filter(p => p.client === c.id), open = openClients.has(c.id);
+    const row = document.createElement("div"); row.className = "crow client" + (open ? " open" : "");
+    row.innerHTML = `<button class="pick" type="button"><i class="dotc">${esc(initials(c.name))}</i><span>${esc(c.name)}</span><small>${histCount(mine.map(p => p.id)) || ""}</small></button><button class="more" type="button" aria-label="Client options">⋯</button>`;
+    row.querySelector(".pick").onclick = () => {
+      if (open && cur && cur.client === c.id) { openClients.delete(c.id); return renderProjects(); }
+      openClients.add(c.id); if (!cur || cur.client !== c.id) selectProject((mine[0] || newProjectFor(c.id, "General")).id); else renderProjects();
+    };
+    row.querySelector(".more").onclick = e => clientMenu(e.currentTarget, c);
+    box.appendChild(row);
+    if (!open) return;
+    mine.forEach(p => {
+      const r = document.createElement("div"); r.className = "crow proj" + (p.id === projId ? " on" : "");
+      r.innerHTML = `<button class="pick" type="button"><span>${esc(p.name)}</span><small>${histCount([p.id]) || ""}</small></button><button class="more" type="button" aria-label="Project options">⋯</button>`;
+      r.querySelector(".pick").onclick = () => selectProject(p.id);
+      r.querySelector(".more").onclick = e => projectMenu(e.currentTarget, p);
+      box.appendChild(r);
+    });
+    const add = document.createElement("div"); add.className = "crow proj add";
+    add.innerHTML = `<button class="pick" type="button"><span>+ New project</span></button>`;
+    add.querySelector(".pick").onclick = () => { const name = prompt(`New project for ${c.name} (e.g. "Spring campaign"):`); if (name && name.trim()) selectProject(newProjectFor(c.id, name.trim()).id); };
+    box.appendChild(add);
   });
+}
+function newProjectFor(clientId, name) {
+  const p = { id: "p" + Date.now() + Math.random().toString(36).slice(2, 5), client: clientId, name, created: Date.now() };
+  projects.push(p); saveProjects(); return p;
+}
+// A small pop-over menu for the ⋯ buttons.
+function showMenu(anchor, items) {
+  closeMenu();
+  const m = document.createElement("div"); m.className = "menu"; m.id = "rowMenu";
+  items.forEach(it => {
+    if (it === "-") { m.appendChild(document.createElement("hr")); return; }
+    if (it.label && !it.run) { const l = document.createElement("div"); l.className = "mlabel"; l.textContent = it.label; m.appendChild(l); return; }
+    const b = document.createElement("button"); b.type = "button"; b.textContent = it.text; if (it.danger) b.className = "danger";
+    b.onclick = () => { closeMenu(); it.run(); }; m.appendChild(b);
+  });
+  document.body.appendChild(m);
+  const r = anchor.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + "px";
+  m.style.top = (r.bottom + h + 8 > window.innerHeight ? Math.max(8, r.top - h - 6) : r.bottom + 6) + "px";
+  setTimeout(() => document.addEventListener("click", closeMenu, { once: true }), 0);
+}
+function closeMenu() { const m = $("rowMenu"); if (m) m.remove(); }
+function clientMenu(anchor, c) {
+  const mine = projects.filter(p => p.client === c.id);
+  showMenu(anchor, [
+    { text: "Rename client", run: () => { const n = prompt("Client name:", c.name); if (n && n.trim()) { c.name = n.trim(); saveClients(); refreshTitles(); renderProjects(); } } },
+    { text: "Brand kit…", run: () => { if (!proj() || proj().client !== c.id) selectProject((mine[0] || newProjectFor(c.id, "General")).id); openBrief(); } },
+    { text: "+ New project", run: () => { const n = prompt(`New project for ${c.name}:`); if (n && n.trim()) selectProject(newProjectFor(c.id, n.trim()).id); } },
+    "-",
+    { text: "Delete client…", danger: true, run: () => {
+      if (clients.length < 2) return alert("This is your only client — create another one first.");
+      const n = histCount(mine.map(p => p.id));
+      if (!confirm(`Delete “${c.name}”, its ${mine.length} project(s) and ${n} saved generation(s) from the reel? This can't be undone.`)) return;
+      const ids = new Set(mine.map(p => p.id));
+      save(LS.hist, load(LS.hist, []).filter(h => !ids.has(h.proj)));
+      projects = projects.filter(p => !ids.has(p.id)); clients = clients.filter(x => x.id !== c.id);
+      saveClients(); selectProject(projects[0].id);
+    } },
+  ]);
+}
+function projectMenu(anchor, p) {
+  const others = clients.filter(c => c.id !== p.client);
+  showMenu(anchor, [
+    { text: "Rename project", run: () => { const n = prompt("Project name:", p.name); if (n && n.trim()) { p.name = n.trim(); saveProjects(); refreshTitles(); renderProjects(); } } },
+    ...(others.length ? ["-", { label: "Move to client" }, ...others.map(c => ({ text: "→ " + c.name, run: () => { const from = client(p.client); if (projects.some(x => x.client === c.id && x.name === p.name)) p.name += " (from " + from.name + ")"; p.client = c.id; saveProjects(); openClients.add(c.id); if (p.id === projId) selectProject(p.id); else renderProjects(); } }))] : []),
+    "-",
+    { text: "Delete project…", danger: true, run: () => {
+      const siblings = projects.filter(x => x.client === p.client);
+      if (projects.length < 2) return alert("This is your only project.");
+      if (!confirm(`Delete project “${p.name}” and its ${histCount([p.id])} saved generation(s)? This can't be undone.`)) return;
+      save(LS.hist, load(LS.hist, []).filter(h => h.proj !== p.id));
+      projects = projects.filter(x => x.id !== p.id);
+      if (siblings.length < 2) newProjectFor(p.client, "General"); // a client always keeps one project
+      saveProjects(); if (p.id === projId) selectProject((projects.find(x => x.client === p.client) || projects[0]).id); else renderProjects();
+    } },
+  ]);
+}
+$("newClient").onclick = () => {
+  const name = prompt("New client name:"); if (!name || !name.trim()) return;
+  const c = { id: "c" + Date.now(), name: name.trim(), style: "", refs: [], created: Date.now() };
+  clients.push(c); saveClients(); openClients = new Set([c.id]);
+  selectProject(newProjectFor(c.id, "General").id);
+  openBrief(); // start the new client with their brand kit
+};
+// Everything that shows the client's name follows renames immediately.
+function refreshTitles() {
+  const c = client(), p = proj(); if (!c || !p) return;
+  $("clientName").value = c.name; $("projName").value = p.name;
+  $("kitTitle").textContent = c.name + " — brand kit"; $("brief").value = c.style || "";
+  updateKitToggle(); renderRefGrid(); updateSel();
+}
+function updateKitToggle() {
+  const c = client(); const has = !!(c && (c.style || "").trim());
+  $("kitToggle").classList.toggle("hidden", !has || mode === "audio");
+  if (c) $("kitToggleText").textContent = `${c.name} style`;
+}
+// Before clients existed, each project carried its own brief + brand photos.
+// Turn every old project into a client of the same name (keeping its brief and
+// photos as that client's brand kit) with one project, "General", that keeps
+// the old project's id — so its reel and draft carry straight over.
+function migrateToClients() {
+  clients = load(LS.clients, []);
+  projects = load(LS.projects, []);
+  let changed = false;
+  if (!clients.length) {
+    projects.forEach(p => {
+      const c = { id: "c" + p.id, name: p.name || "Client", style: p.brief || "", refs: cleanRefs(p.refs), created: p.created || Date.now() };
+      clients.push(c); p.client = c.id; p.name = "General"; delete p.brief; delete p.refs;
+    });
+    changed = true;
+  }
+  if (!clients.length) { clients.push({ id: "c" + Date.now(), name: "My first client", style: "", refs: [], created: Date.now() }); changed = true; }
+  projects.forEach(p => { if (!clients.some(c => c.id === p.client)) { p.client = clients[0].id; changed = true; } });
+  clients.forEach(c => { if (!projects.some(p => p.client === c.id)) { projects.push({ id: "p" + c.id, client: c.id, name: "General", created: Date.now() }); changed = true; } });
+  if (changed) { saveClients(); saveProjects(); }
 }
 // The working draft — prompt, attached references and the option fields — is
 // saved per project, so a refresh (or an accidental reload) never makes you
@@ -760,7 +924,7 @@ function restoreDraft() {
   const d = load(LS.draft + projId, null);
   const m = (d && d.mode) || "image";
   setMode(m); // sets up the mode's UI + per-mode default model (apply is skipped while restoring)
-  $("useBrief").checked = !!(d && d.useBrief);
+  $("useBrief").checked = !(d && d.useBrief === false); // the client's style is on unless switched off for this project
   genCount = Math.max(1, Math.min(MAX_COUNT, (d && d.count) || 1));
   applyModeState(loadModeState(m)); // load THIS mode's own prompt/refs/settings (or clear for a fresh mode)
   renderCountChips();
@@ -771,19 +935,15 @@ function restoreDraft() {
 function selectProject(id) {
   if (projId && projId !== id) { saveDraft(); viewing = null; } // leaving: keep this project's draft; a finishing job no longer hijacks the stage
   projId = id; const p = proj(); saveProjects();
-  $("projName").value = p.name; $("brief").value = p.brief || "";
+  openClients.add(p.client); refreshTitles();
   current = null; setStage(null); $("metaText").textContent = "";
   ["dl","animate","asRef","reuse"].forEach(i => $(i).classList.add("hidden"));
   restoreDraft();
   renderProjects(); renderHistory(); renderRefGrid(); renderActivity();
 }
-$("newProj").onclick = () => {
-  const name = prompt("Project name (client or job):"); if (!name) return;
-  const p = { id: "p"+Date.now(), name: name.trim(), brief:"", created: Date.now() };
-  projects.unshift(p); selectProject(p.id);
-};
-$("projName").onchange = () => { const p = proj(); p.name = $("projName").value.trim() || "Untitled project"; $("projName").value = p.name; saveProjects(); renderProjects(); };
-$("brief").oninput = () => { proj().brief = $("brief").value; saveProjects(); };
+$("projName").onchange = () => { const p = proj(); p.name = $("projName").value.trim() || "General"; saveProjects(); refreshTitles(); renderProjects(); };
+$("clientName").onchange = () => { const c = client(); c.name = $("clientName").value.trim() || c.name; saveClients(); refreshTitles(); renderProjects(); };
+$("brief").oninput = () => { client().style = $("brief").value; saveClients(); updateKitToggle(); };
 
 /* ---------- models ---------- */
 const kindOf = m => {
@@ -861,7 +1021,9 @@ function updateSel() {
   $("sel").classList.toggle("none", !id);
   $("selName").textContent = id ? (hit ? shortName(hit.name) : id) : "No model chosen";
   $("selId").textContent = hit ? id : "";
-  $("goLabel").textContent = ({ image:"Generate image", video:"Generate video", audio:"Generate voice" })[mode] + (id ? " with " + (hit ? shortName(hit.name) : id) : "");
+  const c = typeof client === "function" && clients.length ? client() : null;
+  $("goLabel").textContent = c ? "Generate for " + c.name : ({ image:"Generate image", video:"Generate video", audio:"Generate voice" })[mode];
+  $("go").title = id ? "Model: " + (hit ? shortName(hit.name) : id) : "Choose a model";
   if (mode==="audio") {
     const song = isSongModel(id) || isSongModel(hit && hit.name);
     $("promptLabel").textContent = song ? "Song" : "Script";
@@ -937,6 +1099,8 @@ function setMode(m) {
   $("prompt").placeholder = m==="audio" ? "The words to be spoken. Add tone or pacing notes if the model supports them."
     : m==="video" ? "Describe the motion and the camera: what moves, how fast, where the lens goes." : "Describe the shot: subject, lens, light, mood.";
   $("refBlock").classList.toggle("hidden", m==="audio");
+  if (clients.length) updateKitToggle();
+  $("formatBlock").classList.toggle("hidden", m==="audio");
   $("refHint").textContent = m==="video" ? "The first frame of your video (only the first image is used). Pick any aspect ratio under Options — the image is reshaped to it. Empty = text-to-video." : "Optional, up to 10, for edit models";
   $("durWrap").classList.toggle("hidden", m!=="video");
   updateAspectWrap();
@@ -1130,17 +1294,27 @@ $("file").onchange = async e => {
   $("file").value = "";
 };
 
-/* ---------- brand references (persist per project, for brief context and reuse) ---------- */
-function projRefs() { return proj().refs || (proj().refs = []); }
+/* ---------- brand photos (part of the client's brand kit, shared by all its projects) ---------- */
+function projRefs() { const c = client(); return c.refs || (c.refs = []); }
 function renderRefGrid() {
   const box = $("refGrid"); if (!box) return; box.innerHTML = "";
+  // The same photos, one tap away right under "Reference images".
+  const picks = $("kitPicks"), ready = projRefs().filter(r => /^https?:/i.test(r.url));
+  picks.innerHTML = ""; $("kitPicksWrap").classList.toggle("hidden", !ready.length);
+  $("kitPicksLabel").textContent = `From ${client().name}'s brand kit — tap to use`;
+  ready.forEach(r => {
+    const t = document.createElement("div"); t.className = "refthumb" + (refUrls.some(x => x.url === r.url) ? " on" : ""); t.title = (r.name || "Brand photo") + " — tap to use as a reference";
+    t.innerHTML = `<img src="${r.url}" alt="" onerror="mediaFallback(this)">`;
+    t.onclick = () => { addRef(r.url, r.name || "Brand photo"); renderRefGrid(); };
+    picks.appendChild(t);
+  });
   projRefs().forEach((r, i) => {
     const b = document.createElement("div"); b.className = "refthumb" + (refUrls.some(x=>x.url===r.url) ? " on" : "");
     b.title = (r.name || "reference") + " — tap to add as a reference image, ✕ to remove from this project";
     b.innerHTML = `<img src="${r.url}" alt="" onerror="mediaFallback(this)">`;
     b.onclick = () => { addRef(r.url, r.name || "Brand reference"); renderRefGrid(); };
     const rm = document.createElement("button"); rm.className = "rm"; rm.type = "button"; rm.textContent = "✕";
-    rm.onclick = e => { e.stopPropagation(); projRefs().splice(i,1); saveProjects(); renderRefGrid(); };
+    rm.onclick = e => { e.stopPropagation(); projRefs().splice(i,1); saveClients(); renderRefGrid(); };
     b.appendChild(rm);
     box.appendChild(b);
   });
@@ -1156,7 +1330,7 @@ $("refsFile").onchange = async e => {
       const mime = small.slice(5, small.indexOf(";"));
       const out = await api("/api/upload", { method:"POST", body: JSON.stringify({ name:f.name, type:mime, data:small.slice(small.indexOf(",")+1) }) });
       if (!out.url) throw new Error("upload returned no URL");
-      entry.url = out.url; saveProjects(); renderRefGrid();
+      entry.url = out.url; saveClients(); renderRefGrid();
     } catch (err) {
       projRefs().splice(projRefs().indexOf(entry), 1); renderRefGrid(); note("Couldn't add " + f.name + ": " + err.message, true);
     }
@@ -1185,7 +1359,8 @@ $("go").onclick = async () => {
   if (!model) return note("Choose a model.", true);
   if (!looksLikeId(model)) return note("That model didn't load properly — pick one from the list again (or Refresh catalogue).", true);
   if (!prompt) return note(mode==="audio" ? "Write the script first." : "Write a prompt first.", true);
-  if ($("useBrief").checked && proj().brief.trim() && mode!=="audio") prompt = proj().brief.trim() + ". " + prompt;
+  const style = (client().style || "").trim();
+  if ($("useBrief").checked && style && mode!=="audio") prompt = style + ". " + prompt;
 
   let params;
   try { params = buildParams(); } catch { return note("Extra parameters must be valid JSON.", true); }
@@ -1215,7 +1390,7 @@ async function startGeneration({ mode, model, prompt, ref, params, count = 1 }) 
   await Promise.all(Array.from({ length: count }, async (_, i) => {
     const p = { ...params };
     if (p.seed != null) p.seed = Number(p.seed) + i;
-    const item = { mode, model, prompt, ref, params: p, proj: projId, started: Date.now() };
+    const item = { mode, model, prompt, ref, params: p, proj: projId, client: (proj() || {}).client, started: Date.now() };
     try {
       const { id } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: ref, params: p }) });
       const job = { ...item, id, status: "running" };
@@ -1277,7 +1452,7 @@ function addPending(id, item) { const p = loadPending().filter(x => x.id !== id)
 function removePending(id) { save(LS.pending, loadPending().filter(x => x.id !== id)); renderActivity(); }
 // Always-visible "N generating…" pill, across every project. Clicking it jumps
 // to a running generation so you can never lose track of in-flight work.
-function projName(pid) { const p = projects.find(x => x.id === pid); return p ? p.name : "a project"; }
+function projName(pid) { const p = projects.find(x => x.id === pid); if (!p) return "another project"; const c = client(p.client); return (c ? c.name + " / " : "") + p.name; }
 function renderActivity() {
   const el = $("activity"); if (!el) return;
   const p = loadPending();
@@ -1413,7 +1588,7 @@ $("animate").onclick = () => { if (!current) return; setMode("video"); setDrop(c
 function upsertHistory(item) {
   const h = load(LS.hist, []); const i = h.findIndex(x => x.id === item.id);
   if (i >= 0) h[i] = item; else h.unshift(item);
-  save(LS.hist, h.slice(0,150)); renderProjects(); renderHistory(); renderActivity();
+  save(LS.hist, h.slice(0,1000)); renderProjects(); renderHistory(); renderActivity();
 }
 const addHistory = upsertHistory;
 const clock = t => { const s = Math.max(0, Math.floor((Date.now() - t) / 1000)); return Math.floor(s/60) + ":" + String(s%60).padStart(2, "0"); };
@@ -1421,7 +1596,7 @@ function renderHistory() {
   const h = load(LS.hist, []).filter(x => x.proj===projId); const box = $("hist"); box.innerHTML = "";
   const n = h.filter(x => x.status !== "failed").length;
   $("count").textContent = n ? `${n} generation${n>1?"s":""}` : "";
-  if (!h.length) { box.innerHTML = '<div class="none"><img src="/Generation/images/brand-texture-3.webp" alt="" class="noneArt">This project\'s generations will collect here — every one, the moment you press Generate.</div>'; return; }
+  if (!h.length) { box.innerHTML = '<div class="none"><img src="/Generation/images/brand-texture-3.webp" alt="" class="noneArt">Everything you make for this project collects here — every take, the moment you press Generate.</div>'; return; }
   h.forEach(item => {
     const b = document.createElement("button");
     b.className = (viewing===item.id ? "on" : "") + (item.status==="failed" ? " failed" : "");
@@ -1497,8 +1672,7 @@ async function startStudio(user) {
   // Old versions kept an Atlas key / access code in the browser — no longer used.
   try { localStorage.removeItem("il.atlas"); localStorage.removeItem("il.key"); } catch {}
   await importDeviceWork();
-  projects = load(LS.projects, []);
-  if (!projects.length) projects = [{ id:"p0", name:"Untitled project", brief:"", created:Date.now() }];
+  migrateToClients();
   projId = getRaw(LS.proj); if (!projects.some(p => p.id===projId)) projId = projects[0].id;
   renderPresets(); selectProject(projId); // selectProject → restoreDraft sets the mode and restores the working draft
   loadModels(); resumePending();
