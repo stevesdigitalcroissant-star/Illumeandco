@@ -22,9 +22,9 @@ const REF_PCT = () => num(process.env.REFERRAL_PERCENT, 0); // referrals off unl
 const FREE = () => Math.max(0, Math.round(num(process.env.FREE_CREDITS, 0)));
 const enabled = () => !!(process.env.STRIPE_SECRET_KEY || process.env.CREDITS === "on");
 const PACKS = [
-  { id: "p25", usd: 25, credits: 2600, bonus: "+4% bonus" },
-  { id: "p50", usd: 50, credits: 5400, bonus: "+8% bonus" },
-  { id: "p100", usd: 100, credits: 11000, bonus: "+10% bonus" },
+  { id: "p25", usd: 25, credits: 1500 },
+  { id: "p50", usd: 50, credits: 3500, bonus: "+17% more credits per $" },
+  { id: "p100", usd: 100, credits: 9000, bonus: "Best value · +50% per $" },
 ];
 const creditsFor = usd => Math.max(1, Math.ceil(num(usd, 0) * (1 + MARKUP()) * 100));
 // Members pay; the owner never does.
