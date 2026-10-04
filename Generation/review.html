@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0C0B09">
+<meta name="robots" content="noindex">
+<title>Storyboard review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Fraunces:opsz,wght,SOFT@9..144,300;9..144,400&display=swap" rel="stylesheet">
+<style>
+/* Client review page — the same warm black + champagne gold as Illume Studio. */
+:root{
+  color-scheme:dark;
+  --bg:#0C0B09; --panel:#15130F; --panel-2:#1B1814; --raised:#221E19; --field:#100E0B;
+  --line:rgba(255,236,200,.09); --line-2:rgba(255,236,200,.16);
+  --text:#F3EDE2; --muted:#B4AA9A; --faint:#7C7366;
+  --gold:#E8B54B; --gold-2:#F5D58A; --gold-ink:#1A1408; --gold-soft:rgba(232,181,75,.12); --gold-line:rgba(232,181,75,.45);
+  --ok:#7FD39B; --ok-soft:rgba(127,211,155,.12); --warn:#F0B36E; --warn-soft:rgba(240,179,110,.12);
+  --ui:"DM Sans",system-ui,sans-serif; --display:"Fraunces",Georgia,serif;
+  --ease:220ms cubic-bezier(.2,.8,.2,1);
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    color-scheme:light;
+    --bg:#F5F1EA; --panel:#FFFDF9; --panel-2:#FBF8F2; --raised:#F3EEE5; --field:#FFFFFF;
+    --line:rgba(60,44,20,.12); --line-2:rgba(60,44,20,.2);
+    --text:#1E1912; --muted:#6E6455; --faint:#9C9282;
+    --gold:#B8862E; --gold-2:#D9A94C; --gold-ink:#FFFDF8; --gold-soft:rgba(184,134,46,.1); --gold-line:rgba(184,134,46,.5);
+    --ok:#2E8A55; --ok-soft:rgba(46,138,85,.1); --warn:#B66A16; --warn-soft:rgba(182,106,22,.1);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg)}
+body{color:var(--text);font:15px/1.5 var(--ui);-webkit-font-smoothing:antialiased;min-height:100vh}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 80px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold)}
+h1{font-family:var(--display);font-weight:300;font-size:clamp(28px,5vw,44px);line-height:1.1;margin:10px 0 4px}
+.sub{color:var(--muted);margin:0}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-size:14px;font-weight:600;border-radius:12px;padding:10px 16px;cursor:pointer;border:1px solid var(--line-2);background:var(--raised);color:var(--text);transition:border-color var(--ease),transform var(--ease)}
+.btn:hover{border-color:var(--gold-line);transform:translateY(-1px)}
+.btn.gold{background:linear-gradient(180deg,var(--gold-2),var(--gold));color:var(--gold-ink);border-color:transparent}
+.summary{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px;color:var(--muted);font-size:13px}
+.summary span{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:18px}
+.shot{background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;transition:border-color var(--ease)}
+.shot.approved{border-color:rgba(127,211,155,.55)}
+.shot.changes{border-color:rgba(240,179,110,.55)}
+.frame{position:relative;aspect-ratio:16/9;background:#080706}
+.frame video,.frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.num{position:absolute;left:12px;top:12px;z-index:2;font-family:var(--display);font-size:16px;background:var(--gold);color:#1A1408;border-radius:9px;padding:1px 10px}
+.state{position:absolute;right:12px;top:12px;z-index:2;font-size:12px;font-weight:600;border-radius:999px;padding:4px 10px;background:rgba(10,9,7,.75);color:#F3EDE2}
+.state.approved{background:var(--ok);color:#0C1A10}
+.state.changes{background:var(--warn);color:#1A1006}
+.body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px}
+.note{color:var(--muted);font-size:13.5px;margin:0}
+.decide{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.decide button{font:inherit;font-size:13.5px;font-weight:600;border-radius:11px;padding:9px 10px;cursor:pointer;border:1px solid var(--line-2);background:var(--panel-2);color:var(--text)}
+.decide .ap.on{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.decide .ch.on{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.comments{display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.comments div{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:7px 10px}
+.comments b{font-weight:600}
+.comments small{color:var(--faint);margin-left:6px}
+form.add{display:flex;gap:8px}
+form.add input{flex:1;min-width:0;font:inherit;font-size:14px;background:var(--field);color:var(--text);border:1px solid var(--line-2);border-radius:11px;padding:9px 12px;outline:none}
+form.add input:focus{border-color:var(--gold-line)}
+.empty,.err{text-align:center;color:var(--muted);padding:60px 16px}
+.err b,.empty b{display:block;font-family:var(--display);font-weight:300;font-size:30px;color:var(--text);margin-bottom:8px}
+/* full-screen player */
+.player{position:fixed;inset:0;z-index:20;background:#000;display:flex;flex-direction:column}
+.player.hidden{display:none}
+.player .stage{flex:1;position:relative}
+.player video,.player img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.player .bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;color:#F3EDE2;font-size:14px}
+.player .bar button{font:inherit;background:rgba(255,255,255,.1);color:#fff;border:0;border-radius:10px;padding:8px 14px;cursor:pointer}
+.namebox{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:16px}
+.namebox.hidden{display:none}
+.namebox form{background:var(--panel);border:1px solid var(--line-2);border-radius:20px;padding:22px;width:min(380px,100%);display:flex;flex-direction:column;gap:12px}
+.namebox h2{font-family:var(--display);font-weight:300;margin:0;font-size:24px}
+.namebox input{font:inherit;background:var(--field);color:var(--text);border:1px solid var(--line-2);border-radius:11px;padding:10px 12px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--raised);border:1px solid var(--line-2);border-radius:12px;padding:10px 16px;font-size:14px;opacity:0;pointer-events:none;transition:opacity var(--ease);max-width:calc(100% - 32px)}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand"><i></i>Illume Studio · review</div>
+      <h1 id="title">Loading…</h1>
+      <p class="sub" id="sub"></p>
+    </div>
+    <div class="actions">
+      <button class="btn" id="playAll" type="button">▶ Play all</button>
+      <button class="btn gold" id="approveAll" type="button">✓ Approve all</button>
+    </div>
+  </header>
+  <div class="summary" id="summary"></div>
+  <div class="grid" id="grid"></div>
+</div>
+<div class="player hidden" id="player"><div class="stage" id="pStage"></div><div class="bar"><span id="pInfo"></span><button type="button" id="pClose">✕ Close</button></div></div>
+<div class="namebox hidden" id="namebox"><form id="nameForm"><h2>Your name</h2><p class="sub">So the studio knows who approved or commented.</p><input id="nameIn" autocomplete="name" required maxlength="60"><button class="btn gold" type="submit">Continue</button></form></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const token = location.pathname.split("/").filter(Boolean).pop();
+const API = "/api/studio?fn=review";
+let data = null;
+let who = ""; try { who = localStorage.getItem("il.reviewer") || ""; } catch {}
+const toast = t => { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 3500); };
+function askName() {
+  if (who) return Promise.resolve(who);
+  return new Promise(ok => {
+    $("namebox").classList.remove("hidden"); $("nameIn").focus();
+    $("nameForm").onsubmit = e => { e.preventDefault(); who = $("nameIn").value.trim().slice(0, 60); try { localStorage.setItem("il.reviewer", who); } catch {} $("namebox").classList.add("hidden"); ok(who); };
+  });
+}
+async function send(body) {
+  const name = await askName();
+  const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, t: token, name }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { toast(j.error || "Couldn't send — please try again."); return false; }
+  data.feedback = j.feedback; render(); return true;
+}
+function render() {
+  const shots = data.shots, fb = data.feedback || {};
+  const n = s => shots.filter(x => (fb[x.id] || {}).status === s).length;
+  $("summary").innerHTML = `<span>${shots.length} shot${shots.length > 1 ? "s" : ""}</span><span>✓ ${n("approved")} approved</span><span>✎ ${n("changes")} need changes</span>`;
+  const grid = $("grid"); grid.innerHTML = "";
+  shots.forEach((s, i) => {
+    const f = fb[s.id] || {}, st = f.status;
+    const el = document.createElement("article"); el.className = "shot" + (st ? " " + st : "");
+    const media = s.mode === "video" ? `<video src="${s.src}" controls playsinline preload="metadata"></video>` : s.mode === "audio" ? `<audio src="${s.src}" controls style="position:absolute;left:12px;right:12px;bottom:12px;width:calc(100% - 24px)"></audio>` : `<img src="${s.src}" alt="Shot ${i + 1}" loading="lazy">`;
+    el.innerHTML = `<div class="frame"><span class="num">${i + 1}</span>${st ? `<span class="state ${st}">${st === "approved" ? "✓ Approved" : "✎ Changes"}</span>` : ""}${media}</div>
+      <div class="body">${s.note ? `<p class="note">${esc(s.note)}</p>` : ""}
+        <div class="decide"><button type="button" class="ap${st === "approved" ? " on" : ""}">✓ Approve</button><button type="button" class="ch${st === "changes" ? " on" : ""}">✎ Request changes</button></div>
+        <div class="comments">${(f.comments || []).map(c => `<div><b>${esc(c.name)}</b><small>${new Date(c.t).toLocaleDateString()}</small><br>${esc(c.text)}</div>`).join("")}</div>
+        <form class="add"><input placeholder="Add a comment for shot ${i + 1}…" maxlength="1000"><button class="btn" type="submit">Send</button></form>
+      </div>`;
+    el.querySelector(".ap").onclick = () => send({ action: "feedback", take: s.id, status: st === "approved" ? "clear" : "approved" });
+    el.querySelector(".ch").onclick = async () => {
+      if (st === "changes") return send({ action: "feedback", take: s.id, status: "clear" });
+      const input = el.querySelector("form input");
+      const said = input.value.trim();
+      if (await send({ action: "feedback", take: s.id, status: "changes", comment: said })) toast(said ? "Sent — the studio will see your note." : "Marked — add a comment below to say what to change.");
+    };
+    el.querySelector("form").onsubmit = async e => { e.preventDefault(); const input = e.target.querySelector("input"); if (!input.value.trim()) return; if (await send({ action: "feedback", take: s.id, comment: input.value })) { input.value = ""; toast("Comment sent to the studio."); } };
+    grid.appendChild(el);
+  });
+}
+$("approveAll").onclick = async () => { if (await send({ action: "feedback", take: "*", status: "approved" })) toast("Every shot approved — thank you!"); };
+let run = null;
+$("playAll").onclick = async () => {
+  const me = run = {}; $("player").classList.remove("hidden");
+  for (let i = 0; i < data.shots.length && run === me; i++) {
+    const s = data.shots[i]; const st = $("pStage"); st.innerHTML = ""; $("pInfo").textContent = `Shot ${i + 1} of ${data.shots.length}`;
+    if (s.mode === "video") {
+      const v = document.createElement("video"); v.src = s.src; v.playsInline = true; v.autoplay = true; st.appendChild(v);
+      v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });
+      await new Promise(d => { v.onended = d; v.onerror = d; setTimeout(d, 60000); });
+    } else if (s.mode === "image") {
+      const im = document.createElement("img"); im.src = s.src; st.appendChild(im); await new Promise(d => setTimeout(d, 3000));
+    }
+  }
+  if (run === me) closePlayer();
+};
+function closePlayer() { run = null; $("player").classList.add("hidden"); $("pStage").innerHTML = ""; }
+$("pClose").onclick = closePlayer;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closePlayer(); });
+(async () => {
+  try {
+    const r = await fetch(`${API}&t=${encodeURIComponent(token)}`, { cache: "no-store" });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || "This review link isn't active any more.");
+    data = j;
+    document.title = `${j.client ? j.client + " — " : ""}${j.title} · review`;
+    $("title").textContent = j.title; $("sub").textContent = (j.client ? j.client + " · " : "") + "Watch each shot, then approve it or tell us what to change.";
+    if (!j.shots.length) { $("grid").innerHTML = `<div class="empty"><b>Nothing here yet.</b>The studio hasn't added any shots.</div>`; return; }
+    render();
+  } catch (e) {
+    $("title").textContent = "Review"; document.querySelector(".actions").style.display = "none";
+    $("grid").innerHTML = `<div class="err"><b>Link not available.</b>${esc(e.message)}</div>`;
+  }
+})();
+</script>
+</body>
+</html>

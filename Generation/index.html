@@ -628,6 +628,56 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .credPill.low{color:#FFD9D6;border-color:rgba(240,122,110,.5);background:var(--danger-soft)}
 .hist .viaClaude{position:absolute;left:8px;top:8px;z-index:4;font-size:10.5px;font-weight:600;background:rgba(10,9,7,.72);color:#F3EDE2;border:1px solid rgba(255,236,200,.2);border-radius:999px;padding:2px 8px}
 @media (max-width:640px){.credBig span{font-size:38px}.modal{padding:12px}}
+
+/* ============ v8: client review, export cut, cast, look ============ */
+.castRow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.castChip{display:inline-flex;align-items:center;gap:7px;padding:3px 11px 3px 3px;border-radius:999px;border:1px solid var(--line);background:var(--raised);color:var(--text);font:inherit;font-size:12.5px;cursor:pointer;transition:border-color var(--ease),background var(--ease)}
+.castChip .av{width:24px;height:24px;border-radius:50%;background:var(--panel-2) center/cover no-repeat;display:grid;place-items:center;font-size:12px;color:var(--muted);flex-shrink:0}
+.castChip.on{border-color:var(--gold);background:var(--gold-soft);color:var(--gold-2)}
+.castChip:hover{border-color:var(--gold-line)}
+.castChip.manage{padding:4px 11px;color:var(--muted)}
+.castList{display:flex;flex-direction:column;gap:10px}
+.castCard{display:grid;grid-template-columns:auto 1fr;gap:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:12px}
+.castCard .ph{display:flex;gap:6px;flex-wrap:wrap;width:132px}
+.castCard .ph div{position:relative;width:62px;height:62px;border-radius:10px;background:var(--raised) center/cover no-repeat;border:1px solid var(--line)}
+.castCard .ph div button{position:absolute;right:-6px;top:-6px;width:20px;height:20px;border-radius:50%;border:0;background:var(--danger);color:#fff;font-size:10px;cursor:pointer}
+.castCard .ph label{width:62px;height:62px;border-radius:10px;border:1px dashed var(--line-2);display:grid;place-items:center;color:var(--muted);cursor:pointer;font-size:20px}
+.castCard .fl{display:flex;flex-direction:column;gap:8px;min-width:0}
+.castCard .row{display:flex;gap:8px}
+.castCard input,.castCard select,.castCard textarea{font:inherit;font-size:13.5px;background:var(--field);color:var(--text);border:1px solid var(--line-2);border-radius:10px;padding:8px 10px;min-width:0}
+.castCard .row select{flex:0 0 112px;width:112px}
+.castCard .row .nm{flex:1 1 auto;width:auto}
+.castCard textarea{resize:vertical;min-height:54px}
+.castCard .del{align-self:flex-end;background:none;border:0;color:var(--faint);cursor:pointer;font:inherit;font-size:12.5px}
+.castCard .del:hover{color:var(--danger)}
+@media (max-width:640px){.castCard{grid-template-columns:1fr}.castCard .ph{width:auto}}
+.lookPop{width:min(460px,calc(100vw - 24px))}
+.lookGroup{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.lookGroup h5{margin:0;padding:0 4px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.lookGroup .chips{display:flex;flex-wrap:wrap;gap:6px}
+.lookGroup .chip{padding:6px 11px;font-size:12.5px}
+.pi-lens{width:14px;height:14px;border-radius:50%;border:1.6px solid currentColor;box-shadow:inset 0 0 0 2.5px var(--raised),inset 0 0 0 4.5px currentColor;display:inline-block}
+#lookWrap.set .pillBtn{color:var(--gold-2);border-color:var(--gold-line)}
+#shareReview.shared{border-color:var(--gold-line);color:var(--gold-2)}
+.shot .rv{position:absolute;right:10px;bottom:10px;z-index:2;font-size:11px;font-weight:600;border-radius:999px;padding:3px 9px;background:rgba(10,9,7,.78);color:#F3EDE2}
+.shot .rv.approved{background:var(--ok);color:#0C1A10}
+.shot .rv.changes{background:#F0B36E;color:#1A1006}
+.shot .cmts{padding:0 12px 4px;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.shot .cmts div{background:var(--raised);border-radius:9px;padding:5px 8px}
+.shot .cmts b{color:var(--text);font-weight:600}
+.expGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:640px){.expGrid{grid-template-columns:1fr}}
+.seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:3px;gap:3px}
+.seg button{flex:1;font:inherit;font-size:13px;font-weight:600;border:0;border-radius:8px;padding:7px 8px;background:none;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--raised);color:var(--text);box-shadow:var(--sh-sm)}
+#expMusic{flex:1;min-width:0;font:inherit;font-size:13.5px;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+.volRow{display:flex;align-items:center;gap:10px}
+.volRow input{flex:1;accent-color:var(--gold)}
+.expProg{display:flex;flex-direction:column;gap:6px}
+.expProg .bar{height:8px;border-radius:8px;background:var(--panel-2);overflow:hidden;border:1px solid var(--line)}
+.expProg .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-2));transition:width 300ms linear}
+.expProg span{font-size:13px;color:var(--muted)}
+.expGo{min-width:150px;justify-content:center}
 </style>
 </head>
 <body>
@@ -739,6 +789,29 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
     </div>
   </div>
 
+  <!-- Export cut: every storyboard shot joined into one video -->
+  <div class="modal hidden" id="expModal">
+    <div class="modal-backdrop" id="expBackdrop"></div>
+    <div class="modal-panel">
+      <div class="modal-head"><b>Export cut</b><button class="modal-x" id="expClose" aria-label="Close">✕</button></div>
+      <div class="modal-body">
+        <p class="setP" id="expLead"></p>
+        <div class="expGrid">
+          <div class="f"><label>Quality</label><div class="seg" id="expQ"><button type="button" data-v="1080" class="on">1080p</button><button type="button" data-v="720">720p</button></div></div>
+          <div class="f"><label>Between shots</label><div class="seg" id="expT"><button type="button" data-v="fade" class="on">Soft fade</button><button type="button" data-v="cut">Hard cut</button></div></div>
+          <div class="f"><label>Shot sound</label><div class="seg" id="expS"><button type="button" data-v="on" class="on">Keep</button><button type="button" data-v="off">Mute</button></div></div>
+        </div>
+        <div class="f"><label>Music or voiceover <span class="hint">optional — plays under the whole cut</span></label>
+          <div class="giftRow"><select id="expMusic"></select><label class="btn" for="expMusicFile" style="cursor:pointer">Upload…</label><input type="file" id="expMusicFile" accept="audio/*" hidden></div>
+          <div class="volRow"><span class="hint">Volume</span><input type="range" id="expVol" min="0" max="100" value="70"><span class="hint" id="expVolV">70%</span></div>
+        </div>
+        <div class="expProg hidden" id="expProg"><div class="bar"><i id="expBar"></i></div><span id="expStatus"></span></div>
+        <div class="btnRow"><button class="go expGo" id="expGo" type="button">⬇ Export</button><button class="btn hidden" id="expCancel" type="button">Cancel</button></div>
+        <p class="hint">The cut is made right here in your browser, in real time — keep this tab open and on screen until it's done.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Everything about this client, out of the way until you click Brand kit. -->
   <div class="modal hidden" id="briefModal">
     <div class="modal-backdrop" id="briefBackdrop"></div>
@@ -754,6 +827,11 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
             <span id="refsDropText">Drop client screenshots or photos, or tap to choose — add as many as you like</span>
           </div>
           <div class="refgrid" id="refGrid"></div>
+        </div>
+        <div class="f" id="castSec">
+          <label>Cast &amp; products <span class="hint">the people, products and places that come back in this client's shots — tap them in the composer to keep them consistent</span></label>
+          <div class="castList" id="castList"></div>
+          <button class="btn" id="castAdd" type="button">＋ Add a person, product or place</button>
         </div>
       </div>
     </div>
@@ -784,6 +862,8 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         </div>
         <div class="ghRight">
           <span class="boardInfo hidden" id="boardInfo"></span>
+          <button class="btn hidden" id="shareReview" type="button" title="Send this storyboard to your client — they approve or comment on each shot, no account needed">⤴ Client review</button>
+          <button class="btn hidden" id="exportCut" type="button" title="Join every shot into one video file">⬇ Export cut</button>
           <button class="btn hidden" id="playAll" type="button">▶ Play all</button>
           <button class="ghLink hidden" id="clearFailed" type="button">Clear failed</button>
           <button class="ghLink" id="clearHist" type="button">Clear takes</button>
@@ -806,6 +886,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         </div>
       </div>
       <div class="camMoves hidden" id="camMoves" aria-label="Camera moves"></div>
+      <div class="castRow hidden" id="castRow" aria-label="Cast and products"></div>
 
       <div class="cmpMain">
         <div class="refSlot" id="refBlock">
@@ -834,9 +915,11 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         <div class="pill" id="soundWrap"><button class="pillBtn" type="button" data-pop="sound" title="What the video should sound like"><i class="pi pi-sound"></i><span id="pillSound">Sound</span></button>
           <input type="checkbox" id="genAudio" class="sr" tabindex="-1" aria-hidden="true" checked>
           <select id="sound" class="sr" tabindex="-1" aria-hidden="true"><option value="full">Full</option><option value="nomusic">No music</option><option value="sfx">Effects only</option><option value="off">Silent</option></select></div>
+        <div class="pill" id="lookWrap"><button class="pillBtn" type="button" data-pop="look" title="Camera, lens, framing and colour grade"><i class="pi pi-lens"></i><span id="pillLook">Look</span></button>
+          <input type="hidden" id="look" value=""></div>
         <div class="pill" id="countPill"><button class="pillBtn" type="button" data-pop="count" title="How many takes at once"><span id="pillCount">×1</span></button></div>
         <div class="pill"><label class="pillBtn toggle kitToggle hidden" id="kitToggle" title="Adds this client's style notes (Brand kit) in front of your prompt"><input type="checkbox" id="useBrief" checked><span class="kitDia">◆</span><span id="kitToggleText">Brand style</span></label></div>
-        <div class="pill"><button class="pillBtn" type="button" data-pop="presets" title="Saved prompts"><span>☆ Saved</span></button></div>
+        <div class="pill"><button class="pillBtn" type="button" data-pop="presets" title="Saved prompts" aria-label="Saved prompts"><span>☆</span></button></div>
         <span class="spacer"></span>
         <button class="go" id="go"><span id="goLabel">Generate</span><span class="goCost" id="goCost"></span></button>
       </div>
@@ -866,6 +949,11 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
   <div class="popTitle">Saved prompts</div>
   <div class="chips" id="presets"></div>
   <div class="ghostRow"><button class="btn" id="savePreset" type="button">☆ Save current prompt</button><button class="btn" id="clearPrompt" type="button">✕ Clear prompt</button></div>
+</div>
+<div class="pop lookPop hidden" id="pop-look">
+  <div class="popTitle">Look <span class="hint">tap to choose · tap again to clear</span></div>
+  <div id="lookGroups"></div>
+  <div class="ghostRow"><button class="btn" id="lookSave" type="button">◆ Save as client look</button><button class="btn" id="lookReset" type="button">Reset</button></div>
 </div>
 <div class="pop hidden" id="pop-kit"><div class="popTitle" id="kitPopTitle">Brand photos</div><div class="refgrid" id="kitPicks"></div></div>
 <div class="pop hidden" id="pop-list"></div>
@@ -1227,10 +1315,10 @@ let draftTimer = null, restoringDraft = false;
 // prompt, model, references and settings — a video prompt must never appear on
 // the image tab, or vice versa. The draft is { mode, useBrief, count, modes:{
 // image:{...}, video:{...}, audio:{...} } }, one slot per mode.
-const DRAFT_FIELDS = ["prompt","aspect","resolution","duration","seed","extra","framing","sound"];
+const DRAFT_FIELDS = ["prompt","aspect","resolution","duration","seed","extra","framing","sound","look"];
 const CLEAR_IF_ABSENT = { prompt:1, seed:1, extra:1, duration:1 }; // a fresh mode starts these empty; aspect/resolution keep the mode default
 function captureModeState() {
-  const s = { model: $("model").value.trim(), genAudio: $("genAudio").checked,
+  const s = { model: $("model").value.trim(), genAudio: $("genAudio").checked, cast: [...castSel],
     refs: refUrls.filter(r => r.status === "ok").map(r => ({ url:r.url, name:r.name })) };
   DRAFT_FIELDS.forEach(f => { if ($(f)) s[f] = $(f).value; });
   return s;
@@ -1245,6 +1333,8 @@ function applyModeState(s) {
   if (looksLikeId(s.model)) $("model").value = s.model; // else keep setMode's per-mode default
   $("genAudio").checked = s.genAudio !== false;
   if (!s.sound) $("sound").value = s.genAudio === false ? "off" : "full"; // drafts from before the Sound menu
+  if (!("look" in s) && clients.length) $("look").value = client().look ? JSON.stringify(client().look) : ""; // a fresh draft starts from the client's saved look
+  castSel = new Set(Array.isArray(s.cast) ? s.cast : []);
   $("genAudio").checked = $("sound").value !== "off";
   refUrls = Array.isArray(s.refs) ? s.refs.map(r => ({ preview:r.url, url:r.url, name:r.name, status:"ok" })) : [];
 }
@@ -1482,6 +1572,7 @@ function setMode(m) {
   $("resWrap").classList.toggle("hidden", m==="audio");
   updateResolutionOptions();
   $("soundWrap").classList.toggle("hidden", m!=="video");
+  $("lookWrap").classList.toggle("hidden", m==="audio");
   const favs = load(LS.favs+m, []);
   const stored = getRaw(LS.model+m);
   $("model").value = (looksLikeId(stored) ? stored : "") || (favs.find(f => f.id)||{}).id || "";
@@ -1739,6 +1830,8 @@ $("go").onclick = async () => {
   if (!prompt) return note(mode==="audio" ? "Write the script first." : "Write a prompt first.", true);
   const style = (client().style || "").trim();
   if ($("useBrief").checked && style && mode!=="audio") prompt = style + ". " + prompt;
+  if (mode !== "audio") { const c = castPhrase(); if (c) prompt = prompt.replace(/[\s.]*$/, ".") + " " + c; }
+  if (mode !== "audio") { const l = lookPhrase(); if (l) prompt = prompt.replace(/[\s.]*$/, ".") + " " + l; }
   // Seedance has a single sound on/off switch — "no music" is asked for in words.
   if (mode === "video" && SOUND_ASK[$("sound").value]) prompt = prompt.replace(/[\s.]*$/, ".") + " " + SOUND_ASK[$("sound").value];
 
@@ -1751,6 +1844,7 @@ $("go").onclick = async () => {
   if (failed) return note("A reference image failed to upload — remove it or tap it to retry before generating.", true);
 
   let ref = refsForRequest();
+  if (mode === "image") { const extra = castPhotos().filter(u => !(ref || []).includes(u)); if (extra.length) ref = [...(ref || []), ...extra].slice(0, MAX_REFS); } // the cast's photos ride along as references
   if (mode === "video" && ref && ref.length && $("aspect").value) {
     $("go").disabled = true; note(`Reshaping your start image to ${$("aspect").value}…`);
     try { ref = [await reframeStartImage(ref[0], $("aspect").value, $("framing").value)]; }
@@ -2061,7 +2155,7 @@ async function keepBackfill() {
 }
 
 // ---- composer pills + pop-overs
-const POPS = { model: "pop-model", count: "pop-count", presets: "pop-presets", kit: "pop-kit" };
+const POPS = { model: "pop-model", count: "pop-count", presets: "pop-presets", kit: "pop-kit", look: "pop-look" };
 const RATIO_DIMS = r => { const [w, h] = String(r).split(":").map(Number); if (!w || !h) return [14, 14]; const k = 18 / Math.max(w, h); return [Math.max(7, Math.round(w * k)), Math.max(7, Math.round(h * k))]; };
 let openPop = null;
 function closePops() {
@@ -2098,6 +2192,7 @@ document.addEventListener("click", e => {
   const kind = btn.dataset.pop, wasOpen = openPop === kind;
   closePops(); if (wasOpen) return;
   openPop = kind; btn.setAttribute("aria-expanded", "true");
+  if (kind === "look") renderLook();
   if (POPS[kind]) return placePop($(POPS[kind]), btn);
   if (kind === "aspect") {
     const opts = [...$("aspect").options].map(o => ({ value: o.value, label: o.textContent, hint: RATIO_HINT[o.value] || "", icon: o.value ? shapeIcon(o.value) : '<i class="shape" style="width:14px;height:14px;border-style:dashed"></i>' }));
@@ -2135,6 +2230,10 @@ function refreshPills() {
   $("pillFraming").textContent = $("framing").value === "fit" ? "Whole image" : "Crop";
   const r = $("resolution").value; $("pillRes").textContent = r ? r.toUpperCase() : "Auto";
   const d = $("duration").value; $("pillDur").textContent = d ? d + "s" : "Auto";
+  const lk = lookState(), lkLabels = LOOK.map(g => { const o = g.opts.find(x => x[0] === lk[g.key]); return o && o[0]; }).filter(Boolean);
+  $("pillLook").textContent = lkLabels.length ? lkLabels.slice(0, 2).join(" · ") + (lkLabels.length > 2 ? ` +${lkLabels.length - 2}` : "") : "Look";
+  $("lookWrap").classList.toggle("set", !!lkLabels.length);
+  renderCastRow();
   $("pillSound").textContent = { full: "Sound", nomusic: "No music", sfx: "Effects only", off: "Silent" }[$("sound").value] || "Sound";
   $("soundWrap").classList.toggle("muted", $("sound").value === "off");
   $("pillCount").textContent = "×" + genCount;
@@ -2276,6 +2375,9 @@ function renderViewTabs() {
   $("boardInfo").textContent = items.length ? `${items.length} shot${items.length > 1 ? "s" : ""} · ≈ ${fmtDur(total)}` : "";
   $("boardInfo").classList.toggle("hidden", viewMode !== "board" || !items.length);
   $("playAll").classList.toggle("hidden", viewMode !== "board" || !items.length);
+  $("exportCut").classList.toggle("hidden", viewMode !== "board" || !items.some(x => x.mode !== "audio"));
+  $("shareReview").classList.toggle("hidden", viewMode !== "board" || !items.length);
+  renderReviewBtn();
 }
 function setViewMode(m) { viewMode = m; try { localStorage.setItem("il.viewMode", m); } catch {} renderViewTabs(); if (m === "board") renderBoard(); else layoutMasonry(); }
 $("tabTakes").onclick = () => setViewMode("takes");
@@ -2290,8 +2392,9 @@ function renderBoard() {
   items.forEach((it, i) => {
     const el = document.createElement("div"); el.className = "shot" + (viewing === it.id ? " on" : ""); el.draggable = true; el.dataset.id = it.id;
     const media = isVideoItem(it) ? `<video src="${mediaSrc(it.url)}" muted playsinline preload="metadata"></video>` : (it.mode === "audio" && !isImageUrl(it.url)) ? `<div class="aud" style="height:100%;display:grid;place-items:center;color:var(--gold);font-size:30px">♪</div>` : `<img src="${it.url}" alt="" loading="lazy" onerror="mediaFallback(this)">`;
-    el.innerHTML = `<div class="frame"><span class="num">${i + 1}</span><span class="dur">${it.mode === "image" ? "still" : fmtDur(shotSeconds(it))}</span>${media}</div>
-      <div class="txt">${esc(it.userPrompt || it.prompt || "")}</div>
+    const fb = (reviewFb[projId] || {})[it.id] || {}, cm = fb.comments || [];
+    el.innerHTML = `<div class="frame"><span class="num">${i + 1}</span><span class="dur">${it.mode === "image" ? "still" : fmtDur(shotSeconds(it))}</span>${media}${fb.status || cm.length ? `<span class="rv ${fb.status || ""}" title="Client review">${fb.status === "approved" ? "✓ Approved" : fb.status === "changes" ? "✎ Changes" : ""}${cm.length ? ` 💬${cm.length}` : ""}</span>` : ""}</div>
+      <div class="txt">${esc(it.userPrompt || it.prompt || "")}</div>${cm.length ? `<div class="cmts">${cm.slice(-2).map(c => `<div><b>${esc(c.name)}:</b> ${esc(c.text)}</div>`).join("")}</div>` : ""}
       <div class="ctl"><button class="grip" type="button" title="Drag to reorder" aria-label="Drag to reorder">⋮⋮</button><button type="button" class="l" title="Move earlier" aria-label="Move earlier">‹</button><button type="button" class="r" title="Move later" aria-label="Move later">›</button><button type="button" class="rm" title="Remove from the storyboard" aria-label="Remove">✕</button></div>`;
     el.querySelector(".frame").onclick = () => view(it, true);
     el.querySelector(".l").onclick = () => moveShot(it.id, i - 1);
@@ -2308,6 +2411,7 @@ function renderBoard() {
     box.appendChild(el);
   });
   renderViewTabs();
+  autoUpdateReview();
 }
 $("toBoard").onclick = () => { const it = current; if (it) toggleBoard(it.id); };
 // ▶ Play all: the shots in order, full screen — videos play through, stills hold 3s.
@@ -2612,8 +2716,294 @@ async function pullMcp() {
 setInterval(() => { if (me && !document.hidden) pullMcp(); }, 20000);
 document.addEventListener("visibilitychange", () => { if (me && !document.hidden) pullMcp(); });
 
+
+/* ---------- client review links ---------- */
+// "⤴ Client review" publishes this project's storyboard to a private link the
+// client opens without an account (Generation/review.html). Their approvals and
+// comments come back onto the storyboard cards. The link follows the storyboard:
+// reorder, add or remove shots and it updates by itself a few seconds later.
+const reviewFb = {}; // project id → { take id: { status, comments } }
+const keptPath = it => /^\/api\/file\?p=/.test(it.url || "") ? decodeURIComponent(it.url.split("?p=")[1]) : null;
+const reviewUrl = t => location.origin + "/review/" + t;
+function reviewShots() {
+  return boardItems().map(it => ({ id: it.id, path: keptPath(it), mode: it.mode === "audio" ? "audio" : isVideoItem(it) ? "video" : "image", dur: Math.round(shotSeconds(it)) })).filter(x => x.path);
+}
+const reviewSig = shots => shots.map(x => x.id).join(",");
+async function publishReview(quiet) {
+  const p = proj(), shots = reviewShots();
+  if (!shots.length) { if (!quiet) note("Nothing to share yet — shots can be shared once they're saved (a few seconds after they finish).", true); return null; }
+  const out = await api("/api/studio?fn=review", { method: "POST", body: JSON.stringify({ action: "publish", token: p.review || undefined, proj: p.id, title: p.name, client: (client(p.client) || {}).name || "", shots }) });
+  p.review = out.token; p.reviewSig = reviewSig(shots); saveProjects();
+  return out.token;
+}
+let reviewTimer = null;
+function autoUpdateReview() {
+  const p = proj(); if (!p || !p.review) return;
+  if (reviewSig(reviewShots()) === p.reviewSig) return;
+  clearTimeout(reviewTimer); reviewTimer = setTimeout(() => publishReview(true).catch(() => {}), 2500);
+}
+async function copyText(t) { try { await navigator.clipboard.writeText(t); return true; } catch { prompt("Copy this link:", t); return false; } }
+function renderReviewBtn() {
+  const p = proj(), b = $("shareReview"); if (!p || !b) return;
+  const fb = reviewFb[p.id] || {}, ids = boardItems().map(x => x.id);
+  const ok = ids.filter(id => (fb[id] || {}).status === "approved").length, ch = ids.filter(id => (fb[id] || {}).status === "changes").length;
+  b.classList.toggle("shared", !!p.review);
+  b.textContent = p.review ? `⤴ Client review${ok || ch ? ` · ✓${ok}${ch ? ` ✎${ch}` : ""}` : " · shared"}` : "⤴ Client review";
+}
+$("shareReview").onclick = async e => {
+  const p = proj(), anchor = e.currentTarget;
+  if (!p.review) {
+    try { const t = await publishReview(); if (!t) return; await copyText(reviewUrl(t)); note("Review link copied — send it to your client. They can watch every shot, approve it or ask for changes, no account needed."); renderReviewBtn(); }
+    catch (err) { note("Couldn't share: " + err.message, true); }
+    return;
+  }
+  showMenu(anchor, [
+    { text: "Copy review link", run: async () => { await copyText(reviewUrl(p.review)); note("Review link copied."); } },
+    { text: "Open the client's view ↗", run: () => window.open(reviewUrl(p.review), "_blank", "noopener") },
+    { text: "Refresh client feedback", run: () => loadReviewFb(true) },
+    "-",
+    { text: "Stop sharing", danger: true, run: async () => {
+      if (!confirm("Stop sharing this storyboard? The link stops working for your client.")) return;
+      await api("/api/studio?fn=review", { method: "POST", body: JSON.stringify({ action: "revoke", token: p.review }) }).catch(() => {});
+      delete p.review; delete p.reviewSig; delete reviewFb[p.id]; saveProjects(); renderBoard(); note("The review link is switched off.");
+    } },
+  ]);
+};
+async function loadReviewFb(loud) {
+  const p = proj(); if (!p || !p.review) return;
+  try {
+    const r = await fetch(`/api/studio?fn=review&t=${encodeURIComponent(p.review)}`, { cache: "no-store" });
+    if (r.status === 404) { delete p.review; delete p.reviewSig; saveProjects(); renderReviewBtn(); return; }
+    const j = await r.json(); const before = JSON.stringify(reviewFb[p.id] || {});
+    reviewFb[p.id] = j.feedback || {};
+    const changed = before !== JSON.stringify(reviewFb[p.id]);
+    if (changed) { renderBoard(); if (before !== "{}" || loud) { const v = Object.values(reviewFb[p.id]); note(`Client review: ✓ ${v.filter(x => x.status === "approved").length} approved · ✎ ${v.filter(x => x.status === "changes").length} need changes · 💬 ${v.reduce((t, x) => t + (x.comments || []).length, 0)} comments.`); } }
+    else if (loud) note("No new client feedback yet.");
+  } catch {}
+}
+setInterval(() => { if (me && !document.hidden && viewMode === "board") loadReviewFb(); }, 30000);
+$("tabBoard").addEventListener("click", () => loadReviewFb());
+
+/* ---------- export cut: every storyboard shot in one video file ---------- */
+// Rendered in the browser in real time: each shot is played onto a canvas (stills
+// hold 3s with a slow push-in), its sound and an optional music bed are mixed
+// with Web Audio, and the whole thing is recorded with MediaRecorder.
+let exportRun = null;
+function expSeg(id) { return $(id).querySelector(".on").dataset.v; }
+["expQ", "expT", "expS"].forEach(id => $(id).onclick = e => { const b = e.target.closest("button"); if (!b || exportRun) return; $(id).querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); });
+$("expVol").oninput = () => $("expVolV").textContent = $("expVol").value + "%";
+let expUpload = null;
+$("expMusicFile").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  if (expUpload) URL.revokeObjectURL(expUpload.url);
+  expUpload = { url: URL.createObjectURL(f), name: f.name };
+  fillMusic("upload");
+};
+function fillMusic(sel) {
+  const s = $("expMusic"); const audios = projTakes().filter(x => x.mode === "audio" && x.url && x.status !== "failed" && x.status !== "running");
+  s.innerHTML = `<option value="">No music</option>` + (expUpload ? `<option value="upload">⬆ ${esc(expUpload.name)}</option>` : "")
+    + audios.map(a => `<option value="${esc(a.id)}">♪ ${esc((a.userPrompt || a.prompt || "Audio take").slice(0, 60))}</option>`).join("");
+  if (sel != null) s.value = sel;
+}
+function openExport() {
+  const items = boardItems().filter(x => x.mode !== "audio"), total = items.reduce((t, it) => t + shotSeconds(it), 0);
+  $("expLead").textContent = `${items.length} shot${items.length > 1 ? "s" : ""} · about ${fmtDur(total)}. It takes as long as the cut itself to make.`;
+  fillMusic(); $("expProg").classList.add("hidden"); $("expGo").disabled = false; $("expGo").textContent = "⬇ Export";
+  $("expModal").classList.remove("hidden");
+}
+function closeExport() { if (exportRun) { if (!confirm("Stop the export?")) return; exportRun.cancel = true; } $("expModal").classList.add("hidden"); }
+$("exportCut").onclick = openExport; $("expClose").onclick = closeExport; $("expBackdrop").onclick = closeExport;
+$("expCancel").onclick = () => { if (exportRun) exportRun.cancel = true; };
+const pickMime = () => ["video/mp4;codecs=avc1.42E01F,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m));
+const loadVideo = src => new Promise((ok, bad) => { const v = document.createElement("video"); v.preload = "auto"; v.playsInline = true; v.src = src; v.onloadeddata = () => ok(v); v.onerror = () => bad(new Error("couldn't load a video shot")); });
+const loadImg = src => new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error("couldn't load a still")); i.src = src; });
+const loadAudio = src => new Promise((ok, bad) => { const a = new Audio(); a.preload = "auto"; a.src = src; a.oncanplay = () => ok(a); a.onerror = () => bad(new Error("couldn't load the music")); });
+$("expGo").onclick = async () => {
+  const mime = pickMime();
+  if (!mime || !HTMLCanvasElement.prototype.captureStream) return note("This browser can't record video — try Chrome, Edge or Safari on a computer.", true);
+  const items = boardItems().filter(x => x.mode !== "audio"); if (!items.length) return;
+  const short = Number(expSeg("expQ")), fade = expSeg("expT") === "fade" ? 0.35 : 0, shotSound = expSeg("expS") === "on";
+  const run = exportRun = { cancel: false };
+  const ac = new (window.AudioContext || window.webkitAudioContext)(); // made inside the click, so it's allowed to start
+  $("expGo").disabled = true; $("expCancel").classList.remove("hidden"); $("expProg").classList.remove("hidden");
+  const status = t => $("expStatus").textContent = t, bar = f => $("expBar").style.width = Math.round(Math.min(1, f) * 100) + "%";
+  let rec = null, music = null;
+  try {
+    status("Loading shots…"); bar(0);
+    const media = [];
+    for (const it of items) media.push(isVideoItem(it) ? await loadVideo(mediaSrc(it.url)) : await loadImg(/^\//.test(it.url) ? it.url : mediaSrc(it.url)));
+    const m0 = media[0], ar = (m0.videoWidth || m0.naturalWidth) / (m0.videoHeight || m0.naturalHeight) || 16 / 9;
+    const even = n => Math.round(n / 2) * 2;
+    const W = ar >= 1 ? even(short * ar) : short, H = ar >= 1 ? short : even(short / ar);
+    const cv = document.createElement("canvas"); cv.width = W; cv.height = H; const ctx = cv.getContext("2d");
+    const dest = ac.createMediaStreamDestination();
+    const stream = cv.captureStream(30); dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+    const chunks = []; rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: short >= 1080 ? 12e6 : 6e6 });
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    const stopped = new Promise(r => rec.onstop = r);
+    const total = items.reduce((t, it, i) => t + (media[i].tagName === "VIDEO" ? media[i].duration || shotSeconds(it) : 3), 0);
+    let doneSec = 0;
+    const draw = (src, sw, sh, alpha, zoom) => {
+      ctx.globalAlpha = 1; ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+      const k = Math.min(W / sw, H / sh) * (zoom || 1), dw = sw * k, dh = sh * k;
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha)); ctx.drawImage(src, (W - dw) / 2, (H - dh) / 2, dw, dh); ctx.globalAlpha = 1;
+    };
+    const mv = $("expMusic").value;
+    if (mv) {
+      const src = mv === "upload" ? expUpload.url : mediaSrc((projTakes().find(x => x.id === mv) || {}).url || "");
+      music = await loadAudio(src); music.loop = true;
+      const g = ac.createGain(); g.gain.value = Number($("expVol").value) / 100;
+      ac.createMediaElementSource(music).connect(g).connect(dest); music._gain = g;
+    }
+    await ac.resume();
+    // first frame on the canvas before recording starts, so the file never opens on black
+    draw(media[0].tagName === "VIDEO" ? media[0] : media[0], media[0].videoWidth || media[0].naturalWidth, media[0].videoHeight || media[0].naturalHeight, fade ? 0 : 1);
+    rec.start(500); if (music) music.play().catch(() => {});
+    for (let i = 0; i < items.length; i++) {
+      if (run.cancel) break;
+      const m = media[i]; status(`Recording shot ${i + 1} of ${items.length}…`);
+      if (m.tagName === "VIDEO") {
+        const g = ac.createGain(); g.gain.value = shotSound ? 1 : 0;
+        ac.createMediaElementSource(m).connect(g).connect(dest);
+        m.currentTime = 0; await m.play().catch(() => { m.muted = true; return m.play(); });
+        await new Promise(res => {
+          const tick = () => {
+            if (run.cancel || m.ended) return res();
+            const t = m.currentTime, d = m.duration || 1;
+            draw(m, m.videoWidth, m.videoHeight, fade ? Math.min(1, t / fade, (d - t) / fade) : 1);
+            bar((doneSec + t) / total); requestAnimationFrame(tick);
+          };
+          m.onended = res; tick();
+        });
+        m.pause(); doneSec += m.duration || 0;
+      } else {
+        const t0 = performance.now(), d = 3;
+        await new Promise(res => {
+          const tick = () => {
+            const t = (performance.now() - t0) / 1000;
+            if (run.cancel || t >= d) return res();
+            draw(m, m.naturalWidth, m.naturalHeight, fade ? Math.min(1, t / fade, (d - t) / fade) : 1, 1 + 0.05 * (t / d)); // gentle push-in on stills
+            bar((doneSec + t) / total); requestAnimationFrame(tick);
+          };
+          tick();
+        });
+        doneSec += d;
+      }
+    }
+    if (music && music._gain) { music._gain.gain.setTargetAtTime(0, ac.currentTime, 0.25); await new Promise(r => setTimeout(r, 700)); }
+    rec.stop(); await stopped;
+    if (run.cancel) { status("Export cancelled."); return; }
+    bar(1);
+    const ext = mime.startsWith("video/mp4") ? "mp4" : "webm";
+    const file = new Blob(chunks, { type: mime.split(";")[0] });
+    const name = `${(client().name || "Illume")} - ${(proj().name || "cut")} - cut.${ext}`.replace(/[\\/:*?"<>|]+/g, "_");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    status(`Done — “${name}” (${(file.size / 1048576).toFixed(1)} MB) is downloading.`);
+    note("Your cut is ready — check your downloads.");
+  } catch (err) {
+    reportClient("export", err);
+    try { if (rec && rec.state !== "inactive") rec.stop(); } catch {}
+    status("Export failed: " + err.message); note("Export failed: " + err.message, true);
+  } finally {
+    if (music) music.pause();
+    ac.close().catch(() => {});
+    exportRun = null; $("expGo").disabled = false; $("expGo").textContent = "⬇ Export again"; $("expCancel").classList.add("hidden");
+  }
+};
+
+/* ---------- cast & products: the people, products and places a client reuses ---------- */
+// Saved on the client (client.cast). Tapping one in the composer adds its
+// description to the prompt and, for images, its photos as references — so the
+// same face and the same product come back shot after shot.
+let castSel = new Set();
+const CAST_KINDS = { person: "Person", product: "Product", place: "Place" };
+function clientCast() { const c = client(); return (c && (c.cast || (c.cast = []))) || []; }
+function castPhrase() {
+  const sel = clientCast().filter(x => castSel.has(x.id) && x.name);
+  if (!sel.length) return "";
+  return "Featuring " + sel.map(x => x.name + (x.desc ? ` (${x.desc.trim().replace(/[.\s]+$/, "")})` : "")).join("; ") + ".";
+}
+function castPhotos() { return clientCast().filter(x => castSel.has(x.id)).flatMap(x => (x.refs || []).map(r => r.url)).filter(u => /^https?:/i.test(u)); }
+function renderCastRow() {
+  const box = $("castRow"); if (!box || !clients.length) return;
+  const list = clientCast();
+  [...castSel].forEach(id => { if (!list.some(x => x.id === id)) castSel.delete(id); });
+  box.classList.toggle("hidden", mode === "audio" || !list.length);
+  box.innerHTML = "";
+  list.forEach(x => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "castChip" + (castSel.has(x.id) ? " on" : "");
+    const ph = (x.refs || [])[0];
+    b.innerHTML = `<span class="av" style="${ph ? `background-image:url('${esc(ph.url)}')` : ""}">${ph ? "" : x.kind === "product" ? "◇" : x.kind === "place" ? "⌂" : "☺"}</span>${esc(x.name || "Untitled")}`;
+    b.title = (x.desc || "") + (mode === "video" ? "\n(Video: the description is added to the prompt. For the exact face/product, make the start frame as an image first.)" : "\n(Image: the description and photos are added.)");
+    b.onclick = () => { castSel.has(x.id) ? castSel.delete(x.id) : castSel.add(x.id); renderCastRow(); saveDraft(); };
+    box.appendChild(b);
+  });
+  if (list.length) { const m = document.createElement("button"); m.type = "button"; m.className = "castChip manage"; m.textContent = "✎ Cast"; m.title = "Add or edit people, products and places"; m.onclick = () => { openBrief(); setTimeout(() => $("castSec").scrollIntoView({ behavior: "smooth" }), 50); }; box.appendChild(m); }
+}
+function renderCastList() {
+  const box = $("castList"); if (!box) return; box.innerHTML = "";
+  const list = clientCast();
+  if (!list.length) box.innerHTML = `<p class="hint" style="margin:0">Nobody yet. Add the actor who appears in every ad, the hero product, the café — with a photo or two and a short description.</p>`;
+  list.forEach(x => {
+    const el = document.createElement("div"); el.className = "castCard";
+    el.innerHTML = `<div class="ph">${(x.refs || []).map((r, i) => `<div style="background-image:url('${esc(r.url)}')"><button type="button" data-rm="${i}" aria-label="Remove photo">✕</button></div>`).join("")}${(x.refs || []).length < 4 ? `<label title="Add a photo">＋<input type="file" accept="image/png,image/jpeg,image/webp" hidden multiple></label>` : ""}</div>
+      <div class="fl"><div class="row"><select aria-label="Type">${Object.entries(CAST_KINDS).map(([k, v]) => `<option value="${k}"${x.kind === k ? " selected" : ""}>${v}</option>`).join("")}</select><input class="nm" placeholder="Name — e.g. Mia, Matcha tin" value="${esc(x.name || "")}" maxlength="60"></div>
+      <textarea class="ds" placeholder="What must stay the same — e.g. 28, curly red hair, freckles, gold hoop earrings" maxlength="400">${esc(x.desc || "")}</textarea>
+      <button class="del" type="button">Remove</button></div>`;
+    el.querySelector("select").onchange = e => { x.kind = e.target.value; saveClients(); renderCastRow(); };
+    el.querySelector(".nm").oninput = e => { x.name = e.target.value; saveClients(); renderCastRow(); };
+    el.querySelector(".ds").oninput = e => { x.desc = e.target.value; saveClients(); };
+    el.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { x.refs.splice(Number(b.dataset.rm), 1); saveClients(); renderCastList(); renderCastRow(); });
+    el.querySelector(".del").onclick = () => { if (!confirm(`Remove ${x.name || "this"} from the cast?`)) return; list.splice(list.indexOf(x), 1); castSel.delete(x.id); saveClients(); renderCastList(); renderCastRow(); };
+    const fi = el.querySelector("input[type=file]");
+    if (fi) fi.onchange = async e => {
+      for (const f of [...e.target.files].slice(0, 4 - (x.refs || []).length)) {
+        try {
+          const small = await shrinkForUpload(f), mime = small.slice(5, small.indexOf(";"));
+          const out = await api("/api/upload", { method: "POST", body: JSON.stringify({ name: f.name, type: mime, data: small.slice(small.indexOf(",") + 1) }) });
+          if (!out.url) throw new Error("upload returned no URL");
+          (x.refs || (x.refs = [])).push({ url: out.url, name: f.name }); saveClients(); renderCastList(); renderCastRow();
+        } catch (err) { note("Couldn't add " + f.name + ": " + err.message, true); }
+      }
+    };
+    box.appendChild(el);
+  });
+}
+$("castAdd").onclick = () => { clientCast().push({ id: "k" + Date.now().toString(36), kind: "person", name: "", desc: "", refs: [] }); saveClients(); renderCastList(); const n = $("castList").querySelectorAll(".nm"); if (n.length) n[n.length - 1].focus(); };
+
+/* ---------- look: camera, lens, framing and colour grade in a few taps ---------- */
+const LOOK = [
+  { key: "camera", title: "Camera", opts: [["Cinema digital", "shot on ARRI Alexa 35, rich cinematic digital image"], ["RED", "shot on RED V-Raptor, crisp high-detail image"], ["35mm film", "shot on 35mm Kodak film, natural film grain"], ["16mm film", "shot on 16mm film, visible grain, nostalgic texture"], ["Super 8", "Super 8 home-movie footage, heavy grain, soft warm colour"], ["iPhone / UGC", "shot on an iPhone, authentic handheld UGC look"], ["Drone", "aerial drone camera"]] },
+  { key: "lens", title: "Lens", opts: [["14mm", "14mm ultra-wide lens, dramatic perspective"], ["24mm", "24mm wide lens"], ["35mm", "35mm lens, natural perspective"], ["50mm", "50mm lens, true-to-eye perspective"], ["85mm", "85mm portrait lens, flattering compression"], ["135mm", "135mm telephoto lens, compressed background"], ["Macro", "100mm macro lens, extreme close detail"], ["Anamorphic", "anamorphic lens, oval bokeh, horizontal lens flares, widescreen feel"]] },
+  { key: "depth", title: "Focus", opts: [["Shallow", "shallow depth of field, f/1.4, creamy bokeh background"], ["Medium", "moderate depth of field, f/4"], ["Deep", "deep focus, everything sharp, f/11"]] },
+  { key: "framing", title: "Framing", opts: [["Extreme close-up", "extreme close-up"], ["Close-up", "close-up shot"], ["Medium", "medium shot"], ["Wide", "wide establishing shot"], ["Top-down", "top-down overhead shot"], ["Low angle", "low-angle hero shot"]] },
+  { key: "grade", title: "Colour grade", opts: [["Natural", "natural, true-to-life colour grade"], ["Teal & orange", "teal and orange cinematic colour grade"], ["Golden hour", "warm golden-hour colour grade, soft amber highlights"], ["Cool & moody", "cool, moody colour grade, deep blue shadows, low saturation"], ["Vibrant ad", "vibrant, punchy commercial colour grade, clean whites"], ["Kodak Portra", "Kodak Portra film colour, soft pastel skin tones, gentle grain"], ["Fuji film", "Fujifilm colour, green-tinted shadows, crisp film look"], ["Bleach bypass", "bleach bypass look, desaturated, high contrast"], ["Pastel", "soft pastel colour grade, airy and light"], ["Noir", "high-contrast film noir lighting, hard shadows"], ["Black & white", "black and white, rich contrast"]] },
+];
+function lookState() { try { return JSON.parse($("look").value || "{}") || {}; } catch { return {}; } }
+function setLook(st) { const clean = Object.fromEntries(Object.entries(st).filter(([, v]) => v)); $("look").value = Object.keys(clean).length ? JSON.stringify(clean) : ""; saveDraft(); refreshPills(); }
+function lookPhrase() {
+  const st = lookState(), parts = LOOK.map(g => { const o = g.opts.find(x => x[0] === st[g.key]); return o && o[1]; }).filter(Boolean);
+  return parts.length ? "Look: " + parts.join(", ") + "." : "";
+}
+function renderLook() {
+  const st = lookState(), box = $("lookGroups"); box.innerHTML = "";
+  LOOK.forEach(g => {
+    const el = document.createElement("div"); el.className = "lookGroup"; el.innerHTML = `<h5>${g.title}</h5><div class="chips"></div>`;
+    g.opts.forEach(([label, phrase]) => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "chip" + (st[g.key] === label ? " on" : ""); b.textContent = label; b.title = phrase;
+      b.onclick = e => { e.stopPropagation(); const cur = lookState(); cur[g.key] = cur[g.key] === label ? null : label; setLook(cur); renderLook(); };
+      el.lastChild.appendChild(b);
+    });
+    box.appendChild(el);
+  });
+  $("lookSave").textContent = `◆ Save as ${client().name}'s look`;
+}
+$("lookReset").onclick = e => { e.stopPropagation(); setLook({}); renderLook(); };
+$("lookSave").onclick = e => { e.stopPropagation(); const st = lookState(); client().look = Object.keys(st).length ? st : null; saveClients(); note(Object.keys(st).length ? `Saved — new projects for ${client().name} start with this look.` : `${client().name} no longer has a saved look.`); };
+
 /* ---------- brief modal ---------- */
-function openBrief() { $("briefModal").classList.remove("hidden"); }
+function openBrief() { renderCastList(); $("briefModal").classList.remove("hidden"); }
 function closeBrief() { $("briefModal").classList.add("hidden"); }
 $("briefBtn").onclick = openBrief;
 $("briefClose").onclick = closeBrief;

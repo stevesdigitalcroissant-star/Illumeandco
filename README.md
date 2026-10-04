@@ -174,6 +174,22 @@ Each project also has a **Storyboard**: takes added as numbered shots, reordered
 or arrows, and played back in order with ▶ Play all. “Continue shot” puts the next shot
 straight after the one it continues.
 
+**Client review links** (`api/_review.js`, page `Generation/review.html`, served at `/review/<token>`):
+in the Storyboard, “⤴ Client review” copies a private link. The client watches the shots without an
+account and approves or comments on each; the feedback appears on the storyboard cards. The link
+follows the storyboard (re-published a few seconds after a change) until “Stop sharing”.
+Stored at `review/<token>.json`; only the shots listed there can be read through the link.
+
+**Export cut**: joins the storyboard into one video in the browser (canvas + Web Audio + MediaRecorder,
+real time): 1080p/720p, soft fades or hard cuts, shot sound on/off, optional music or voiceover
+(an audio take or an uploaded file). MP4 where the browser can record it, otherwise WebM.
+
+**Cast & products** (Brand kit): people, products and places with photos and a description, saved on
+the client. Tapping them in the composer adds “Featuring …” to the prompt and, for images, their photos
+as references. **Look** (composer pill): camera, lens, focus, framing and colour grade, added to the
+prompt as “Look: …”; can be saved as the client's default look. Both also work from Claude/ChatGPT
+(`create_take` → `cast`, `look`).
+
 **Settings** (⚙ in the sidebar) holds the account, credits (packs, history, owner gifts),
 the invite link, Google Drive and the **Claude connection**.
 

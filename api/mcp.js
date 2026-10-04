@@ -88,6 +88,14 @@ const MODELS = {
   video: [["bytedance/seedance-2.5/text-to-video", "Seedance 2.5 — cinematic camera moves"], ["bytedance/seedance-2.0/text-to-video", "Seedance 2.0 — cheaper draft tier"]],
   audio: [["bytedance/seed-audio-1.0", "Seed Audio — voiceover / narration"]],
 };
+// The Studio's "Look" menu — same labels and wording as the page.
+const LOOK = {
+  camera: { "Cinema digital": "shot on ARRI Alexa 35, rich cinematic digital image", "RED": "shot on RED V-Raptor, crisp high-detail image", "35mm film": "shot on 35mm Kodak film, natural film grain", "16mm film": "shot on 16mm film, visible grain, nostalgic texture", "Super 8": "Super 8 home-movie footage, heavy grain, soft warm colour", "iPhone / UGC": "shot on an iPhone, authentic handheld UGC look", "Drone": "aerial drone camera" },
+  lens: { "14mm": "14mm ultra-wide lens, dramatic perspective", "24mm": "24mm wide lens", "35mm": "35mm lens, natural perspective", "50mm": "50mm lens, true-to-eye perspective", "85mm": "85mm portrait lens, flattering compression", "135mm": "135mm telephoto lens, compressed background", "Macro": "100mm macro lens, extreme close detail", "Anamorphic": "anamorphic lens, oval bokeh, horizontal lens flares, widescreen feel" },
+  focus: { "Shallow": "shallow depth of field, f/1.4, creamy bokeh background", "Medium": "moderate depth of field, f/4", "Deep": "deep focus, everything sharp, f/11" },
+  framing: { "Extreme close-up": "extreme close-up", "Close-up": "close-up shot", "Medium": "medium shot", "Wide": "wide establishing shot", "Top-down": "top-down overhead shot", "Low angle": "low-angle hero shot" },
+  grade: { "Natural": "natural, true-to-life colour grade", "Teal & orange": "teal and orange cinematic colour grade", "Golden hour": "warm golden-hour colour grade, soft amber highlights", "Cool & moody": "cool, moody colour grade, deep blue shadows, low saturation", "Vibrant ad": "vibrant, punchy commercial colour grade, clean whites", "Kodak Portra": "Kodak Portra film colour, soft pastel skin tones, gentle grain", "Fuji film": "Fujifilm colour, green-tinted shadows, crisp film look", "Bleach bypass": "bleach bypass look, desaturated, high contrast", "Pastel": "soft pastel colour grade, airy and light", "Noir": "high-contrast film noir lighting, hard shadows", "Black & white": "black and white, rich contrast" },
+};
 const TOOLS = [
   { name: "list_clients", description: "List the Studio's clients and their projects (with brand style notes and how many takes each has). Use the names with create_take.", inputSchema: { type: "object", properties: {} } },
   { name: "create_take", description: "Generate an image, video or voiceover in Illume Studio, filed under a client and project. Returns a take id; then call check_take until it's done. Members pay in credits.", inputSchema: { type: "object", required: ["prompt"], properties: {
@@ -104,6 +112,8 @@ const TOOLS = [
     reference_image_urls: { type: "array", items: { type: "string" }, description: "https image URLs. Image: references for edit models. Video: the first one is the start frame." },
     use_brand_style: { type: "boolean", description: "Put the client's brand-kit style notes in front of the prompt (default true)." },
     count: { type: "integer", minimum: 1, maximum: 4, description: "How many variations (default 1)." },
+    cast: { type: "array", items: { type: "string" }, description: "Names from the client's Cast & products (see list_clients) — their descriptions are added, and for images their photos too, to keep faces and products consistent." },
+    look: { type: "object", description: "Camera look, like the Studio's Look menu. Omit to use the client's saved look.", properties: Object.fromEntries(Object.entries(LOOK).map(([k, v]) => [k, { type: "string", enum: Object.keys(v) }])) },
   } } },
   { name: "check_take", description: "Check a take made with create_take. Waits up to ~40s. When finished it's saved permanently in the Studio; images are returned so you can see them.", inputSchema: { type: "object", required: ["take_id"], properties: { take_id: { type: "string" }, wait_seconds: { type: "integer", minimum: 0, maximum: 45, default: 40 } } } },
   { name: "list_takes", description: "Recent takes (newest first), optionally for one client/project.", inputSchema: { type: "object", properties: { client: { type: "string" }, project: { type: "string" }, limit: { type: "integer", minimum: 1, maximum: 50, default: 15 } } } },
@@ -130,7 +140,7 @@ async function callTool(user, req, name, a) {
   if (name === "list_clients") {
     const clients = d["il.clients"] || [], projects = d["il.projects"] || [], takes = allTakes(d);
     if (!clients.length) return text("No clients yet — open the Studio once to set one up.");
-    return text(clients.map(c => `• ${c.name}${c.style ? ` — style: “${String(c.style).slice(0, 100)}”` : ""}\n` + projects.filter(p => p.client === c.id).map(p => `    – ${p.name} (${takes.filter(t => t.proj === p.id && t.status !== "failed").length} takes${p.board && p.board.length ? `, ${p.board.length} in storyboard` : ""})`).join("\n")).join("\n"));
+    return text(clients.map(c => `• ${c.name}${c.style ? ` — style: “${String(c.style).slice(0, 100)}”` : ""}\n` + ((c.cast || []).length ? `    cast & products: ${c.cast.filter(x => x.name).map(x => x.name + (x.desc ? ` (${String(x.desc).slice(0, 60)})` : "")).join("; ")}\n` : "") + projects.filter(p => p.client === c.id).map(p => `    – ${p.name} (${takes.filter(t => t.proj === p.id && t.status !== "failed").length} takes${p.board && p.board.length ? `, ${p.board.length} in storyboard` : ""})`).join("\n")).join("\n"));
   }
   if (name === "list_takes") {
     let takes = allTakes(d);
@@ -156,7 +166,13 @@ async function callTool(user, req, name, a) {
     let prompt = (a.use_brand_style !== false && style && mode !== "audio") ? style + ". " + userPrompt : userPrompt;
     const ASK = { no_music: "Audio: realistic sound effects, ambience and any dialogue only. No music, no soundtrack, no score, no background song.", effects_only: "Audio: realistic sound effects and ambience only. No music, no soundtrack, no score, no singing, no voices or speech." };
     if (mode === "video" && ASK[a.sound]) prompt = prompt.replace(/[\s.]*$/, ".") + " " + ASK[a.sound];
-    const refs = (Array.isArray(a.reference_image_urls) ? a.reference_image_urls : []).filter(u => /^https:\/\//i.test(u)).slice(0, 10);
+    const want = (Array.isArray(a.cast) ? a.cast : []).map(norm);
+    const cast = (tgt.client.cast || []).filter(x => x.name && want.includes(norm(x.name)));
+    if (mode !== "audio" && cast.length) prompt = prompt.replace(/[\s.]*$/, ".") + " Featuring " + cast.map(x => x.name + (x.desc ? ` (${String(x.desc).trim().replace(/[.\s]+$/, "")})` : "")).join("; ") + ".";
+    const lk = a.look && typeof a.look === "object" ? a.look : (tgt.client.look ? { camera: tgt.client.look.camera, lens: tgt.client.look.lens, focus: tgt.client.look.depth, framing: tgt.client.look.framing, grade: tgt.client.look.grade } : {});
+    const lookParts = Object.keys(LOOK).map(k => LOOK[k][lk[k]]).filter(Boolean);
+    if (mode !== "audio" && lookParts.length) prompt = prompt.replace(/[\s.]*$/, ".") + " Look: " + lookParts.join(", ") + ".";
+    const refs = [...(Array.isArray(a.reference_image_urls) ? a.reference_image_urls : []), ...(mode === "image" ? cast.flatMap(x => (x.refs || []).map(r => r.url)) : [])].filter(u => /^https:\/\//i.test(u)).slice(0, 10);
     const params = {};
     if (mode === "image") { if (a.aspect_ratio) params.aspect_ratio = a.aspect_ratio; params.resolution = /^(1k|2k|4k)$/.test(a.quality) ? a.quality : "2k"; }
     if (mode === "video") {
