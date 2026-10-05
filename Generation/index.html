@@ -792,6 +792,24 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .expProg .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-2));transition:width 300ms linear}
 .expProg span{font-size:13px;color:var(--muted)}
 .expGo{min-width:150px;justify-content:center}
+
+/* studio dialog */
+.uiPanel{width:min(440px,100%);padding:0;gap:0}
+.uiBody{padding:24px 24px 8px;display:flex;flex-direction:column;gap:10px}
+.uiBody b{font-family:var(--display);font-weight:300;font-size:26px;line-height:1.15}
+.uiBody p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+.uiBody p:empty{display:none}
+.uiBody input{font:inherit;font-size:16px;background:var(--field);color:var(--text);border:1px solid var(--line-2);border-radius:14px;padding:13px 15px;outline:none;transition:border-color var(--ease),box-shadow var(--ease)}
+.uiBody input:focus{border-color:var(--gold-line);box-shadow:0 0 0 4px var(--gold-soft)}
+.uiBtns{display:flex;justify-content:flex-end;gap:10px;padding:16px 24px 22px}
+.uiBtns .btn{min-width:96px;justify-content:center;height:44px}
+.uiOk{min-width:120px;height:44px;justify-content:center;padding:0 22px}
+.uiOk.danger{background:linear-gradient(180deg,#F49488,#E0604F);color:#fff;box-shadow:none}
+.hist .testBadge{position:absolute;left:8px;top:8px;z-index:3;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--gold-ink);background:var(--gold-2);border-radius:999px;padding:3px 8px}
+.lookTests{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.lookTests span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-right:2px}
+.lookTests button{width:44px;height:33px;border-radius:8px;border:1px solid var(--line);background:#000 center/cover no-repeat;cursor:pointer;padding:0}
+.lookTests button:hover,.lookTests button.on{border-color:var(--gold)}
 </style>
 </head>
 <body>
@@ -902,6 +920,19 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         </section>
       </div>
     </div>
+  </div>
+
+  <!-- the studio's own dialog (instead of the browser's plain pop-ups) -->
+  <div class="modal hidden" id="ui" role="dialog" aria-modal="true" aria-labelledby="uiTitle">
+    <div class="modal-backdrop" id="uiBackdrop"></div>
+    <form class="modal-panel uiPanel" id="uiForm">
+      <div class="uiBody">
+        <b id="uiTitle"></b>
+        <p id="uiText"></p>
+        <input id="uiInput" autocomplete="off" maxlength="80">
+      </div>
+      <div class="uiBtns"><button class="btn" type="button" id="uiCancel">Cancel</button><button class="go uiOk" type="submit" id="uiOk">OK</button></div>
+    </form>
   </div>
 
   <!-- Export cut: every storyboard shot joined into one video -->
@@ -1069,6 +1100,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
   <div class="lookSide">
     <div class="lookMonitor" id="lookMonitor"></div>
     <div class="lookExplain" id="lookExplain"></div>
+    <div class="lookTests hidden" id="lookTests"></div>
     <button class="btn lookTest" id="lookTest" type="button" title="Makes one real image with your prompt and this look, so you see exactly what you'll get — it lands in your takes">✦ Test this look on my shot</button>
     <div class="lookSum" id="lookSum"></div>
     <div class="lookBtns"><button class="btn" id="lookSave" type="button">◆ Save as client look</button><button class="btn" id="lookReset" type="button">Reset</button></div>
@@ -1297,11 +1329,32 @@ $("gateForm").addEventListener("submit", async e => {
 });
 $("settings").onclick = () => openSettings();
 $("signOut").onclick = async () => {
-  if (!confirm(`Sign out of ${me ? me.name : "the studio"}?`)) return;
+  if (!(await uiConfirm(`You can sign back in any time — your work stays saved.`, { title: "Sign out?", ok: "Sign out" }))) return;
   await syncNow();
   await fetch("/api/auth", { method:"POST", headers: headers(), body: JSON.stringify({ action:"logout" }) }).catch(() => {});
   location.reload();
 };
+
+
+/* ---------- the studio's own dialog (names, confirmations) ---------- */
+let uiDone = null;
+function uiDialog({ title, text = "", input = false, value = "", placeholder = "", ok = "OK", cancel = "Cancel", danger = false }) {
+  if (uiDone) uiDone(null);
+  $("uiTitle").textContent = title; $("uiText").textContent = text;
+  $("uiInput").classList.toggle("hidden", !input); $("uiInput").value = value; $("uiInput").placeholder = placeholder;
+  $("uiOk").textContent = ok; $("uiOk").classList.toggle("danger", danger);
+  $("uiCancel").textContent = cancel; $("uiCancel").classList.toggle("hidden", cancel === null);
+  $("ui").classList.remove("hidden");
+  setTimeout(() => (input ? $("uiInput") : $("uiOk")).focus(), 30);
+  return new Promise(res => { uiDone = v => { uiDone = null; $("ui").classList.add("hidden"); res(v); }; });
+}
+$("uiForm").onsubmit = e => { e.preventDefault(); if (!uiDone) return; if ($("uiInput").classList.contains("hidden")) uiDone(true); else { const v = $("uiInput").value.trim(); if (!v) { $("uiInput").focus(); return; } uiDone(v); } };
+$("uiCancel").onclick = () => uiDone && uiDone(null);
+$("uiBackdrop").onclick = () => uiDone && uiDone(null);
+document.addEventListener("keydown", e => { if (e.key === "Escape" && uiDone) uiDone(null); });
+const uiAsk = (title, opts = {}) => uiDialog({ title, input: true, ok: "Create", ...opts });
+const uiConfirm = (text, opts = {}) => uiDialog({ title: opts.title || "Are you sure?", text, ok: opts.ok || "Yes", danger: !!opts.danger, ...opts }).then(Boolean);
+const uiAlert = (text, title = "Heads up") => uiDialog({ title, text, ok: "OK", cancel: null });
 
 /* ---------- clients & projects ---------- */
 // Everything is organised as Client → Project. A client owns its brand kit
@@ -1338,7 +1391,7 @@ function renderProjects() {
     });
     const add = document.createElement("div"); add.className = "crow proj add";
     add.innerHTML = `<button class="pick" type="button"><span>+ New project</span></button>`;
-    add.querySelector(".pick").onclick = () => { const name = prompt(`New project for ${c.name} (e.g. "Spring campaign"):`); if (name && name.trim()) selectProject(newProjectFor(c.id, name.trim()).id); };
+    add.querySelector(".pick").onclick = async () => { const name = await uiAsk("New project", { text: `For ${c.name}.`, placeholder: "e.g. Spring campaign" }); if (name) selectProject(newProjectFor(c.id, name).id); };
     box.appendChild(add);
   });
 }
@@ -1366,14 +1419,14 @@ function closeMenu() { const m = $("rowMenu"); if (m) m.remove(); }
 function clientMenu(anchor, c) {
   const mine = projects.filter(p => p.client === c.id);
   showMenu(anchor, [
-    { text: "Rename client", run: () => { const n = prompt("Client name:", c.name); if (n && n.trim()) { c.name = n.trim(); saveClients(); refreshTitles(); renderProjects(); } } },
+    { text: "Rename client", run: async () => { const n = await uiAsk("Rename client", { value: c.name, ok: "Save" }); if (n) { c.name = n; saveClients(); refreshTitles(); renderProjects(); } } },
     { text: "Brand kit…", run: () => { if (!proj() || proj().client !== c.id) selectProject((mine[0] || newProjectFor(c.id, "General")).id); openBrief(); } },
-    { text: "+ New project", run: () => { const n = prompt(`New project for ${c.name}:`); if (n && n.trim()) selectProject(newProjectFor(c.id, n.trim()).id); } },
+    { text: "+ New project", run: async () => { const n = await uiAsk("New project", { text: `For ${c.name}.`, placeholder: "e.g. Spring campaign" }); if (n) selectProject(newProjectFor(c.id, n).id); } },
     "-",
-    { text: "Delete client…", danger: true, run: () => {
-      if (clients.length < 2) return alert("This is your only client — create another one first.");
+    { text: "Delete client…", danger: true, run: async () => {
+      if (clients.length < 2) return uiAlert("This is your only client — create another one first.");
       const n = histCount(mine.map(p => p.id));
-      if (!confirm(`Delete “${c.name}”, its ${mine.length} project(s) and ${n} saved generation(s) from the reel? This can't be undone.`)) return;
+      if (!(await uiConfirm(`Its ${mine.length} project(s) and ${n} saved generation(s) are removed from the reel. This can't be undone.`, { title: `Delete “${c.name}”?`, ok: "Delete client", danger: true }))) return;
       const ids = new Set(mine.map(p => p.id));
       save(LS.hist, load(LS.hist, []).filter(h => !ids.has(h.proj)));
       projects = projects.filter(p => !ids.has(p.id)); clients = clients.filter(x => x.id !== c.id);
@@ -1384,13 +1437,13 @@ function clientMenu(anchor, c) {
 function projectMenu(anchor, p) {
   const others = clients.filter(c => c.id !== p.client);
   showMenu(anchor, [
-    { text: "Rename project", run: () => { const n = prompt("Project name:", p.name); if (n && n.trim()) { p.name = n.trim(); saveProjects(); refreshTitles(); renderProjects(); } } },
+    { text: "Rename project", run: async () => { const n = await uiAsk("Rename project", { value: p.name, ok: "Save" }); if (n) { p.name = n; saveProjects(); refreshTitles(); renderProjects(); } } },
     ...(others.length ? ["-", { label: "Move to client" }, ...others.map(c => ({ text: "→ " + c.name, run: () => { const from = client(p.client); if (projects.some(x => x.client === c.id && x.name === p.name)) p.name += " (from " + from.name + ")"; p.client = c.id; saveProjects(); openClients.add(c.id); if (p.id === projId) selectProject(p.id); else renderProjects(); } }))] : []),
     "-",
-    { text: "Delete project…", danger: true, run: () => {
+    { text: "Delete project…", danger: true, run: async () => {
       const siblings = projects.filter(x => x.client === p.client);
-      if (projects.length < 2) return alert("This is your only project.");
-      if (!confirm(`Delete project “${p.name}” and its ${histCount([p.id])} saved generation(s)? This can't be undone.`)) return;
+      if (projects.length < 2) return uiAlert("This is your only project.");
+      if (!(await uiConfirm(`Its ${histCount([p.id])} saved generation(s) are removed too. This can't be undone.`, { title: `Delete “${p.name}”?`, ok: "Delete project", danger: true }))) return;
       save(LS.hist, load(LS.hist, []).filter(h => h.proj !== p.id));
       projects = projects.filter(x => x.id !== p.id);
       if (siblings.length < 2) newProjectFor(p.client, "General"); // a client always keeps one project
@@ -1398,8 +1451,8 @@ function projectMenu(anchor, p) {
     } },
   ]);
 }
-$("newClient").onclick = () => {
-  const name = prompt("New client name:"); if (!name || !name.trim()) return;
+$("newClient").onclick = async () => {
+  const name = await uiAsk("New client", { text: "Each client gets its own projects, brand kit and cast.", placeholder: "e.g. Moody Matcha" }); if (!name) return;
   const c = { id: "c" + Date.now(), name: name.trim(), style: "", refs: [], created: Date.now() };
   clients.push(c); saveClients(); openClients = new Set([c.id]);
   selectProject(newProjectFor(c.id, "General").id);
@@ -1722,7 +1775,7 @@ function renderPresets() {
   list.forEach((p, i) => {
     const b = document.createElement("button"); b.className = "chip"; b.textContent = p; b.title = p + "  (right-click / long-press to delete)";
     b.onclick = () => { $("prompt").value = p; $("prompt").dispatchEvent(new Event("input")); closePops(); };
-    b.oncontextmenu = e => { e.preventDefault(); if (confirm("Delete this saved prompt?")) { list.splice(i,1); save(LS.presets, list); renderPresets(); } };
+    b.oncontextmenu = async e => { e.preventDefault(); if (await uiConfirm("It's removed from your saved prompts.", { title: "Delete this saved prompt?", ok: "Delete", danger: true })) { list.splice(i,1); save(LS.presets, list); renderPresets(); } };
     box.appendChild(b);
   });
 }
@@ -2428,7 +2481,7 @@ function renderHistory() {
     const ov = done ? `<span class="ov"><b>${esc(modelLabel(item.model, item.mode))}</b><span>${esc(item.userPrompt || item.prompt || "")}</span></span>` : "";
     const inB = done && board().includes(item.id);
     b.style.setProperty("--ar", ratioOf(item));
-    b.innerHTML = inner + (item.mode !== "image" ? `<span class="tag">${kind}</span>` : "") + ov + (freshIds.has(item.id) ? '<span class="newBadge">NEW</span>' : "")
+    b.innerHTML = inner + (item.mode !== "image" ? `<span class="tag">${kind}</span>` : "") + ov + (freshIds.has(item.id) ? '<span class="newBadge">NEW</span>' : "") + (item.lookTest ? '<span class="testBadge">LOOK TEST</span>' : "")
       + (/^\/api\/file/.test(item.url || "") ? `<span class="keepDot" title="Saved permanently${item.drive ? " · in Google Drive" : ""}"></span>` : "")
       + (item.drive ? '<span class="driveDot gd" title="In your Google Drive"></span>' : "")
       + (done ? `<span class="addBoard${inB ? " in" : ""}" role="button" title="${inB ? "In the storyboard — tap to remove" : "Add to the storyboard"}">${inB ? "✓" : "＋"}</span>` : "");
@@ -2453,7 +2506,7 @@ function renderHistory() {
   layoutMasonry(); renderViewTabs();
 }
 setInterval(() => document.querySelectorAll("#hist .tick").forEach(el => { el.textContent = clock(Number(el.dataset.t)); }), 1000);
-$("clearHist").onclick = () => { if (confirm("Remove this project's takes from the list? (Files already saved permanently stay in storage.)")) { save(LS.hist, load(LS.hist, []).filter(x => x.proj!==projId)); renderHistory(); renderProjects(); } };
+$("clearHist").onclick = async () => { if (await uiConfirm("They're removed from this project's list. Files already saved permanently stay in storage.", { title: "Clear this project's takes?", ok: "Clear takes", danger: true })) { save(LS.hist, load(LS.hist, []).filter(x => x.proj!==projId)); renderHistory(); renderProjects(); } };
 
 
 /* ---------- masonry: cards keep their real shape ---------- */
@@ -2585,7 +2638,7 @@ $("driveBtn").onclick = e => {
     { text: "Save everything to Drive now", run: () => driveBackfill(true) },
     "-",
     { text: "Disconnect Google Drive", danger: true, run: async () => {
-      if (!confirm("Disconnect Google Drive? Everything already saved there stays in your Drive.")) return;
+      if (!(await uiConfirm("Everything already saved there stays in your Drive.", { title: "Disconnect Google Drive?", ok: "Disconnect", danger: true }))) return;
       await api("/api/gdrive", { method: "POST", body: JSON.stringify({ action: "disconnect" }) });
       drive.connected = false; drive.email = null; renderDrive(); note("Google Drive disconnected.");
     } },
@@ -2631,7 +2684,7 @@ async function deleteTakes(ids, ask) {
   if (ask) {
     const inDrive = items.some(h => h.drive);
     const what = items.length === 1 ? "this take" : `these ${items.length} takes`;
-    if (!confirm(`Delete ${what}? ${items.some(h => /^\/api\/file/.test(h.url || "")) ? "Its saved file is deleted too. " : ""}${inDrive ? "Copies already in your Google Drive stay there. " : ""}This can't be undone.`)) return;
+    if (!(await uiConfirm(`${items.some(h => /^\/api\/file/.test(h.url || "")) ? "Its saved file is deleted too. " : ""}${inDrive ? "Copies already in your Google Drive stay there. " : ""}This can't be undone.`, { title: `Delete ${what}?`, ok: "Delete", danger: true }))) return;
   }
   const set = new Set(ids);
   save(LS.hist, all.filter(h => !set.has(h.id)));
@@ -2770,7 +2823,7 @@ function renderSettings() {
     mk("Open my folder ↗", () => window.open("https://drive.google.com/drive/search?q=" + encodeURIComponent("Illume Studio"), "_blank", "noopener"));
     mk("Save everything now", () => driveBackfill(true));
     mk("Disconnect", async () => {
-      if (!confirm("Disconnect Google Drive? Everything already saved there stays in your Drive.")) return;
+      if (!(await uiConfirm("Everything already saved there stays in your Drive.", { title: "Disconnect Google Drive?", ok: "Disconnect", danger: true }))) return;
       await api("/api/gdrive", { method: "POST", body: JSON.stringify({ action: "disconnect" }) });
       drive.connected = false; drive.email = null; renderDrive(); renderSettings(); note("Google Drive disconnected.");
     }, "btn danger");
@@ -2795,7 +2848,7 @@ $("mcpPat").onclick = async () => {
   } catch (err) { note(err.message, true); }
 };
 $("mcpRevoke").onclick = async () => {
-  if (!confirm("Revoke all Claude access? Every connected Claude app and personal key stops working until you connect again.")) return;
+  if (!(await uiConfirm("Every connected Claude or ChatGPT app and personal key stops working until you connect again.", { title: "Revoke all access?", ok: "Revoke", danger: true }))) return;
   try { await api("/api/mcp?oauth=revoke", { method: "POST", body: "{}" }); $("mcpPatOut").classList.add("hidden"); note("Claude access revoked everywhere."); }
   catch (err) { note(err.message, true); }
 };
@@ -2873,7 +2926,7 @@ function autoUpdateReview() {
   if (reviewSig(reviewShots()) === p.reviewSig) return;
   clearTimeout(reviewTimer); reviewTimer = setTimeout(() => publishReview(true).catch(() => {}), 2500);
 }
-async function copyText(t) { try { await navigator.clipboard.writeText(t); return true; } catch { prompt("Copy this link:", t); return false; } }
+async function copyText(t) { try { await navigator.clipboard.writeText(t); return true; } catch { await uiDialog({ title: "Copy this link", input: true, value: t, ok: "Done", cancel: null }); return false; } }
 function renderReviewBtn() {
   const p = proj(), b = $("shareReview"); if (!p || !b) return;
   const fb = reviewFb[p.id] || {}, ids = boardItems().map(x => x.id);
@@ -2894,7 +2947,7 @@ $("shareReview").onclick = async e => {
     { text: "Refresh client feedback", run: () => loadReviewFb(true) },
     "-",
     { text: "Stop sharing", danger: true, run: async () => {
-      if (!confirm("Stop sharing this storyboard? The link stops working for your client.")) return;
+      if (!(await uiConfirm("The link stops working for your client.", { title: "Stop sharing?", ok: "Stop sharing", danger: true }))) return;
       await api("/api/studio?fn=review", { method: "POST", body: JSON.stringify({ action: "revoke", token: p.review }) }).catch(() => {});
       delete p.review; delete p.reviewSig; delete reviewFb[p.id]; saveProjects(); renderBoard(); note("The review link is switched off.");
     } },
@@ -2942,7 +2995,7 @@ function openExport() {
   fillMusic(); $("expProg").classList.add("hidden"); $("expGo").disabled = false; $("expGo").textContent = "⬇ Export";
   $("expModal").classList.remove("hidden");
 }
-function closeExport() { if (exportRun) { if (!confirm("Stop the export?")) return; exportRun.cancel = true; } $("expModal").classList.add("hidden"); }
+async function closeExport() { if (exportRun) { if (!(await uiConfirm("The cut so far is thrown away.", { title: "Stop the export?", ok: "Stop", danger: true }))) return; if (exportRun) exportRun.cancel = true; } $("expModal").classList.add("hidden"); }
 $("exportCut").onclick = openExport; $("expClose").onclick = closeExport; $("expBackdrop").onclick = closeExport;
 $("expCancel").onclick = () => { if (exportRun) exportRun.cancel = true; };
 const pickMime = () => ["video/mp4;codecs=avc1.42E01F,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m));
@@ -3086,7 +3139,7 @@ function renderCastList() {
     el.querySelector(".nm").oninput = e => { x.name = e.target.value; saveClients(); renderCastRow(); };
     el.querySelector(".ds").oninput = e => { x.desc = e.target.value; saveClients(); };
     el.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { x.refs.splice(Number(b.dataset.rm), 1); saveClients(); renderCastList(); renderCastRow(); });
-    el.querySelector(".del").onclick = () => { if (!confirm(`Remove ${x.name || "this"} from the cast?`)) return; list.splice(list.indexOf(x), 1); castSel.delete(x.id); saveClients(); renderCastList(); renderCastRow(); };
+    el.querySelector(".del").onclick = async () => { if (!(await uiConfirm("Takes already made with them aren't affected.", { title: `Remove ${x.name || "this"} from the cast?`, ok: "Remove", danger: true }))) return; list.splice(list.indexOf(x), 1); castSel.delete(x.id); saveClients(); renderCastList(); renderCastRow(); };
     const fi = el.querySelector("input[type=file]");
     if (fi) fi.onchange = async e => {
       for (const f of [...e.target.files].slice(0, 4 - (x.refs || []).length)) {
@@ -3287,7 +3340,7 @@ function renderLookPreview() {
   const st = lookState(), mon = $("lookMonitor");
   if (lookTestShot) { // a real test shot in progress, or done
     mon.innerHTML = lookTestShot.url
-      ? `<div class="shot" style="background-image:url('${esc(mediaSrc(lookTestShot.url))}')"></div><span class="cap">YOUR TEST SHOT</span>`
+      ? `<div class="shot" style="background-image:url('${esc(/^\//.test(lookTestShot.url) ? lookTestShot.url : mediaSrc(lookTestShot.url))}')"></div><span class="cap">YOUR TEST SHOT</span>`
       : `<div class="wait"><div><b>Shooting your test…</b>${lookTestShot.err ? esc(lookTestShot.err) : "about 15–30 seconds"}</div></div>`;
   } else {
     // which option to show: the one under the pointer, else the last one picked on this tab
@@ -3307,6 +3360,11 @@ function renderLookPreview() {
   $("lookExplain").innerHTML = help
     ? `<div class="tx"><b>${esc(f.label)}</b><p>${esc(help[0])}</p><p class="best">Best for: ${esc(help[1])}</p></div>${lookDiagram(f.g, f.label)}`
     : `<div class="tx"><b>Not sure?</b><p>Tap a Quick look above, or point at any option to see what it does — drag the line on the picture to compare it with a normal shot.</p></div>`;
+  // earlier tests in this project, one tap to see them again (and pick their look back up)
+  const tests = projTakes().filter(h => h.lookTest && h.url).slice(0, 6);
+  $("lookTests").classList.toggle("hidden", !tests.length);
+  $("lookTests").innerHTML = tests.length ? `<span>Your tests</span>` + tests.map(h => `<button type="button" data-id="${esc(h.id)}" class="${lookTestShot && lookTestShot.url === h.url ? "on" : ""}" style="background-image:url('${esc(/^\//.test(h.url) ? h.url : mediaSrc(h.url))}')" title="Show this test${h.look ? " and use its look" : ""}"></button>`).join("") : "";
+  $("lookTests").querySelectorAll("button").forEach(b => b.onclick = e => { e.stopPropagation(); const h = tests.find(x => x.id === b.dataset.id); if (!h) return; if (h.look) { const keep = h; setLook(h.look); lookTestShot = { url: keep.url }; renderLook(); } else { lookTestShot = { url: h.url }; renderLookPreview(); } });
   // what a test costs
   const t = $("lookTest"); if (!lookTestBusy) t.innerHTML = lookTestShot && lookTestShot.url ? "↻ Test again" : `✦ Test this look on my shot<small>${lookTestCostTxt}</small>`;
 }
@@ -3342,7 +3400,8 @@ $("lookTest").onclick = async e => {
     if (!url) throw new Error("It took too long — try again.");
     lookTestShot = { url };
     // every paid image is kept: the test lands in your takes too
-    upsertHistory({ id, mode: "image", model: SEEDREAM, prompt, userPrompt: userPrompt + " (look test)", params: { aspect_ratio: aspect }, proj: projId, client: (proj() || {}).client, started: Date.now(), at: Date.now(), url, status: "done" });
+    upsertHistory({ id, mode: "image", model: SEEDREAM, prompt, userPrompt, lookTest: true, look: lookState(), params: { aspect_ratio: aspect }, proj: projId, client: (proj() || {}).client, started: Date.now(), at: Date.now(), url, status: "done" });
+    note(`Test shot saved in ${(proj() || {}).name || "this project"}'s takes (marked LOOK TEST). Every test also stays under “Your tests” here.`);
     if (typeof keepBackfill === "function") setTimeout(keepBackfill, 1500);
   } catch (err) {
     if (err.status === 402) { lookTestShot = null; note("Not enough credits for a test — top up to keep going.", true); openSettings("credits"); }
@@ -3489,7 +3548,7 @@ $("lookMake").onclick = async e => {
   const aiN = jobs.filter(j => !j.photo).length, photoN = jobs.length - aiN;
   if (aiN) { try { const est = await api("/api/studio?fn=estimate", { method: "POST", body: JSON.stringify({ mode: "image", model: SEEDREAM, prompt: jobs.find(j => !j.photo).prompt, params: { aspect_ratio: "4:3", resolution: "2k" } }) }); each = Number(est.price); } catch {} }
   const cost = aiN && Number.isFinite(each) ? ` — about ${(each * aiN).toLocaleString(undefined, { style: "currency", currency: "usd" })} on your Atlas balance` : "";
-  if (!confirm(`${missing.length ? "Make" : "Remake"} ${jobs.length} Look picture${jobs.length > 1 ? "s" : ""}: ${photoN ? `${photoN} real photo${photoN > 1 ? "s" : ""} of the gear (free, from Wikimedia Commons)${aiN ? " and " : ""}` : ""}${aiN ? `${aiN} with Seedream${cost}` : ""}? Every account will see them. It takes a few minutes — keep this tab open.`)) return;
+  if (!(await uiConfirm(`${missing.length ? "Make" : "Remake"} ${jobs.length} Look picture${jobs.length > 1 ? "s" : ""}: ${photoN ? `${photoN} real photo${photoN > 1 ? "s" : ""} of the gear (free, from Wikimedia Commons)${aiN ? " and " : ""}` : ""}${aiN ? `${aiN} with Seedream${cost}` : ""}? Every account will see them. It takes a few minutes — keep this tab open.`, { title: "Make the Look pictures?", ok: "Make them" }))) return;
   lookMaking = true; $("lookMake").disabled = true;
   let done = 0, failed = 0, saving = Promise.resolve();
   const tick = () => { $("lookMake").textContent = `✦ Making pictures… ${done + failed}/${jobs.length}`; };
