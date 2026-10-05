@@ -732,9 +732,12 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .lv .persp{transform:perspective(300px) rotateX(-20deg) scale(1.45)!important;transform-origin:50% 100%!important}
 @media (max-width:760px){
   .lookPop{flex-direction:column;max-height:82vh;overflow-y:auto;padding:12px}
-  .lookSide{width:auto;display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:start}
-  .lookMonitor{grid-row:span 2}
-  .lookBtns{grid-column:2;margin-top:0}
+  .lookSide{width:auto;display:grid;grid-template-columns:86px 1fr;gap:6px 10px;align-items:start}
+  .lookMonitor{grid-row:span 3;border-radius:12px}
+  .lookMonitor::after,.lookMonitor .rec{display:none}
+  .lookSum{min-height:0}.lookSum em{font-size:12px;padding:0}
+  .lookBtns{grid-column:2;margin-top:0}.lookBtns .btn{padding:6px 8px;font-size:12px}
+  .lookMake{grid-column:2;padding:6px 8px;font-size:12px}
   .lookGrid{grid-template-columns:repeat(2,1fr);overflow:visible}
 }
 .pi-lens{width:14px;height:14px;border-radius:50%;border:1.6px solid currentColor;box-shadow:inset 0 0 0 2.5px var(--raised),inset 0 0 0 4.5px currentColor;display:inline-block}
