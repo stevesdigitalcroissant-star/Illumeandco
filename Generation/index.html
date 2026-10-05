@@ -668,6 +668,25 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .lookMake{justify-content:center;font-size:12.5px;color:var(--gold-2);border-color:var(--gold-line);background:var(--gold-soft)}
 .lookMake:disabled{opacity:.7;cursor:default}
 .lookTile .vis .ph.real{transform:none}
+/* Camera & Lens: the gear itself, in a strip you scroll through */
+.gearWrap{position:relative;flex:1;min-height:0;display:flex;align-items:center}
+.gearRail{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:8px 6px 14px;scrollbar-width:thin;width:100%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.gearCard{position:relative;flex:0 0 200px;scroll-snap-align:center;display:flex;flex-direction:column;gap:6px;padding:0;border:0;background:none;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.gearCard .gpic{position:relative;display:block;aspect-ratio:1;border-radius:18px;background:radial-gradient(circle at 50% 40%,#2a2620,#0b0a08 70%) center/cover no-repeat;box-shadow:0 0 0 1px var(--line);transition:box-shadow var(--ease),transform var(--ease)}
+.gearCard .gpic[style]{background-size:cover;background-color:#000}
+.gearCard .gpic.none{display:grid;place-items:center;font-family:var(--display);font-weight:300;font-size:54px;color:rgba(245,213,138,.55)}
+.gearCard:hover .gpic{transform:translateY(-3px);box-shadow:0 0 0 1px var(--gold-line),0 20px 40px -20px #000}
+.gearCard.on .gpic{box-shadow:0 0 0 2px var(--gold),0 22px 44px -18px rgba(232,181,75,.5)}
+.gearCard.on .gpic::after{content:"✓ Selected";position:absolute;left:10px;top:10px;font-family:var(--ui);font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--gold);color:var(--gold-ink)}
+.gearCard .sample{position:absolute;right:10px;top:142px;width:56px;height:42px;border-radius:9px;overflow:hidden;background:#000 center/cover no-repeat;box-shadow:0 0 0 2px rgba(0,0,0,.6),0 6px 16px rgba(0,0,0,.6)}
+.gearCard .sample .lv{position:absolute;inset:0}
+.gearCard b{font-family:var(--display);font-weight:400;font-size:19px;padding:2px 4px 0}
+.gearCard.on b{color:var(--gold-2)}
+.gearCard small{font-size:12px;color:var(--faint);padding:0 4px;margin-top:-4px}
+.gearNav{position:absolute;top:calc(50% - 40px);z-index:3;width:36px;height:36px;border-radius:50%;border:1px solid var(--line-2);background:rgba(12,11,9,.85);color:var(--text);font-size:20px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.gearNav:hover{border-color:var(--gold-line);color:var(--gold-2)}
+.gearNav.prev{left:-6px}.gearNav.next{right:-6px}
+@media (max-width:760px){.gearCard{flex-basis:160px}.gearCard .sample{top:110px}.gearNav{display:none}}
 .lookBtns .btn{flex:1;justify-content:center;font-size:12.5px}
 .lookTabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .lookTabs button{flex:1;white-space:nowrap;font:inherit;font-size:13px;font-weight:600;border:0;border-radius:10px;padding:8px 12px;background:none;color:var(--muted);cursor:pointer;position:relative}
@@ -1011,6 +1030,11 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
   <div class="lookMain">
     <nav class="lookTabs" id="lookTabs" role="tablist"></nav>
     <div class="lookGrid" id="lookGrid"></div>
+    <div class="gearWrap hidden" id="gearWrap">
+      <button class="gearNav prev" id="gearPrev" type="button" aria-label="Scroll left">‹</button>
+      <div class="gearRail" id="gearRail"></div>
+      <button class="gearNav next" id="gearNext" type="button" aria-label="Scroll right">›</button>
+    </div>
   </div>
 </div>
 <div class="pop hidden" id="pop-kit"><div class="popTitle" id="kitPopTitle">Brand photos</div><div class="refgrid" id="kitPicks"></div></div>
@@ -3032,8 +3056,8 @@ $("castAdd").onclick = () => { clientCast().push({ id: "k" + Date.now().toString
 
 /* ---------- look: camera, lens, framing and colour grade in a few taps ---------- */
 const LOOK = [
-  { key: "camera", title: "Camera", opts: [["Cinema digital", "shot on ARRI Alexa 35, rich cinematic digital image"], ["RED", "shot on RED V-Raptor, crisp high-detail image"], ["35mm film", "shot on 35mm Kodak film, natural film grain"], ["16mm film", "shot on 16mm film, visible grain, nostalgic texture"], ["Super 8", "Super 8 home-movie footage, heavy grain, soft warm colour"], ["iPhone / UGC", "shot on an iPhone, authentic handheld UGC look"], ["Drone", "aerial drone camera"]] },
-  { key: "lens", title: "Lens", opts: [["14mm", "14mm ultra-wide lens, dramatic perspective"], ["24mm", "24mm wide lens"], ["35mm", "35mm lens, natural perspective"], ["50mm", "50mm lens, true-to-eye perspective"], ["85mm", "85mm portrait lens, flattering compression"], ["135mm", "135mm telephoto lens, compressed background"], ["Macro", "100mm macro lens, extreme close detail"], ["Anamorphic", "anamorphic lens, oval bokeh, horizontal lens flares, widescreen feel"]] },
+  { key: "camera", title: "Camera", opts: [["Cinema digital", "shot on ARRI Alexa 35, rich cinematic digital image"], ["RED", "shot on RED V-Raptor, crisp high-detail image"], ["Sony Venice", "shot on Sony Venice 2, smooth full-frame cinematic image, natural skin tones"], ["IMAX 70mm", "shot on IMAX 70mm film, immense detail and clarity, epic scale"], ["35mm film", "shot on 35mm Kodak film, natural film grain"], ["16mm film", "shot on 16mm film, visible grain, nostalgic texture"], ["Super 8", "Super 8 home-movie footage, heavy grain, soft warm colour"], ["iPhone / UGC", "shot on an iPhone, authentic handheld UGC look"], ["GoPro", "GoPro action camera, ultra-wide, immersive point-of-view"], ["Drone", "aerial drone camera"]] },
+  { key: "lens", title: "Lens", opts: [["14mm", "14mm ultra-wide lens, dramatic perspective"], ["24mm", "24mm wide lens"], ["35mm", "35mm lens, natural perspective"], ["50mm", "50mm lens, true-to-eye perspective"], ["85mm", "85mm portrait lens, flattering compression"], ["135mm", "135mm telephoto lens, compressed background"], ["Macro", "100mm macro lens, extreme close detail"], ["Anamorphic", "anamorphic lens, oval bokeh, horizontal lens flares, widescreen feel"], ["Fisheye", "fisheye lens, strong barrel distortion, 180-degree view"], ["Vintage", "vintage lens, soft glow, swirly bokeh, gentle flares"]] },
   { key: "depth", title: "Focus", opts: [["Shallow", "shallow depth of field, f/1.4, creamy bokeh background"], ["Medium", "moderate depth of field, f/4"], ["Deep", "deep focus, everything sharp, f/11"]] },
   { key: "framing", title: "Framing", opts: [["Extreme close-up", "extreme close-up"], ["Close-up", "close-up shot"], ["Medium", "medium shot"], ["Wide", "wide establishing shot"], ["Top-down", "top-down overhead shot"], ["Low angle", "low-angle hero shot"]] },
   { key: "grade", title: "Colour grade", opts: [["Natural", "natural, true-to-life colour grade"], ["Teal & orange", "teal and orange cinematic colour grade"], ["Golden hour", "warm golden-hour colour grade, soft amber highlights"], ["Cool & moody", "cool, moody colour grade, deep blue shadows, low saturation"], ["Vibrant ad", "vibrant, punchy commercial colour grade, clean whites"], ["Kodak Portra", "Kodak Portra film colour, soft pastel skin tones, gentle grain"], ["Fuji film", "Fujifilm colour, green-tinted shadows, crisp film look"], ["Bleach bypass", "bleach bypass look, desaturated, high contrast"], ["Pastel", "soft pastel colour grade, airy and light"], ["Noir", "high-contrast film noir lighting, hard shadows"], ["Black & white", "black and white, rich contrast"]] },
@@ -3067,7 +3091,7 @@ const GRADE_VIS = {
 };
 const LOOK_VIS = {
   camera: { img: "scene", hint: {
-    "Cinema digital": "Clean, rich, widescreen", "RED": "Crisp, high detail", "35mm film": "Warm, natural grain", "16mm film": "Grainy, nostalgic", "Super 8": "Home-movie memories", "iPhone / UGC": "Authentic, social-first", "Drone": "From above" },
+    "Cinema digital": "Clean, rich, widescreen", "RED": "Crisp, high detail", "35mm film": "Warm, natural grain", "16mm film": "Grainy, nostalgic", "Super 8": "Home-movie memories", "iPhone / UGC": "Authentic, social-first", "Drone": "From above", "Sony Venice": "Smooth, full-frame", "IMAX 70mm": "Epic scale, huge detail", "GoPro": "Action, point-of-view" },
     opt: {
       "Cinema digital": { filter: "contrast(1.08) saturate(1.05)", lb: 11, vg: .35 },
       "RED": { filter: "contrast(1.22) saturate(1.18) brightness(1.03)" },
@@ -3076,13 +3100,17 @@ const LOOK_VIS = {
       "Super 8": { filter: "sepia(.45) contrast(.85) saturate(1.1) brightness(1.08) blur(.4px)", gr: .85, vg: .75, gw: 7, gr2: "18px" },
       "iPhone / UGC": { filter: "saturate(1.15) contrast(1.05)", phone: true },
       "Drone": { img: "flat", z: .9, filter: "saturate(1.05)" },
+      "Sony Venice": { filter: "contrast(1.04) saturate(1.02) brightness(1.04)", vg: .25 },
+      "IMAX 70mm": { filter: "contrast(1.12) saturate(1.1)", z: .95 },
+      "GoPro": { z: 1, vg: .7, filter: "saturate(1.3) contrast(1.1)" },
     } },
-  lens: { img: "scene", hint: { "14mm": "Ultra-wide, dramatic", "24mm": "Wide", "35mm": "Natural, documentary", "50mm": "What the eye sees", "85mm": "Portrait, flattering", "135mm": "Tight, compressed", "Macro": "Extreme detail", "Anamorphic": "Cinematic flares, oval bokeh" },
+  lens: { img: "scene", hint: { "14mm": "Ultra-wide, dramatic", "24mm": "Wide", "35mm": "Natural, documentary", "50mm": "What the eye sees", "85mm": "Portrait, flattering", "135mm": "Tight, compressed", "Macro": "Extreme detail", "Anamorphic": "Cinematic flares, oval bokeh", "Fisheye": "Bent, 180° world", "Vintage": "Soft glow, swirly bokeh" },
     opt: {
       "14mm": { z: 1, vg: .55, num: "14" }, "24mm": { z: 1.12, num: "24" }, "35mm": { z: 1.3, pos: "45% 60%", num: "35" }, "50mm": { z: 1.6, pos: "45% 66%", num: "50" },
       "85mm": { z: 2.1, pos: "40% 70%", num: "85" }, "135mm": { z: 2.9, pos: "38% 72%", num: "135" },
       "Macro": { img: "macro", z: 1.6, pos: "50% 55%", num: "100", numSmall: "mm macro" },
       "Anamorphic": { lb: 13, flare: true, filter: "contrast(1.08) saturate(1.05)" },
+      "Fisheye": { z: 1, vg: .9 }, "Vintage": { filter: "sepia(.2) contrast(.88) brightness(1.08) blur(.5px)", vg: .5 },
     } },
   depth: { img: "product", hint: { "Shallow": "f/1.4 · soft, creamy background", "Medium": "f/4 · gentle falloff", "Deep": "f/11 · everything sharp" },
     opt: { "Shallow": { bl: 7, focus: ["52%", "56%"] }, "Medium": { bl: 2.5, focus: ["52%", "56%"] }, "Deep": { bl: 0 } } },
@@ -3125,6 +3153,11 @@ function monitorVis(st) {
 let lookTab = "camera";
 /* ---------- real pictures for the Look tiles, made once with Seedream ---------- */
 let lookHave = {}, lookMaking = false;
+// every picture the Look picker uses: one sample per option, plus a product photo of each camera and lens
+function allLookJobs() {
+  return [...LOOK.flatMap(g => g.opts.map(([label, phrase]) => ({ key: lookKey(g.key, label), prompt: lookPicPrompt(g.key, label, phrase) }))),
+    ...["camera", "lens"].flatMap(g => Object.keys(GEAR[g]).map(label => ({ key: gearKey(g, label), prompt: gearPrompt(g, label), square: true })))];
+}
 const lookKey = (g, label) => (g + "-" + label).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");
 async function loadLookPics() { try { lookHave = (await api("/api/studio?fn=look", { cache: "no-store" })).have || {}; } catch { lookHave = {}; } }
 // The same subject across a whole tab, so the only thing that changes is the option itself.
@@ -3147,29 +3180,52 @@ function lookPicPrompt(g, label, phrase) {
   const k = lookKey(g, label);
   return `${LOOK_SUBJECT_FOR[k] || LOOK_SUBJECT[g]}. ${phrase}. Cinematic, photorealistic still frame. No text, no watermark, no borders.`;
 }
+const GEAR = {
+  camera: {
+    "Cinema digital": "A professional digital cinema camera in the style of an ARRI Alexa 35, with matte box, follow focus and top handle",
+    "RED": "A compact modular RED-style cinema camera body with a top handle and side monitor",
+    "Sony Venice": "A full-frame Sony Venice style cinema camera with a cinema prime lens",
+    "IMAX 70mm": "A large IMAX 70mm film camera with a big film magazine",
+    "35mm film": "A vintage 35mm motion-picture film camera with a film magazine on top",
+    "16mm film": "A classic 16mm film camera, Bolex style, with a three-lens turret",
+    "Super 8": "A retro 1970s Super 8 home-movie camera with a pistol grip",
+    "iPhone / UGC": "A modern smartphone mounted on a small handheld gimbal",
+    "GoPro": "A small rugged action camera",
+    "Drone": "A professional camera drone with a gimbal camera underneath",
+  },
+  lens: {
+    "14mm": "An ultra-wide 14mm cinema prime lens with a large bulbous front element", "24mm": "A 24mm cinema prime lens with focus and iris gears",
+    "35mm": "A 35mm cinema prime lens with focus and iris gears", "50mm": "A 50mm cinema prime lens with focus and iris gears",
+    "85mm": "An 85mm portrait cinema prime lens with a wide front element", "135mm": "A long 135mm telephoto cinema lens",
+    "Macro": "A 100mm macro lens", "Anamorphic": "An anamorphic cinema lens with an oval front element and blue lens coating",
+    "Fisheye": "A fisheye lens with a strongly curved, bulging front element", "Vintage": "A vintage brass and chrome film-era camera lens",
+  },
+};
+const gearKey = (g, label) => "gear-" + lookKey(g, label);
+const gearPrompt = (g, label) => `${GEAR[g][label]}. Studio product photograph on a seamless black background, dramatic rim light, three-quarter view, centred, premium and detailed. No text, no logos, no watermark.`;
 const SEEDREAM = "bytedance/seedream-v5.0-pro/text-to-image";
-async function shrinkPic(url) { // 480×360 tile, centre-cropped
+async function shrinkPic(url, square) { // 480×360 tile (360×360 for gear), centre-cropped
   const img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error("couldn't load the picture")); i.src = mediaSrc(url); });
-  const W = 480, H = 360, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const W = square ? 360 : 480, H = 360, c = document.createElement("canvas"); c.width = W; c.height = H;
   const k = Math.max(W / img.naturalWidth, H / img.naturalHeight), w = img.naturalWidth * k, h = img.naturalHeight * k;
   c.getContext("2d").drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
   let d = c.toDataURL("image/webp", 0.82); if (!d.startsWith("data:image/webp")) d = c.toDataURL("image/jpeg", 0.85); // Safari can't write webp
   return d.slice(d.indexOf(",") + 1);
 }
 async function makeOnePic(job) {
-  const { id } = await api("/api/generate", { method: "POST", body: JSON.stringify({ mode: "image", model: SEEDREAM, prompt: job.prompt, params: { aspect_ratio: "4:3", resolution: "2k" } }) });
+  const { id } = await api("/api/generate", { method: "POST", body: JSON.stringify({ mode: "image", model: SEEDREAM, prompt: job.prompt, params: { aspect_ratio: job.square ? "1:1" : "4:3", resolution: "2k" } }) });
   for (let i = 0; i < 60; i++) {
     await new Promise(r => setTimeout(r, 3000));
     const st = await api(`/api/status?id=${encodeURIComponent(id)}`, { cache: "no-store" }).catch(() => null);
     if (!st) continue;
     if (st.status === "failed" || st.status === "canceled") throw new Error(st.error || "Seedream couldn't make it");
-    if ((st.status === "completed" || st.status === "succeeded") && st.outputs.length) return shrinkPic(st.outputs[0]);
+    if ((st.status === "completed" || st.status === "succeeded") && st.outputs.length) return shrinkPic(st.outputs[0], job.square);
   }
   throw new Error("took too long");
 }
 $("lookMake").onclick = async e => {
   e.stopPropagation(); if (lookMaking) return;
-  const all = LOOK.flatMap(g => g.opts.map(([label, phrase]) => ({ key: lookKey(g.key, label), prompt: lookPicPrompt(g.key, label, phrase) })));
+  const all = allLookJobs();
   const missing = all.filter(j => !lookHave[j.key]), jobs = missing.length ? missing : all;
   let each = null;
   try { const est = await api("/api/studio?fn=estimate", { method: "POST", body: JSON.stringify({ mode: "image", model: SEEDREAM, prompt: jobs[0].prompt, params: { aspect_ratio: "4:3", resolution: "2k" } }) }); each = Number(est.price); } catch {}
@@ -3197,21 +3253,41 @@ $("lookMake").onclick = async e => {
   if (me && me.role === "owner") refreshBalance();
   renderLook();
 };
+function renderGear(g, vis, st) {
+  const rail = $("gearRail"), keep = rail.dataset.tab === g.key ? rail.scrollLeft : null;
+  rail.dataset.tab = g.key;
+  rail.innerHTML = g.opts.map(([label]) => {
+    const gk = gearKey(g.key, label), lk = lookKey(g.key, label);
+    const sample = lookHave[lk] ? `<span class="sample" style="background-image:url('/api/studio?fn=look&k=${lk}&v=${lookHave[lk]}')"></span>` : `<span class="sample">${lookLayers({ img: vis.img, ...(vis.opt[label] || {}) })}</span>`;
+    const pic = lookHave[gk] ? `<span class="gpic" style="background-image:url('/api/studio?fn=look&k=${gk}&v=${lookHave[gk]}')"></span>` : `<span class="gpic none">${esc(g.key === "lens" ? (label.match(/^\d+/) || [label.slice(0, 2)])[0] : "◉")}</span>`;
+    return `<button type="button" class="gearCard${st[g.key] === label ? " on" : ""}" data-l="${esc(label)}">${pic}${sample}<b>${esc(label)}</b><small>${esc(vis.hint[label] || "")}</small></button>`;
+  }).join("");
+  rail.querySelectorAll(".gearCard").forEach(b => b.onclick = e => {
+    e.stopPropagation(); const cur = lookState(); cur[g.key] = cur[g.key] === b.dataset.l ? null : b.dataset.l; setLook(cur); renderLook();
+  });
+  if (keep != null) rail.scrollLeft = keep;
+  else { const on = rail.querySelector(".gearCard.on"); rail.scrollLeft = on ? on.offsetLeft - (rail.clientWidth - on.offsetWidth) / 2 : 0; }
+}
+$("gearRail").addEventListener("wheel", e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.preventDefault(); $("gearRail").scrollBy({ left: e.deltaY * 1.2 }); } }, { passive: false }); // the mouse wheel scrolls sideways
+["gearPrev", "gearNext"].forEach((id, i) => $(id).onclick = e => { e.stopPropagation(); const r = $("gearRail"); r.scrollBy({ left: (i ? 1 : -1) * r.clientWidth * .8, behavior: "smooth" }); });
 function renderLook() {
   const st = lookState();
   $("lookTabs").innerHTML = LOOK.map(g => `<button type="button" role="tab" data-k="${g.key}" class="${g.key === lookTab ? "on" : ""}${st[g.key] ? " set" : ""}">${g.title}</button>`).join("");
   $("lookTabs").querySelectorAll("button").forEach(b => b.onclick = e => { e.stopPropagation(); lookTab = b.dataset.k; renderLook(); });
   const g = LOOK.find(x => x.key === lookTab), vis = LOOK_VIS[lookTab];
-  $("lookGrid").innerHTML = g.opts.map(([label]) => {
+  const gear = GEAR[lookTab];
+  $("lookGrid").classList.toggle("hidden", !!gear); $("gearWrap").classList.toggle("hidden", !gear);
+  if (gear) renderGear(g, vis, st);
+  else $("lookGrid").innerHTML = g.opts.map(([label]) => {
     const k = lookKey(g.key, label), v = lookHave[k] ? { src: `/api/studio?fn=look&k=${k}&v=${lookHave[k]}` } : { img: vis.img, ...(vis.opt[label] || {}) };
     return `<button type="button" class="lookTile${st[g.key] === label ? " on" : ""}" data-l="${esc(label)}"><span class="vis">${lookLayers(v)}</span><b>${esc(label)}</b><small>${esc(vis.hint[label] || "")}</small></button>`;
   }).join("");
-  $("lookGrid").querySelectorAll(".lookTile").forEach(b => b.onclick = e => { e.stopPropagation(); const cur = lookState(); cur[g.key] = cur[g.key] === b.dataset.l ? null : b.dataset.l; setLook(cur); renderLook(); });
+  if (!gear) $("lookGrid").querySelectorAll(".lookTile").forEach(b => b.onclick = e => { e.stopPropagation(); const cur = lookState(); cur[g.key] = cur[g.key] === b.dataset.l ? null : b.dataset.l; setLook(cur); renderLook(); });
   $("lookMonitor").innerHTML = lookLayers(monitorVis(st)) + `<span class="rec"><i></i>LOOK</span>`;
   const chosen = LOOK.filter(x => st[x.key]);
   $("lookSum").innerHTML = chosen.length ? chosen.map(x => `<span data-k="${x.key}" title="Remove">${esc(st[x.key])}</span>`).join("") : `<em>Pick a camera, lens, focus, framing and grade — or leave it to the model.</em>`;
   $("lookSum").querySelectorAll("span").forEach(sp => sp.onclick = e => { e.stopPropagation(); const cur = lookState(); cur[sp.dataset.k] = null; setLook(cur); renderLook(); });
-  const total = LOOK.reduce((t, x) => t + x.opts.length, 0), made = Object.keys(lookHave).length;
+  const total = allLookJobs().length, made = allLookJobs().filter(j => lookHave[j.key]).length;
   $("lookMake").classList.toggle("hidden", !(me && me.role === "owner"));
   if (!lookMaking) $("lookMake").textContent = made >= total ? "↻ Remake pictures with Seedream" : made ? `✦ Make the ${total - made} missing pictures` : "✦ Make pictures with Seedream";
   $("lookSave").textContent = "◆ Save for client"; $("lookSave").title = `Make this ${client().name}'s default look — new projects start with it`;
