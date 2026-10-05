@@ -666,12 +666,39 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .lookPop{width:min(900px,calc(100vw - 24px));max-height:min(78vh,640px);flex-direction:row;gap:16px;padding:16px;overflow:hidden}
 .lookSide{width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:12px}
 .lookMain{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;min-height:0}
-.lookMonitor{position:relative;aspect-ratio:4/5;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 0 0 1px var(--line-2),0 24px 50px -24px #000}
+.lookSide{overflow-y:auto;scrollbar-width:none}
+.lookMonitor{position:relative;flex-shrink:0;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 0 0 1px var(--line-2),0 24px 50px -24px #000}
 .lookMonitor::after{content:"PREVIEW";position:absolute;left:10px;top:10px;z-index:9;font-size:9.5px;font-weight:700;letter-spacing:.18em;color:rgba(255,255,255,.75);background:rgba(0,0,0,.45);padding:3px 7px;border-radius:6px}
 .lookMonitor .rec{position:absolute;right:10px;top:10px;z-index:9;display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;letter-spacing:.14em;color:rgba(255,255,255,.75)}
 .lookMonitor .rec i{width:7px;height:7px;border-radius:50%;background:#F05A4E;box-shadow:0 0 8px #F05A4E;animation:recBlink 1.4s infinite}
 @keyframes recBlink{50%{opacity:.25}}
 .lookSum{display:flex;flex-wrap:wrap;gap:6px;min-height:28px}
+/* before / after: drag the handle */
+.cmp{position:absolute;inset:0;cursor:ew-resize;touch-action:none}
+.cmp .side{position:absolute;inset:0;background:center/cover no-repeat}
+.cmp .after{clip-path:inset(0 0 0 var(--cut,50%))}
+.cmp .cbar{position:absolute;top:0;bottom:0;left:var(--cut,50%);width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 10px rgba(0,0,0,.6);z-index:4}
+.cmp .cbar::after{content:"‹ ›";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;background:#fff;color:#111;font:700 12px/30px var(--ui);text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.5);letter-spacing:-1px}
+.cmp .tag{position:absolute;bottom:8px;z-index:5;font-size:10.5px;font-weight:700;letter-spacing:.06em;color:#fff;background:rgba(0,0,0,.55);padding:3px 8px;border-radius:6px;max-width:46%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp .tag.l{left:8px}.cmp .tag.r{right:8px;background:rgba(232,181,75,.9);color:#1A1408}
+.lookMonitor .shot{position:absolute;inset:0;background:center/cover no-repeat}
+.lookMonitor .wait{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#F3EDE2;font-size:13px;background:radial-gradient(circle,#221d16,#0b0a08)}
+.lookMonitor .wait b{display:block;font-family:var(--display);font-weight:300;font-size:26px;margin-bottom:2px}
+.lookMonitor .cap{position:absolute;left:8px;bottom:8px;z-index:5;font-size:10.5px;font-weight:700;letter-spacing:.06em;color:#1A1408;background:var(--gold);padding:3px 8px;border-radius:6px}
+.lookExplain{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;min-height:76px}
+.lookExplain .tx{flex:1;min-width:0}
+.lookExplain b{display:block;font-size:13px;margin-bottom:3px}
+.lookExplain p{margin:0;font-size:12.5px;line-height:1.45;color:var(--muted)}
+.lookExplain p.best{margin-top:4px;color:var(--gold-2);font-size:12px}
+.lookExplain svg{width:64px;height:64px;flex-shrink:0}
+.lookTest{justify-content:center;font-size:12.5px;font-weight:600}
+.lookTest small{color:var(--faint);font-weight:500;margin-left:4px}
+.lookRecipes{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;padding:1px}
+.lookRecipes::before{content:"Quick looks";align-self:center;flex-shrink:0;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-right:2px}
+.recipe{flex-shrink:0;display:flex;align-items:center;gap:7px;font:inherit;font-size:12.5px;font-weight:600;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;cursor:pointer;transition:border-color var(--ease)}
+.recipe i{width:26px;height:26px;border-radius:50%;background:var(--raised) center/cover no-repeat;flex-shrink:0}
+.recipe:hover{border-color:var(--gold-line)}
+.recipe.on{border-color:var(--gold);background:var(--gold-soft);color:var(--gold-2)}
 .lookSum span{font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--gold-2);cursor:pointer}
 .lookSum span:hover{text-decoration:line-through}
 .lookSum em{font-style:normal;font-size:12.5px;color:var(--faint);padding:4px 2px}
@@ -735,12 +762,12 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .lv .persp{transform:perspective(300px) rotateX(-20deg) scale(1.45)!important;transform-origin:50% 100%!important}
 @media (max-width:760px){
   .lookPop{flex-direction:column;max-height:82vh;overflow-y:auto;padding:12px}
-  .lookSide{width:auto;display:grid;grid-template-columns:86px 1fr;gap:6px 10px;align-items:start}
-  .lookMonitor{grid-row:span 3;border-radius:12px}
-  .lookMonitor::after,.lookMonitor .rec{display:none}
+  .lookSide{width:auto;display:flex;flex-direction:column;gap:8px;overflow:visible}
+  .lookMonitor{aspect-ratio:16/10;border-radius:12px}
   .lookSum{min-height:0}.lookSum em{font-size:12px;padding:0}
-  .lookBtns{grid-column:2;margin-top:0}.lookBtns .btn{padding:6px 8px;font-size:12px}
-  .lookMake{grid-column:2;padding:6px 8px;font-size:12px}
+  .lookBtns{margin-top:0}.lookBtns .btn{padding:6px 8px;font-size:12px}
+  .lookMake{padding:6px 8px;font-size:12px}
+  .lookExplain{min-height:0}
   .lookGrid{grid-template-columns:repeat(2,1fr);overflow:visible}
 }
 .pi-lens{width:14px;height:14px;border-radius:50%;border:1.6px solid currentColor;box-shadow:inset 0 0 0 2.5px var(--raised),inset 0 0 0 4.5px currentColor;display:inline-block}
@@ -1040,12 +1067,15 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 </div>
 <div class="pop lookPop hidden" id="pop-look" role="dialog" aria-label="Look">
   <div class="lookSide">
-    <div class="lookMonitor" id="lookMonitor" aria-hidden="true"></div>
+    <div class="lookMonitor" id="lookMonitor"></div>
+    <div class="lookExplain" id="lookExplain"></div>
+    <button class="btn lookTest" id="lookTest" type="button" title="Makes one real image with your prompt and this look, so you see exactly what you'll get — it lands in your takes">✦ Test this look on my shot</button>
     <div class="lookSum" id="lookSum"></div>
     <div class="lookBtns"><button class="btn" id="lookSave" type="button">◆ Save as client look</button><button class="btn" id="lookReset" type="button">Reset</button></div>
     <button class="btn lookMake hidden" id="lookMake" type="button" title="Studio owner: real photos of the cameras and lenses (Wikimedia Commons) plus Seedream samples of each look">✦ Make the Look pictures</button>
   </div>
   <div class="lookMain">
+    <div class="lookRecipes" id="lookRecipes"></div>
     <nav class="lookTabs" id="lookTabs" role="tablist"></nav>
     <div class="lookGrid" id="lookGrid"></div>
     <div class="gearWrap hidden" id="gearWrap">
@@ -3082,7 +3112,7 @@ const LOOK = [
   { key: "grade", title: "Colour grade", opts: [["Natural", "natural, true-to-life colour grade"], ["Teal & orange", "teal and orange cinematic colour grade"], ["Golden hour", "warm golden-hour colour grade, soft amber highlights"], ["Cool & moody", "cool, moody colour grade, deep blue shadows, low saturation"], ["Vibrant ad", "vibrant, punchy commercial colour grade, clean whites"], ["Kodak Portra", "Kodak Portra film colour, soft pastel skin tones, gentle grain"], ["Fuji film", "Fujifilm colour, green-tinted shadows, crisp film look"], ["Bleach bypass", "bleach bypass look, desaturated, high contrast"], ["Pastel", "soft pastel colour grade, airy and light"], ["Noir", "high-contrast film noir lighting, hard shadows"], ["Black & white", "black and white, rich contrast"]] },
 ];
 function lookState() { try { return JSON.parse($("look").value || "{}") || {}; } catch { return {}; } }
-function setLook(st) { const clean = Object.fromEntries(Object.entries(st).filter(([, v]) => v)); $("look").value = Object.keys(clean).length ? JSON.stringify(clean) : ""; saveDraft(); refreshPills(); }
+function setLook(st) { lookTestShot = lookTestBusy ? lookTestShot : null; const clean = Object.fromEntries(Object.entries(st).filter(([, v]) => v)); $("look").value = Object.keys(clean).length ? JSON.stringify(clean) : ""; saveDraft(); refreshPills(); }
 function lookPhrase() {
   const st = lookState(), parts = LOOK.map(g => { const o = g.opts.find(x => x[0] === st[g.key]); return o && o[1]; }).filter(Boolean);
   return parts.length ? "Look: " + parts.join(", ") + "." : "";
@@ -3169,6 +3199,169 @@ function monitorVis(st) {
   v.lb = cam.lb || lens.lb; v.gw = cam.gw; v.gr2 = cam.gr2; v.flare = lens.flare; v.bl = dep.bl; v.focus = dep.focus && ["50%", "42%"]; v.persp = fr.persp;
   return v;
 }
+
+/* ---------- the Look preview: real samples, before/after, plain-language help, a real test ---------- */
+// In everyday words: what each option does, and what it's good for.
+const LOOK_HELP = {
+  camera: {
+    "Cinema digital": ["The classic modern film look: rich colour, smooth highlights, nothing harsh.", "Commercials, brand films, anything premium"],
+    "RED": ["Very sharp and punchy, lots of fine detail.", "Product close-ups, sport, action"],
+    "Sony Venice": ["Soft, smooth and flattering, beautiful skin tones.", "Fashion, beauty, people-led ads"],
+    "IMAX 70mm": ["Huge, crystal-clear and epic — the blockbuster feel.", "Landscapes, launches, big reveal moments"],
+    "35mm film": ["Warm, organic, a little grain — like a real movie.", "Storytelling ads, lifestyle, nostalgia"],
+    "16mm film": ["Grainier and more raw, slightly vintage.", "Indie, music videos, behind-the-scenes"],
+    "Super 8": ["Home-movie memories: heavy grain, soft and warm.", "Throwback moments, emotional montages"],
+    "iPhone / UGC": ["Looks filmed on a phone by a real person — authentic, not polished.", "TikTok, Reels, testimonials, UGC ads"],
+    "GoPro": ["Ultra-wide, in-the-action point of view.", "Sport, travel, first-person moments"],
+    "Drone": ["Flying above the scene, looking down or sweeping across.", "Openings, locations, scale"],
+  },
+  lens: {
+    "14mm": ["Sees a huge area; close things look big and dramatic, lines bend.", "Small rooms, architecture, bold action"],
+    "24mm": ["Wide, shows the whole scene around the subject.", "Establishing shots, interiors, vlogs"],
+    "35mm": ["Natural and honest — like standing in the room.", "Documentary, street, everyday scenes"],
+    "50mm": ["Close to what your eye sees, no distortion.", "All-rounder: people, products, food"],
+    "85mm": ["Zooms in a little: faces look flattering, background melts away.", "Portraits, beauty, interviews"],
+    "135mm": ["Far away and tight; the background looks pulled close and soft.", "Hero product shots, candid moments"],
+    "Macro": ["Extremely close: textures, drops, tiny details fill the frame.", "Food, cosmetics, jewellery, product details"],
+    "Anamorphic": ["Wide cinema frame with long horizontal flares and oval blur.", "Cinematic ads, trailers, night scenes"],
+    "Fisheye": ["A round, bent, 180° world — playful and extreme.", "Skate, music, fun social clips"],
+    "Vintage": ["Soft glow, swirly background blur, gentle flares.", "Dreamy, romantic, nostalgic looks"],
+  },
+  depth: {
+    "Shallow": ["Only the subject is sharp, the background is a creamy blur.", "Making one thing stand out: a face, a product"],
+    "Medium": ["Subject sharp, background a little soft but readable.", "People in a place, products in context"],
+    "Deep": ["Everything is sharp from front to back.", "Landscapes, rooms, flat lays"],
+  },
+  framing: {
+    "Extreme close-up": ["A tiny detail fills the frame — an eye, a drop, a texture.", "Intense moments, product details"],
+    "Close-up": ["The face or the product fills most of the frame.", "Emotion, beauty, hero product"],
+    "Medium": ["The subject with some space around them.", "Talking, demonstrating, lifestyle"],
+    "Wide": ["The whole scene: where we are and who's there.", "Opening shots, locations, context"],
+    "Top-down": ["Looking straight down from above.", "Food, flat lays, desks, recipes"],
+    "Low angle": ["Camera low, looking up — the subject feels powerful.", "Heroes, products as icons, confidence"],
+  },
+  grade: {
+    "Natural": ["True-to-life colours, nothing added.", "Honest, clean, everyday"],
+    "Teal & orange": ["Warm skin against cool shadows — the blockbuster colour.", "Action, trailers, bold ads"],
+    "Golden hour": ["Warm, sunny, glowing light like just before sunset.", "Lifestyle, beauty, feel-good"],
+    "Cool & moody": ["Blue, dark and quiet.", "Drama, tech, night, luxury"],
+    "Vibrant ad": ["Bright, punchy colours and clean whites.", "Food, retail, social ads"],
+    "Kodak Portra": ["Soft film colours, flattering skin, gentle grain.", "Fashion, weddings, editorial"],
+    "Fuji film": ["Crisp film look with a hint of green in the shadows.", "Street, travel, indie"],
+    "Bleach bypass": ["Gritty: low colour, hard contrast.", "War, sport, intense moments"],
+    "Pastel": ["Light, airy and soft colours.", "Beauty, kids, spring campaigns"],
+    "Noir": ["Black shadows and hard light, high drama.", "Mystery, perfume, night"],
+    "Black & white": ["No colour, all about light and shape.", "Timeless, artistic, emotional"],
+  },
+};
+// What each option is compared against in the before/after view.
+const LOOK_BASE = { camera: "iPhone / UGC", lens: "50mm", depth: "Deep", framing: "Medium", grade: "Natural" };
+// One tap for people who don't speak camera.
+const LOOK_RECIPES = [
+  ["Luxury product", { camera: "Cinema digital", lens: "85mm", depth: "Shallow", framing: "Close-up", grade: "Golden hour" }],
+  ["Food ad", { camera: "RED", lens: "Macro", depth: "Shallow", framing: "Close-up", grade: "Vibrant ad" }],
+  ["TikTok / UGC", { camera: "iPhone / UGC", lens: "24mm", depth: "Deep", framing: "Medium", grade: "Natural" }],
+  ["Fashion editorial", { camera: "Sony Venice", lens: "85mm", depth: "Shallow", framing: "Medium", grade: "Kodak Portra" }],
+  ["Moody film", { camera: "35mm film", lens: "50mm", depth: "Shallow", framing: "Medium", grade: "Cool & moody" }],
+  ["Epic trailer", { camera: "IMAX 70mm", lens: "Anamorphic", depth: "Deep", framing: "Wide", grade: "Teal & orange" }],
+  ["Home movie", { camera: "Super 8", lens: "Vintage", depth: "Medium", framing: "Medium", grade: "Kodak Portra" }],
+];
+const FOV = { "14mm": 104, "24mm": 74, "35mm": 54, "50mm": 40, "85mm": 24, "135mm": 15, "Macro": 20, "Anamorphic": 70, "Fisheye": 180, "Vintage": 34 };
+const F_NUM = { "Shallow": 1.4, "Medium": 4, "Deep": 11 };
+let lookFocus = null, lookCut = 50, lookTestShot = null;
+const lookPicUrl = (g, label) => { const k = lookKey(g, label); return lookHave[k] ? `/api/studio?fn=look&k=${k}&v=${lookHave[k]}` : null; };
+// A small picture that explains the option: field of view for lenses, the aperture for focus.
+function lookDiagram(g, label) {
+  if (g === "lens" && FOV[label]) {
+    const a = Math.min(FOV[label], 178) / 2 * Math.PI / 180, r = 42, cx = 32, cy = 60;
+    const x1 = cx - Math.sin(a) * r, y1 = cy - Math.cos(a) * r, x2 = cx + Math.sin(a) * r;
+    return `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M${cx} ${cy} L${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y1.toFixed(1)} Z" fill="rgba(232,181,75,.18)" stroke="#E8B54B" stroke-width="1.2"/><rect x="${cx - 6}" y="${cy - 3}" width="12" height="7" rx="2" fill="#E8B54B"/><text x="32" y="9" text-anchor="middle" font-size="8.5" fill="#B4AA9A" font-family="sans-serif">${FOV[label]}° view</text></svg>`;
+  }
+  if (g === "depth" && F_NUM[label]) {
+    const open = { 1.4: 22, 4: 14, 11: 6 }[F_NUM[label]];
+    return `<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="30" r="25" fill="#1B1814" stroke="#7C7366"/><circle cx="32" cy="30" r="${open}" fill="#E8B54B" opacity=".85"/><text x="32" y="62" text-anchor="middle" font-size="9" fill="#B4AA9A" font-family="sans-serif">f/${F_NUM[label]}</text></svg>`;
+  }
+  return "";
+}
+function renderLookPreview() {
+  const st = lookState(), mon = $("lookMonitor");
+  if (lookTestShot) { // a real test shot in progress, or done
+    mon.innerHTML = lookTestShot.url
+      ? `<div class="shot" style="background-image:url('${esc(mediaSrc(lookTestShot.url))}')"></div><span class="cap">YOUR TEST SHOT</span>`
+      : `<div class="wait"><div><b>Shooting your test…</b>${lookTestShot.err ? esc(lookTestShot.err) : "about 15–30 seconds"}</div></div>`;
+  } else {
+    // which option to show: the one under the pointer, else the last one picked on this tab
+    const f = lookFocus || (st[lookTab] ? { g: lookTab, label: st[lookTab] } : null);
+    const after = f && lookPicUrl(f.g, f.label), base = f && LOOK_BASE[f.g], before = f && base !== f.label && lookPicUrl(f.g, base);
+    if (after && before) {
+      mon.innerHTML = `<div class="cmp" style="--cut:${lookCut}%"><div class="side" style="background-image:url('${before}')"></div><div class="side after" style="background-image:url('${after}')"></div><div class="cbar"></div><span class="tag l">${esc(base)}</span><span class="tag r">${esc(f.label)}</span></div>`;
+      const cmp = mon.querySelector(".cmp");
+      const move = e => { const r = cmp.getBoundingClientRect(); lookCut = Math.max(0, Math.min(100, ((e.clientX - r.left) / r.width) * 100)); cmp.style.setProperty("--cut", lookCut + "%"); };
+      cmp.addEventListener("pointerdown", e => { e.stopPropagation(); cmp.setPointerCapture(e.pointerId); move(e); cmp.onpointermove = move; });
+      cmp.addEventListener("pointerup", () => cmp.onpointermove = null);
+    } else if (after) mon.innerHTML = `<div class="shot" style="background-image:url('${after}')"></div><span class="cap">${esc(f.label.toUpperCase())}</span>`;
+    else mon.innerHTML = lookLayers(monitorVis(st)) + `<span class="rec"><i></i>LOOK</span>`;
+  }
+  // the explanation
+  const f = lookFocus || (st[lookTab] ? { g: lookTab, label: st[lookTab] } : null), help = f && (LOOK_HELP[f.g] || {})[f.label];
+  $("lookExplain").innerHTML = help
+    ? `<div class="tx"><b>${esc(f.label)}</b><p>${esc(help[0])}</p><p class="best">Best for: ${esc(help[1])}</p></div>${lookDiagram(f.g, f.label)}`
+    : `<div class="tx"><b>Not sure?</b><p>Tap a Quick look above, or point at any option to see what it does — drag the line on the picture to compare it with a normal shot.</p></div>`;
+  // what a test costs
+  const t = $("lookTest"); if (!lookTestBusy) t.innerHTML = lookTestShot && lookTestShot.url ? "↻ Test again" : `✦ Test this look on my shot<small>${lookTestCostTxt}</small>`;
+}
+let lookTestBusy = false, lookTestCostTxt = "";
+async function lookTestCost() {
+  try {
+    const out = await api("/api/studio?fn=estimate", { method: "POST", body: JSON.stringify({ mode: "image", model: SEEDREAM, prompt: "test", params: { aspect_ratio: "4:3", resolution: "2k" } }) });
+    lookTestCostTxt = out.credits != null ? `≈ ${out.credits} credits` : Number.isFinite(Number(out.price)) ? `≈ $${Number(out.price).toFixed(2)}` : "";
+  } catch { lookTestCostTxt = ""; }
+  if (!$("pop-look").classList.contains("hidden")) renderLookPreview();
+}
+$("lookTest").onclick = async e => {
+  e.stopPropagation(); if (lookTestBusy) return;
+  const look = lookPhrase(); if (!look) return note("Pick at least one option (or a Quick look) first.", true);
+  const userPrompt = $("prompt").value.trim() || "A woman holding a coffee cup by a sunny café window";
+  const style = (client().style || "").trim();
+  let prompt = ($("useBrief").checked && style ? style + ". " : "") + userPrompt;
+  const c = castPhrase(); if (c) prompt = prompt.replace(/[\s.]*$/, ".") + " " + c;
+  prompt = prompt.replace(/[\s.]*$/, ".") + " " + look;
+  const aspect = mode === "image" && $("aspect").value ? $("aspect").value : "4:3";
+  lookTestBusy = true; lookTestShot = {}; renderLookPreview(); $("lookTest").textContent = "Shooting…";
+  try {
+    const { id } = await api("/api/generate", { method: "POST", body: JSON.stringify({ mode: "image", model: SEEDREAM, prompt, image_url: mode === "image" ? refsForRequest() : null, params: { aspect_ratio: aspect, resolution: "2k" } }) });
+    if (wallet && wallet.enabled && !wallet.owner) refreshCredits();
+    let url = null;
+    for (let i = 0; i < 60 && !url; i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      const s = await api(`/api/status?id=${encodeURIComponent(id)}`, { cache: "no-store" }).catch(() => null);
+      if (!s) continue;
+      if (s.status === "failed" || s.status === "canceled") throw new Error(friendlyErr(s.error || "The test didn't work"));
+      if ((s.status === "completed" || s.status === "succeeded") && s.outputs.length) url = s.outputs[0];
+    }
+    if (!url) throw new Error("It took too long — try again.");
+    lookTestShot = { url };
+    // every paid image is kept: the test lands in your takes too
+    upsertHistory({ id, mode: "image", model: SEEDREAM, prompt, userPrompt: userPrompt + " (look test)", params: { aspect_ratio: aspect }, proj: projId, client: (proj() || {}).client, started: Date.now(), at: Date.now(), url, status: "done" });
+    if (typeof keepBackfill === "function") setTimeout(keepBackfill, 1500);
+  } catch (err) {
+    if (err.status === 402) { lookTestShot = null; note("Not enough credits for a test — top up to keep going.", true); openSettings("credits"); }
+    else lookTestShot = { err: err.message };
+  } finally { lookTestBusy = false; renderLookPreview(); }
+};
+function renderRecipes() {
+  const st = lookState(), same = r => LOOK.every(g => (st[g.key] || null) === (r[g.key] || null));
+  $("lookRecipes").innerHTML = LOOK_RECIPES.map(([name, r], i) => { const pic = lookPicUrl("grade", r.grade) || lookPicUrl("camera", r.camera); return `<button type="button" class="recipe${same(r) ? " on" : ""}" data-i="${i}"><i style="${pic ? `background-image:url('${pic}')` : ""}"></i>${esc(name)}</button>`; }).join("");
+  $("lookRecipes").querySelectorAll(".recipe").forEach(b => b.onclick = e => { e.stopPropagation(); const r = LOOK_RECIPES[b.dataset.i][1]; setLook({ ...r }); lookTestShot = null; lookFocus = null; note(`“${LOOK_RECIPES[b.dataset.i][0]}” look applied — tweak any tab, or Test it on your shot.`); renderLook(); });
+}
+// pointing at an option previews it on the monitor
+function hookLookHover(sel, g) {
+  document.querySelectorAll(sel).forEach(el => {
+    el.addEventListener("mouseenter", () => { lookFocus = { g, label: el.dataset.l }; lookTestShot = lookTestBusy ? lookTestShot : null; renderLookPreview(); });
+    el.addEventListener("mouseleave", () => { lookFocus = null; renderLookPreview(); });
+  });
+}
+
 let lookTab = "camera";
 /* ---------- real pictures for the Look tiles, made once with Seedream ---------- */
 let lookHave = {}, lookSrc = {}, lookMaking = false;
@@ -3351,7 +3544,9 @@ function renderLook() {
     return `<button type="button" class="lookTile${st[g.key] === label ? " on" : ""}" data-l="${esc(label)}"><span class="vis">${lookLayers(v)}</span><b>${esc(label)}</b><small>${esc(vis.hint[label] || "")}</small></button>`;
   }).join("");
   if (!gear) $("lookGrid").querySelectorAll(".lookTile").forEach(b => b.onclick = e => { e.stopPropagation(); const cur = lookState(); cur[g.key] = cur[g.key] === b.dataset.l ? null : b.dataset.l; setLook(cur); renderLook(); });
-  $("lookMonitor").innerHTML = lookLayers(monitorVis(st)) + `<span class="rec"><i></i>LOOK</span>`;
+  hookLookHover(gear ? "#gearRail .gearCard" : "#lookGrid .lookTile", g.key);
+  renderRecipes(); renderLookPreview();
+  if (!lookTestCostTxt) lookTestCost();
   const chosen = LOOK.filter(x => st[x.key]);
   $("lookSum").innerHTML = chosen.length ? chosen.map(x => `<span data-k="${x.key}" title="Remove">${esc(st[x.key])}</span>`).join("") : `<em>Pick a camera, lens, focus, framing and grade — or leave it to the model.</em>`;
   $("lookSum").querySelectorAll("span").forEach(sp => sp.onclick = e => { e.stopPropagation(); const cur = lookState(); cur[sp.dataset.k] = null; setLook(cur); renderLook(); });
