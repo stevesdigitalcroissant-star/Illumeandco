@@ -20,13 +20,21 @@ const SHARED = /^il\.(clients|projects|hist|presets|trash|spend)$/;
 const MAX_FILE = 3 * 1024 * 1024; // a whole reel of 1000 takes is well below this
 const fileOf = name => `data/${db.fileKey(name)}.json`;
 
-// item-by-item merge of a list someone saved into the list on the server
+// item-by-item merge of a list someone saved into the list on the server:
+// - an item both have: the more recently changed copy wins (_t, stamped by the page)
+// - an item only the server has: kept if this person never saw it (a teammate added it),
+//   dropped if it was in their base (they deleted it)
 function merge(k, mine, server, base) {
-  if (!Array.isArray(mine) || !Array.isArray(server) || !Array.isArray(base)) return mine;
-  const ids = new Set(mine.map(x => x && x.id)), seen = new Set(base);
-  const theirs = server.filter(x => x && x.id && !ids.has(x.id) && !seen.has(x.id));
-  if (!theirs.length) return mine;
-  const out = [...mine, ...theirs];
+  if (!Array.isArray(mine) || !Array.isArray(server)) return mine;
+  const sMap = new Map(server.filter(x => x && x.id).map(x => [x.id, x]));
+  let changed = false;
+  const out = mine.map(x => { const sv = x && x.id && sMap.get(x.id); if (sv && (sv._t || 0) > (x._t || 0)) { changed = true; return sv; } return x; });
+  if (Array.isArray(base)) {
+    const ids = new Set(mine.map(x => x && x.id)), seen = new Set(base);
+    const theirs = server.filter(x => x && x.id && !ids.has(x.id) && !seen.has(x.id));
+    if (theirs.length) { out.push(...theirs); changed = true; }
+  }
+  if (!changed) return mine;
   if (k === "il.hist" || k === "il.trash" || k === "il.spend") out.sort((a, b) => (b.at || b.started || b.t || 0) - (a.at || a.started || a.t || 0));
   return out;
 }

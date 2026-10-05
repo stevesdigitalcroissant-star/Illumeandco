@@ -923,6 +923,40 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .spendTable .bar{height:4px;border-radius:4px;background:var(--gold);opacity:.6;margin:0 10px 6px}
 /* viewers watch and comment: nothing that changes the studio */
 .roleViewer .composer,.roleViewer .delTake,.roleViewer #clearHist,.roleViewer #clearFailed,.roleViewer .addBoard,.roleViewer #newClient,.roleViewer .crow .more,.roleViewer .crow.add,.roleViewer #shareReview,.roleViewer .shot .ctl,.roleViewer #trashEmpty,.roleViewer #reuse,.roleViewer #animate,.roleViewer #continueShot,.roleViewer .changesBox .btn{display:none!important}
+
+/* shot list */
+.shotStats{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.shotStats span{border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--panel)}
+.shot .meta{display:flex;align-items:center;gap:6px;padding:8px 10px 0;flex-wrap:wrap}
+.shot .meta button{font:inherit;font-size:11.5px;font-weight:600;border-radius:999px;padding:3px 9px;border:1px solid var(--line-2);background:var(--raised);color:var(--muted);cursor:pointer}
+.shot .meta button:hover{color:var(--text);border-color:var(--gold-line)}
+.shot .meta .st-todo{color:var(--faint);border-style:dashed}
+.shot .meta .st-doing{color:#9EC3FF;border-color:rgba(158,195,255,.4)}
+.shot .meta .st-ready{color:var(--gold);border-color:var(--gold-line)}
+.shot .meta .st-approved{color:var(--ok);border-color:rgba(127,211,155,.5)}
+.shot .meta .ver{font-size:11px;color:var(--gold);margin-left:auto}
+.shot .meta .more{margin-left:auto}
+.shot .meta .ver + .more{margin-left:0}
+.shot .ttl{padding:8px 12px 0;font-weight:600;font-size:13.5px}
+.shot.plan .frame{display:grid;place-items:center;background:repeating-linear-gradient(135deg,var(--panel) 0 12px,var(--panel-2) 12px 24px);cursor:default}
+.shot.plan .planTxt{padding:14px 16px;text-align:center;max-width:90%}
+.shot.plan .planTxt b{display:block;font-family:var(--display);font-weight:400;font-size:18px;margin-bottom:4px}
+.shot.plan .planTxt span{font-size:12.5px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.shot .ctl .write{width:auto;padding:0 10px;color:var(--gold);font-size:12.5px;font-weight:600}
+.notesPanel textarea{width:100%;min-height:70px;margin:6px 0;font:inherit;font-size:13.5px}
+.notesPanel .nt{padding:8px 10px;border-radius:10px;background:var(--panel-2);margin:0 0 6px;font-size:13.5px}
+.notesPanel .nt small{color:var(--faint);display:block;font-size:11.5px;margin-bottom:2px}
+.notesPanel .nt mark{background:rgba(232,181,75,.2);color:var(--gold);border-radius:4px;padding:0 3px}
+.notesPanel .chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px}
+.notesPanel .chips button{width:auto;padding:3px 9px;border:1px solid var(--line-2);border-radius:999px;font-size:12px;display:inline-block}
+.notesPanel .send{display:flex;justify-content:flex-end}
+.notesPanel .send button{width:auto;display:inline-block;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:var(--gold-ink);font-weight:700;padding:7px 14px}
+#uiArea{width:100%;font:inherit;font-size:14px;margin-top:8px}
+.kitBrand{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
+.kitBrand label{display:flex;align-items:center;gap:8px}
+.kitBrand input[type=color]{width:42px;height:30px;padding:0;border:1px solid var(--line-2);border-radius:8px;background:none}
+.kitBrand select{width:auto;min-width:160px}
+.roleViewer #planShots,.roleViewer .shot .meta button:not(.nt),.roleViewer .notesPanel .send,.roleViewer .notesPanel textarea,.roleViewer .notesPanel .chips{display:none!important}
 </style>
 </head>
 <body>
@@ -1067,6 +1101,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         <b id="uiTitle"></b>
         <p id="uiText"></p>
         <input id="uiInput" autocomplete="off" maxlength="80">
+        <textarea id="uiArea" class="hidden" rows="7"></textarea>
       </div>
       <div class="uiBtns"><button class="btn" type="button" id="uiCancel">Cancel</button><button class="btn hidden" type="button" id="uiAlt"></button><button class="go uiOk" type="submit" id="uiOk">OK</button></div>
     </form>
@@ -1111,6 +1146,10 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
           </div>
           <div class="refgrid" id="refGrid"></div>
         </div>
+        <div class="f">
+          <label>Client review page <span class="hint">how this client's review links look</span></label>
+          <div class="kitBrand"><label>Accent colour <input type="color" id="kitColor" value="#E8B54B"></label><label>Logo <select id="kitLogo"><option value="">Studio name only</option></select></label></div>
+        </div>
         <div class="f" id="castSec">
           <label>Cast &amp; products <span class="hint">the people, products and places that come back in this client's shots — tap them in the composer to keep them consistent</span></label>
           <div class="castList" id="castList"></div>
@@ -1151,6 +1190,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
           <span class="searchBox" id="searchBox"><input type="search" id="takeSearch" placeholder="Search takes…" aria-label="Search takes" autocomplete="off"><button type="button" id="searchAll" class="ghLink" title="Search this project, or every client">This project</button></span>
           <span class="boardInfo hidden" id="boardInfo"></span>
           <button class="btn hidden" id="shareReview" type="button" title="Send this storyboard to your client — they approve or comment on each shot, no account needed">⤴ Client review</button>
+          <button class="btn hidden" id="planShots" type="button" title="Write the shot list first — each line becomes a shot to fill">＋ Plan shots</button>
           <button class="btn hidden" id="deliver" type="button" title="Download every shot (or just the approved ones), named and numbered, in one zip">⬇ Deliver</button>
           <button class="btn hidden" id="exportCut" type="button" title="Join every shot into one video file">⬇ Export cut</button>
           <button class="btn hidden" id="playAll" type="button">▶ Play all</button>
@@ -1409,7 +1449,14 @@ const load = (k, d) => {
   try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; }
 };
 const save = (k, v) => {
-  if (isAccountKey(k)) { account[k] = clone(v); queueSync(k, account[k]); return true; }
+  if (isAccountKey(k)) {
+    if (SHARED_KEY.test(k) && Array.isArray(v)) { // stamp the items that really changed, so a teammate's older copy can't overwrite them
+      const old = new Map((Array.isArray(account[k]) ? account[k] : []).map(x => [x && x.id, JSON.stringify(x)])), now = Date.now();
+      v.forEach(x => { if (x && typeof x === "object" && x.id && old.get(x.id) !== JSON.stringify(x)) x._t = now; });
+    }
+    if (k in account && !(k in unsynced) && JSON.stringify(v) === JSON.stringify(account[k])) return true; // nothing changed: no save
+    account[k] = clone(v); queueSync(k, account[k]); return true;
+  }
   try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } // only caches live here; losing one is harmless
 };
 // Plain-string settings (chosen model, current project) — account data too.
@@ -1556,7 +1603,8 @@ $("delAccount").onclick = async () => {
 
 /* ---------- the studio's own dialog (names, confirmations) ---------- */
 let uiDone = null;
-function uiDialog({ title, text = "", input = false, value = "", placeholder = "", ok = "OK", cancel = "Cancel", danger = false, type = "text", alt = null }) {
+function uiDialog({ title, text = "", input = false, value = "", placeholder = "", ok = "OK", cancel = "Cancel", danger = false, type = "text", alt = null, area = false }) {
+  $("uiArea").classList.toggle("hidden", !area); if (area) { $("uiArea").value = value; $("uiArea").placeholder = placeholder; setTimeout(() => $("uiArea").focus(), 40); }
   $("uiAlt").textContent = alt || ""; $("uiAlt").classList.toggle("hidden", !alt);
   if (uiDone) uiDone(null);
   $("uiTitle").textContent = title; $("uiText").textContent = text;
@@ -1567,7 +1615,7 @@ function uiDialog({ title, text = "", input = false, value = "", placeholder = "
   setTimeout(() => (input ? $("uiInput") : $("uiOk")).focus(), 30);
   return new Promise(res => { uiDone = v => { uiDone = null; $("ui").classList.add("hidden"); res(v); }; });
 }
-$("uiForm").onsubmit = e => { e.preventDefault(); if (!uiDone) return; if ($("uiInput").classList.contains("hidden")) uiDone(true); else { const v = $("uiInput").type === "password" ? $("uiInput").value : $("uiInput").value.trim(); if (!v) { $("uiInput").focus(); return; } uiDone(v); } };
+$("uiForm").onsubmit = e => { e.preventDefault(); if (!uiDone) return; if (!$("uiArea").classList.contains("hidden")) { const v = $("uiArea").value.trim(); if (!v) return $("uiArea").focus(); return uiDone(v); } if ($("uiInput").classList.contains("hidden")) uiDone(true); else { const v = $("uiInput").type === "password" ? $("uiInput").value : $("uiInput").value.trim(); if (!v) { $("uiInput").focus(); return; } uiDone(v); } };
 $("uiCancel").onclick = () => uiDone && uiDone(null);
 $("uiAlt").onclick = () => uiDone && uiDone("alt");
 $("uiBackdrop").onclick = () => uiDone && uiDone(null);
@@ -1608,6 +1656,7 @@ function applyRemote(keys) {
     refreshTitles();
   }
   renderProjects(); renderHistory(); renderBoard(); renderViewTabs(); renderTrash(); renderBudget();
+  if (keys.includes("il.projects")) checkMentions();
 }
 async function pullShared() {
   if (!me || document.hidden || !inTeam() || syncing) return;
@@ -1758,28 +1807,45 @@ async function loadInbox() {
   renderInbox();
 }
 const inboxSeen = () => Number(getRaw("il.inboxSeen")) || 0;
-const inboxLine = i => `${i.name} ${i.take === "*" ? (i.status === "approved" ? "approved every shot" : "left feedback") : i.status === "approved" ? `approved shot ${i.shot}` : i.status === "changes" ? `asked for changes on shot ${i.shot}` : `commented on shot ${i.shot}`} — ${i.title}`;
+const inboxLine = i => i.mention ? `${i.name} mentioned you on shot ${i.shot} — ${i.title}` : `${i.name} ${i.take === "*" ? (i.status === "approved" ? "approved every shot" : "left feedback") : i.status === "approved" ? `approved shot ${i.shot}` : i.status === "changes" ? `asked for changes on shot ${i.shot}` : `commented on shot ${i.shot}`} — ${i.title}`;
+function mentionItems() {
+  if (!me) return [];
+  const out = [];
+  projects.forEach(p => Object.entries(p.shotMeta || {}).forEach(([id, m]) => (m.notes || []).forEach(x => {
+    if ((x.mentions || []).includes(me.name) && x.by !== me.name) out.push({ t: x.t, mention: true, name: personName(x.by), comment: x.text, proj: p.id, entry: id, title: p.name, client: (clients.find(c => c.id === p.client) || {}).name || "", shot: (p.board || []).indexOf(id) + 1 });
+  })));
+  return out;
+}
+const allInbox = () => [...inbox, ...mentionItems()].sort((a, b) => b.t - a.t);
+let mentionToasted = Date.now();
+function checkMentions() {
+  const fresh = mentionItems().filter(i => i.t > mentionToasted);
+  if (fresh.length) { mentionToasted = Date.now(); note(inboxLine(fresh[0])); }
+  renderInbox();
+}
 function renderInbox() {
   const b = $("inboxBtn"); if (!b) return;
-  const n = inbox.filter(i => i.t > inboxSeen()).length;
-  b.classList.toggle("hidden", !inbox.length); b.classList.toggle("new", n > 0);
+  const list = allInbox(), n = list.filter(i => i.t > inboxSeen()).length;
+  b.classList.toggle("hidden", !list.length); b.classList.toggle("new", n > 0);
   b.textContent = n ? `🔔 ${n} new` : "🔔";
   b.title = n ? `${n} new answer${n > 1 ? "s" : ""} from clients` : "What your clients said on review links";
 }
 $("inboxBtn").onclick = e => {
   e.stopPropagation();
   const old = document.querySelector(".inboxPanel"); if (old) { old.remove(); return; }
-  const seen = inboxSeen(), panel = document.createElement("div"); panel.className = "inboxPanel";
+  const seen = inboxSeen(), panel = document.createElement("div"), inbox2 = allInbox(); panel.className = "inboxPanel";
   const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : new Date(t).toLocaleDateString(); };
-  panel.innerHTML = `<h4>Client answers</h4>` + (inbox.length ? inbox.slice(0, 40).map((i, k) => `<button type="button" data-k="${k}" class="${i.t > seen ? "unseen" : ""}"><b>${i.status === "approved" ? "✓ " : i.status === "changes" ? "✎ " : "💬 "}${esc(inboxLine(i))}</b><small>${esc(i.client || "")}${i.client ? " · " : ""}${ago(i.t)}</small>${i.comment ? `<q>${esc(i.comment)}</q>` : ""}</button>`).join("") : `<div class="empty">No answers yet.</div>`);
+  panel.innerHTML = `<h4>Client answers &amp; mentions</h4>` + (inbox2.length ? inbox2.slice(0, 40).map((i, k) => `<button type="button" data-k="${k}" class="${i.t > seen ? "unseen" : ""}"><b>${i.mention ? "@ " : i.status === "approved" ? "✓ " : i.status === "changes" ? "✎ " : "💬 "}${esc(inboxLine(i))}</b><small>${esc(i.client || "")}${i.client ? " · " : ""}${ago(i.t)}</small>${i.comment ? `<q>${esc(i.comment)}</q>` : ""}</button>`).join("") : `<div class="empty">No answers yet.</div>`);
   document.body.appendChild(panel);
   const r = e.currentTarget.getBoundingClientRect();
   panel.style.top = (r.bottom + 8) + "px"; panel.style.left = Math.max(12, Math.min(window.innerWidth - panel.offsetWidth - 12, r.right - panel.offsetWidth)) + "px";
   panel.querySelectorAll("[data-k]").forEach(x => x.onclick = () => {
-    const i = inbox[Number(x.dataset.k)]; panel.remove();
+    const i = inbox2[Number(x.dataset.k)]; panel.remove();
     const p = projects.find(q => q.id === i.proj); if (!p) return note("That project isn't in the studio any more.", true);
     if (p.id !== projId) selectProject(p.id);
-    $("tabBoard").click(); loadReviewFb(true);
+    $("tabBoard").click();
+    if (i.mention) setTimeout(() => { const card = document.querySelector(`#board .shot[data-id="${CSS.escape(i.entry)}"] .nt`); openNotes(i.entry, card); }, 60);
+    else loadReviewFb(true);
   });
   setTimeout(() => document.addEventListener("click", function off(ev) { if (!panel.contains(ev.target)) { panel.remove(); document.removeEventListener("click", off); } }), 0);
   setRaw("il.inboxSeen", Date.now()); renderInbox();
@@ -2230,7 +2296,7 @@ function restoreDraft() {
   renderFavs(); // refresh the model label, cost estimate and pills for the restored values
 }
 function selectProject(id) {
-  if (projId && projId !== id) { saveDraft(); viewing = null; } // leaving: keep this project's draft; a finishing job no longer hijacks the stage
+  if (projId && projId !== id) { saveDraft(); viewing = null; fillTarget = null; } // leaving: keep this project's draft; a finishing job no longer hijacks the stage
   projId = id; const p = proj(); saveProjects();
   openClients.add(p.client); refreshTitles();
   current = null; setStage(null); $("metaText").textContent = "";
@@ -2716,6 +2782,7 @@ async function startGeneration({ mode, model, prompt, userPrompt, after, ref, pa
     const p = { ...params };
     if (p.seed != null) p.seed = Number(p.seed) + i;
     const item = { mode, model, prompt, userPrompt: userPrompt || prompt, after: i === 0 ? after : null, ref, params: p, proj: projId, client: (proj() || {}).client, started: Date.now(), by: me.name, recipe };
+    if (fillTarget && fillTarget.proj === projId) item.fills = { ...fillTarget }; // the first of these takes to finish fills that shot
     if (stagePlan && stagePlan.proj === projId && mode === "image") item.stage = { move: stagePlan.move, dur: stagePlan.dur }; // ▶ Animate on this take uses the Stage's move
     try {
       const { id, cost } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: ref, params: p }) });
@@ -3142,6 +3209,7 @@ $("prompt").addEventListener("input", () => { if (mode === "video") renderCamMov
 /* ---------- takes (the gallery) ---------- */
 // Add an entry, or update the one with the same id (running → done/failed → kept).
 function upsertHistory(item) {
+  if (item.fills && item.url && item.status === "done") setTimeout(() => fillShot(item), 0);
   if (item.status === "failed") unSpend(item.id); // failed takes are refunded — keep the spending honest
   const h = load(LS.hist, []); const i = h.findIndex(x => x.id === item.id);
   if (i >= 0) h[i] = item; else h.unshift(item);
@@ -3222,7 +3290,7 @@ function board(pid) { const p = projects.find(x => x.id === (pid || projId)); if
 function boardItems() { const h = load(LS.hist, []); return board().map(id => h.find(x => x.id === id)).filter(x => x && x.url && (!x.status || x.status === "done")); }
 function toggleBoard(id) {
   const b = board(); const i = b.indexOf(id);
-  if (i >= 0) b.splice(i, 1); else b.push(id);
+  if (i >= 0) { b.splice(i, 1); delete (proj().shotMeta || {})[id]; } else { b.push(id); if (inTeam()) shotMeta(id, true); }
   saveProjects(); renderHistory(); renderBoard();
   if (current && current.id === id) show(current);
   note(i >= 0 ? "Removed from the storyboard." : `Added to the storyboard as shot ${b.length}.`);
@@ -3250,6 +3318,7 @@ function renderViewTabs() {
   $("boardInfo").classList.toggle("hidden", viewMode !== "board" || !items.length);
   $("playAll").classList.toggle("hidden", viewMode !== "board" || !items.length);
   $("deliver").classList.toggle("hidden", viewMode !== "board" || !items.length);
+  $("planShots").classList.toggle("hidden", viewMode !== "board");
   $("searchBox").classList.toggle("hidden", viewMode !== "takes");
   $("exportCut").classList.toggle("hidden", viewMode !== "board" || !items.some(x => x.mode !== "audio"));
   $("shareReview").classList.toggle("hidden", viewMode !== "board" || !items.length);
@@ -3259,40 +3328,149 @@ function setViewMode(m) { viewMode = m; try { localStorage.setItem("il.viewMode"
 $("tabTakes").onclick = () => setViewMode("takes");
 $("tabBoard").onclick = () => setViewMode("board");
 let dragId = null;
+const SHOT_ST = { todo: "To do", doing: "In progress", ready: "Ready for client", approved: "Approved" };
+let fillTarget = null; // { proj, entry, replace?, changed? } — the shot the next take fills
+function shotMeta(id, make, p) {
+  p = p || proj(); if (!p) return null; p.shotMeta = p.shotMeta || {};
+  if (make && !p.shotMeta[id]) p.shotMeta[id] = { status: id.startsWith("sh_") ? "todo" : inTeam() ? "doing" : "ready" };
+  return p.shotMeta[id] || null;
+}
+// In a team a shot reaches the client only once someone marks it "Ready for client".
+const shotShared = id => { const m = ((proj() || {}).shotMeta || {})[id]; return !m || !m.status || m.status === "ready" || m.status === "approved"; };
+function fillShot(item) {
+  const f = item.fills; if (!f) return;
+  const p = projects.find(x => x.id === f.proj); if (!p || !p.board) return;
+  const i = p.board.indexOf(f.entry); if (i < 0 || p.board.includes(item.id)) return;
+  p.shotMeta = p.shotMeta || {};
+  const m = p.shotMeta[f.entry] || {};
+  if (f.replace) { m.prev = [...(m.prev || []), f.entry].slice(-10); if (f.changed) m.changed = f.changed; else delete m.changed; }
+  m.status = inTeam() ? "doing" : "ready"; // a new take: in a team it's checked before the client sees it
+  delete p.shotMeta[f.entry]; p.shotMeta[item.id] = m; p.board[i] = item.id;
+  if (fillTarget && fillTarget.entry === f.entry) fillTarget = null;
+  saveProjects(); if (p.id === projId) { renderBoard(); renderHistory(); }
+  note(`Shot ${i + 1}${m.title ? " — " + m.title : ""} now has the new take${f.replace ? ` (version ${m.prev.length + 1})` : ""}.`);
+}
+function planShots() {
+  uiDialog({ title: "Plan the shots", text: "One shot per line — what happens in it. They appear as empty shots in the storyboard, ready to fill (and assign, in a team).", area: true, placeholder: "Wide: the café at sunrise, steam rising\nClose-up: hands pouring the latte art\nMia takes the first sip, smiles to camera", ok: "Add shots" }).then(v => {
+    if (!v) return;
+    const lines = String(v).split(/\n+/).map(x => x.trim()).filter(Boolean).slice(0, 60); if (!lines.length) return;
+    const p = proj(); p.board = p.board || [];
+    lines.forEach(l => { const id = "sh_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); p.board.push(id); const m = shotMeta(id, true); const mm = /^([^:]{2,40}):\s*(.+)$/.exec(l) || /^(.{2,40}?)\s+[–—-]\s+(.+)$/.exec(l); m.title = mm ? mm[1].trim() : l.slice(0, 48); m.brief = l; });
+    saveProjects(); renderBoard(); note(`${lines.length} shot${lines.length > 1 ? "s" : ""} added — tap ✍ Write on one to start.`);
+  });
+}
+$("planShots").onclick = planShots;
+function writeShot(id, n) {
+  const m = shotMeta(id, true); fillTarget = { proj: projId, entry: id };
+  $("prompt").value = m.brief || m.title || ""; $("prompt").dispatchEvent(new Event("input")); saveDraft(); $("prompt").focus();
+  if (m.status === "todo") { m.status = "doing"; if (!m.who && inTeam()) m.who = me.name; saveProjects(); renderBoard(); }
+  note(`Writing shot ${n}${m.title ? " — " + m.title : ""}. Generate; the first take that finishes fills the shot.`);
+}
+function statusMenu(anchor, id) {
+  showMenu(anchor, Object.entries(SHOT_ST).filter(([k]) => k !== "todo" || id.startsWith("sh_")).map(([k, label]) => ({ text: (shotMeta(id, true).status === k ? "✓ " : "") + label, run: () => { shotMeta(id, true).status = k; saveProjects(); renderBoard(); if (k === "ready") note("It's in the client's review link (if it's shared)."); } })));
+}
+function whoMenu(anchor, id) {
+  const ms = (teamInfo && teamInfo.members) || [];
+  showMenu(anchor, [{ label: "Who's on it" }, ...ms.map(x => ({ text: (shotMeta(id, true).who === x.name ? "✓ " : "") + (x.name === me.name ? "Me" : personName(x.name)), run: () => { shotMeta(id, true).who = x.name; saveProjects(); renderBoard(); } })), "-", { text: "Nobody", run: () => { delete shotMeta(id, true).who; saveProjects(); renderBoard(); } }]);
+}
+function shotMore(anchor, e, n) {
+  const m = shotMeta(e.id, true), h = load(LS.hist, []), prevIt = (m.prev || []).length ? h.find(x => x.id === m.prev[m.prev.length - 1]) : null;
+  showMenu(anchor, [
+    { text: "Name this shot…", run: async () => { const v = await uiAsk(`Shot ${n}`, { value: m.title || "", placeholder: "e.g. Hero pour", ok: "Save" }); if (v != null) { m.title = v; saveProjects(); renderBoard(); } } },
+    ...(e.it ? [{ text: "↺ Make a new version", run: () => { fillTarget = { proj: projId, entry: e.id, replace: true }; useRecipe(e.it); note(`New version of shot ${n}: change what you need, then Generate — it replaces the shot and keeps this one as the previous version.`); } }] : []),
+    ...(prevIt ? [{ text: `See version ${m.prev.length}`, run: () => view(prevIt, true) }] : []),
+    "-",
+    { text: "Remove from the storyboard", danger: true, run: () => { const b = board(); const i = b.indexOf(e.id); if (i >= 0) b.splice(i, 1); delete (proj().shotMeta || {})[e.id]; saveProjects(); renderBoard(); renderHistory(); } },
+  ]);
+}
+const mentionRe = name => new RegExp("@" + personName(name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i");
+function openNotes(id, anchor) {
+  document.querySelectorAll(".inboxPanel").forEach(x => x.remove());
+  const p = proj(), n = board().indexOf(id) + 1, m = shotMeta(id, true); m.notes = m.notes || [];
+  const panel = document.createElement("div"); panel.className = "inboxPanel notesPanel";
+  const others = ((teamInfo && teamInfo.members) || []).filter(x => x.name !== me.name);
+  const paint = () => {
+    const hi = t => esc(t).replace(/@([\w.+-]+)/g, "<mark>@$1</mark>");
+    panel.innerHTML = `<h4>Team notes · shot ${n}${m.title ? " — " + esc(m.title) : ""}</h4><div class="trashEmptyNote" style="margin:0 0 8px;padding:8px;font-size:12px">Only your team sees these — never the client.</div>`
+      + (m.notes.length ? m.notes.map(x => `<div class="nt"><small>${esc(x.by === me.name ? "You" : personName(x.by))} · ${new Date(x.t).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</small>${hi(x.text)}</div>`).join("") : `<div class="empty">No notes yet.</div>`)
+      + `<textarea placeholder="${others.length ? "Write a note — @name to tag someone" : "Write a note for this shot"}"></textarea>${others.length ? `<div class="chips">${others.map(x => `<button type="button" data-at="${esc(personName(x.name))}">@${esc(personName(x.name))}</button>`).join("")}</div>` : ""}<div class="send"><button type="button">Add note</button></div>`;
+    const ta = panel.querySelector("textarea");
+    panel.querySelectorAll("[data-at]").forEach(b => b.onclick = () => { ta.value = (ta.value + " @" + b.dataset.at + " ").replace(/^\s+/, ""); ta.focus(); });
+    panel.querySelector(".send button").onclick = () => {
+      const text = ta.value.trim(); if (!text) return ta.focus();
+      const mentions = others.filter(x => mentionRe(x.name).test(text)).map(x => x.name);
+      m.notes.push({ id: "n" + Date.now().toString(36), by: me.name, t: Date.now(), text: text.slice(0, 1000), mentions });
+      saveProjects(); syncNow(); paint(); renderBoard();
+      if (mentions.length) note(`${mentions.map(personName).join(", ")} will see it in their 🔔.`);
+    };
+  };
+  paint(); document.body.appendChild(panel);
+  const r = (anchor || $("board")).getBoundingClientRect();
+  panel.style.top = Math.min(window.innerHeight - panel.offsetHeight - 12, r.bottom + 6) + "px"; panel.style.left = Math.max(12, Math.min(window.innerWidth - panel.offsetWidth - 12, r.left)) + "px";
+  setTimeout(() => document.addEventListener("click", function off(ev) { if (!panel.contains(ev.target)) { panel.remove(); document.removeEventListener("click", off); } }), 0);
+  void p;
+}
 function renderBoard() {
-  const box = $("board"); box.innerHTML = ""; const items = boardItems();
-  if (!items.length) {
-    box.innerHTML = `<div class="boardEmpty"><b>Build your sequence.</b>Tap ＋ on any take (or “＋ Storyboard” when it's open) to add it as a shot. Drag shots to reorder, then ▶ Play all to watch the cut. <br>Tip: <em>⏭ Continue shot</em> on a video drops the next shot right after it.</div>`;
+  const box = $("board"); box.innerHTML = "";
+  const h = load(LS.hist, []), p = proj();
+  const entries = board().map(id => { const it = h.find(x => x.id === id); return { id, it: it && it.url && (!it.status || it.status === "done") ? it : null }; }).filter(e => e.it || e.id.startsWith("sh_"));
+  if (!entries.length) {
+    box.innerHTML = `<div class="boardEmpty"><b>Build your sequence.</b>Tap ＋ on any take (or “＋ Storyboard” when it's open) to add it as a shot — or ＋ Plan shots to write the shot list first. Drag shots to reorder, then ▶ Play all to watch the cut. <br>Tip: <em>⏭ Continue shot</em> on a video drops the next shot right after it.</div>`;
     renderViewTabs(); return;
   }
-  const need = items.map((it, i) => ({ it, i, fb: (reviewFb[projId] || {})[it.id] })).filter(x => x.fb && x.fb.status === "changes");
+  // where things stand
+  const counts = {}; entries.forEach(e => { const st = (shotMeta(e.id) || {}).status || (e.it ? "ready" : "todo"); counts[st] = (counts[st] || 0) + 1; });
+  if (entries.some(e => shotMeta(e.id)) || inTeam()) { const st = document.createElement("div"); st.className = "shotStats"; st.innerHTML = Object.keys(SHOT_ST).filter(k => counts[k]).map(k => `<span>${counts[k]} ${SHOT_ST[k].toLowerCase()}</span>`).join(""); box.appendChild(st); }
+  const items = entries.filter(e => e.it).map(e => e.it);
+  const need = entries.map((e, i) => ({ it: e.it, i, fb: e.it && (reviewFb[projId] || {})[e.it.id] })).filter(x => x.fb && x.fb.status === "changes");
   if (need.length) {
     const cb = document.createElement("div"); cb.className = "changesBox";
-    cb.innerHTML = `<b>✎ The client asked for changes on ${need.length} shot${need.length > 1 ? "s" : ""}</b>` + need.map(x => { const c = (x.fb.comments || []).slice(-1)[0]; return `<div class="chRow"><span><em>Shot ${x.i + 1}</em>${c ? `${esc(c.name)}: “${esc(c.text)}”` : "No comment left"}</span><button class="btn" type="button" data-id="${esc(x.it.id)}">↺ Redo with same settings</button></div>`; }).join("");
-    cb.querySelectorAll("button[data-id]").forEach(btn => btn.onclick = () => { const x = need.find(n => n.it.id === btn.dataset.id); useRecipe(x.it); const c = (x.fb.comments || []).slice(-1)[0]; note(c ? `Shot ${x.i + 1} — the client said: “${c.text}”. Adjust the prompt, then Generate.` : `Shot ${x.i + 1}'s settings are loaded — adjust, then Generate.`); $("prompt").focus(); });
+    cb.innerHTML = `<b>✎ The client asked for changes on ${need.length} shot${need.length > 1 ? "s" : ""}</b>` + need.map(x => { const c = (x.fb.comments || []).slice(-1)[0]; return `<div class="chRow"><span><em>Shot ${x.i + 1}</em>${c ? `${esc(c.name)}: “${esc(c.text)}”${c.at != null ? ` <small>at ${fmtDur(c.at)}</small>` : c.x != null ? " <small>📍 on the picture</small>" : ""}` : "No comment left"}</span><button class="btn" type="button" data-id="${esc(x.it.id)}">↺ Redo as a new version</button></div>`; }).join("");
+    cb.querySelectorAll("button[data-id]").forEach(btn => btn.onclick = () => {
+      const x = need.find(n => n.it.id === btn.dataset.id), c = (x.fb.comments || []).slice(-1)[0];
+      fillTarget = { proj: projId, entry: x.it.id, replace: true, changed: c ? c.text : "" };
+      useRecipe(x.it);
+      note(c ? `Shot ${x.i + 1} — the client said: “${c.text}”. Adjust the prompt, then Generate: the new take replaces the shot as version ${((shotMeta(x.it.id) || {}).prev || []).length + 2}.` : `Shot ${x.i + 1}'s settings are loaded — adjust, then Generate.`); $("prompt").focus();
+    });
     box.appendChild(cb);
   }
-  items.forEach((it, i) => {
-    const el = document.createElement("div"); el.className = "shot" + (viewing === it.id ? " on" : ""); el.draggable = true; el.dataset.id = it.id;
-    const media = isVideoItem(it) ? `<video src="${mediaSrc(it.url)}" muted playsinline preload="metadata"></video>` : (it.mode === "audio" && !isImageUrl(it.url)) ? `<div class="aud" style="height:100%;display:grid;place-items:center;color:var(--gold);font-size:30px">♪</div>` : `<img src="${it.url}" alt="" loading="lazy" onerror="mediaFallback(this)">`;
-    const fb = (reviewFb[projId] || {})[it.id] || {}, cm = fb.comments || [];
-    el.innerHTML = `<div class="frame"><span class="num">${i + 1}</span><span class="dur">${it.mode === "image" ? "still" : fmtDur(shotSeconds(it))}</span>${media}${fb.status || cm.length ? `<span class="rv ${fb.status || ""}" title="Client review">${fb.status === "approved" ? "✓ Approved" : fb.status === "changes" ? "✎ Changes" : ""}${cm.length ? ` 💬${cm.length}` : ""}</span>` : ""}</div>
-      <div class="txt">${esc(it.userPrompt || it.prompt || "")}</div>${cm.length ? `<div class="cmts">${cm.slice(-2).map(c => `<div><b>${esc(c.name)}:</b> ${esc(c.text)}</div>`).join("")}</div>` : ""}
-      <div class="ctl"><button class="grip" type="button" title="Drag to reorder" aria-label="Drag to reorder">⋮⋮</button><button type="button" class="l" title="Move earlier" aria-label="Move earlier">‹</button><button type="button" class="r" title="Move later" aria-label="Move later">›</button><button type="button" class="rm" title="Remove from the storyboard" aria-label="Remove">✕</button></div>`;
-    el.querySelector(".frame").onclick = () => view(it, true);
-    el.querySelector(".l").onclick = () => moveShot(it.id, i - 1);
-    el.querySelector(".r").onclick = () => moveShot(it.id, i + 1);
-    el.querySelector(".rm").onclick = () => toggleBoard(it.id);
-    const v = el.querySelector("video");
-    if (v) { v.addEventListener("loadedmetadata", () => { if (v.duration && !durations.has(it.id)) { durations.set(it.id, v.duration); el.querySelector(".dur").textContent = fmtDur(v.duration); renderViewTabs(); } }, { once: true });
-      el.onmouseenter = () => v.play().catch(() => {}); el.onmouseleave = () => { v.pause(); v.currentTime = 0; }; }
-    el.addEventListener("dragstart", e => { dragId = it.id; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+  entries.forEach((e, i) => {
+    const it = e.it, m = shotMeta(e.id) || {}, st = m.status || (it ? "ready" : "todo"), team = inTeam();
+    const el = document.createElement("div"); el.className = "shot" + (it ? "" : " plan") + (it && viewing === it.id ? " on" : ""); el.draggable = true; el.dataset.id = e.id;
+    const notesN = (m.notes || []).length;
+    const metaRow = `<div class="meta"><button type="button" class="stb st-${st}" title="Where this shot stands">${SHOT_ST[st]}</button>${team ? `<button type="button" class="who" title="Who's on it">${m.who ? "👤 " + esc(m.who === me.name ? "Me" : personName(m.who)) : "＋ Assign"}</button>` : ""}<button type="button" class="nt" title="Team notes">💬${notesN ? " " + notesN : ""}</button>${(m.prev || []).length ? `<span class="ver" title="Version ${m.prev.length + 1} — earlier versions are kept">v${m.prev.length + 1}</span>` : ""}<button type="button" class="more" title="More">⋯</button></div>`;
+    if (it) {
+      const media = isVideoItem(it) ? `<video src="${mediaSrc(it.url)}" muted playsinline preload="metadata"></video>` : (it.mode === "audio" && !isImageUrl(it.url)) ? `<div class="aud" style="height:100%;display:grid;place-items:center;color:var(--gold);font-size:30px">♪</div>` : `<img src="${it.url}" alt="" loading="lazy" onerror="mediaFallback(this)">`;
+      const fb = (reviewFb[projId] || {})[it.id] || {}, cm = fb.comments || [];
+      el.innerHTML = `<div class="frame"><span class="num">${i + 1}</span><span class="dur">${it.mode === "image" ? "still" : fmtDur(shotSeconds(it))}</span>${media}${fb.status || cm.length ? `<span class="rv ${fb.status || ""}" title="Client review">${fb.status === "approved" ? "✓ Approved" : fb.status === "changes" ? "✎ Changes" : ""}${cm.length ? ` 💬${cm.length}` : ""}</span>` : ""}</div>
+        ${metaRow}${m.title ? `<div class="ttl">${esc(m.title)}</div>` : ""}<div class="txt">${esc(it.userPrompt || it.prompt || "")}</div>${cm.length ? `<div class="cmts">${cm.slice(-2).map(c => `<div><b>${esc(c.name)}:</b> ${c.at != null ? `<em>${fmtDur(c.at)}</em> ` : c.x != null ? "📍 " : ""}${esc(c.text)}</div>`).join("")}</div>` : ""}
+        <div class="ctl"><button class="grip" type="button" title="Drag to reorder" aria-label="Drag to reorder">⋮⋮</button><button type="button" class="l" title="Move earlier" aria-label="Move earlier">‹</button><button type="button" class="r" title="Move later" aria-label="Move later">›</button><button type="button" class="rm" title="Remove from the storyboard" aria-label="Remove">✕</button></div>`;
+      el.querySelector(".frame").onclick = () => view(it, true);
+      const v = el.querySelector("video");
+      if (v) { v.addEventListener("loadedmetadata", () => { if (v.duration && !durations.has(it.id)) { durations.set(it.id, v.duration); el.querySelector(".dur").textContent = fmtDur(v.duration); renderViewTabs(); } }, { once: true });
+        el.onmouseenter = () => v.play().catch(() => {}); el.onmouseleave = () => { v.pause(); v.currentTime = 0; }; }
+    } else {
+      const writing = fillTarget && fillTarget.entry === e.id;
+      el.innerHTML = `<div class="frame"><span class="num">${i + 1}</span><div class="planTxt"><b>${esc(m.title || "Shot " + (i + 1))}</b><span>${esc(m.brief && m.brief !== m.title ? m.brief : "")}</span></div></div>
+        ${metaRow}
+        <div class="ctl"><button class="grip" type="button" title="Drag to reorder" aria-label="Drag to reorder">⋮⋮</button><button type="button" class="l" title="Move earlier" aria-label="Move earlier">‹</button><button type="button" class="r" title="Move later" aria-label="Move later">›</button><button type="button" class="write" title="Put this shot's description in the prompt">${writing ? "✍ Writing…" : "✍ Write"}</button><button type="button" class="rm" title="Remove this shot" aria-label="Remove">✕</button></div>`;
+      el.querySelector(".write").onclick = () => writeShot(e.id, i + 1);
+    }
+    el.querySelector(".stb").onclick = ev => { ev.stopPropagation(); statusMenu(ev.currentTarget, e.id); };
+    const w = el.querySelector(".who"); if (w) w.onclick = ev => { ev.stopPropagation(); whoMenu(ev.currentTarget, e.id); };
+    el.querySelector(".nt").onclick = ev => { ev.stopPropagation(); openNotes(e.id, ev.currentTarget); };
+    el.querySelector(".more").onclick = ev => { ev.stopPropagation(); shotMore(ev.currentTarget, e, i + 1); };
+    el.querySelector(".l").onclick = () => moveShot(e.id, board().indexOf(entries[i - 1] ? entries[i - 1].id : e.id));
+    el.querySelector(".r").onclick = () => moveShot(e.id, board().indexOf(entries[i + 1] ? entries[i + 1].id : e.id));
+    el.querySelector(".rm").onclick = () => { if (it) toggleBoard(it.id); else { const b = board(); b.splice(b.indexOf(e.id), 1); delete (p.shotMeta || {})[e.id]; saveProjects(); renderBoard(); } };
+    el.addEventListener("dragstart", ev => { dragId = e.id; el.classList.add("dragging"); ev.dataTransfer.effectAllowed = "move"; });
     el.addEventListener("dragend", () => { dragId = null; el.classList.remove("dragging"); box.querySelectorAll(".over").forEach(x => x.classList.remove("over")); });
-    el.addEventListener("dragover", e => { if (dragId && dragId !== it.id) { e.preventDefault(); el.classList.add("over"); } });
+    el.addEventListener("dragover", ev => { if (dragId && dragId !== e.id) { ev.preventDefault(); el.classList.add("over"); } });
     el.addEventListener("dragleave", () => el.classList.remove("over"));
-    el.addEventListener("drop", e => { e.preventDefault(); if (dragId && dragId !== it.id) moveShot(dragId, board().indexOf(it.id)); });
+    el.addEventListener("drop", ev => { ev.preventDefault(); if (dragId && dragId !== e.id) moveShot(dragId, board().indexOf(e.id)); });
     box.appendChild(el);
   });
+  void items;
   renderViewTabs();
   autoUpdateReview();
 }
@@ -3611,14 +3789,20 @@ document.addEventListener("visibilitychange", () => { if (me && !document.hidden
 const reviewFb = {}; // project id → { take id: { status, comments } }
 const keptPath = it => /^\/api\/file\?p=/.test(it.url || "") ? decodeURIComponent(it.url.split("?p=")[1]) : null;
 const reviewUrl = t => location.origin + "/review/" + t;
+const shotKind = it => (it.mode === "audio" ? "audio" : isVideoItem(it) ? "video" : "image");
 function reviewShots() {
-  return boardItems().map(it => ({ id: it.id, path: keptPath(it), mode: it.mode === "audio" ? "audio" : isVideoItem(it) ? "video" : "image", dur: Math.round(shotSeconds(it)) })).filter(x => x.path);
+  const p = proj(), h = load(LS.hist, []);
+  return boardItems().filter(it => shotShared(it.id)).map(it => {
+    const m = ((p && p.shotMeta) || {})[it.id] || {}, pv = (m.prev || []).length ? h.find(x => x.id === m.prev[m.prev.length - 1]) : null;
+    return { id: it.id, path: keptPath(it), mode: shotKind(it), dur: Math.round(shotSeconds(it)), note: m.title || "", ...(pv && keptPath(pv) ? { prev: { id: pv.id, path: keptPath(pv), mode: shotKind(pv), changed: m.changed || "" } } : {}) };
+  }).filter(x => x.path);
 }
-const reviewSig = shots => shots.map(x => x.id).join(",");
+function reviewBrand() { const c = client(); return { studio: (teamInfo && teamInfo.name) || "Illume Studio", color: (c && c.reviewColor) || "", logo: (c && c.reviewLogo) || "" }; }
+const reviewSig = shots => JSON.stringify([shots.map(x => x.id + (x.prev ? "<" + x.prev.id : "") + (x.note || "")), reviewBrand()]);
 async function publishReview(quiet) {
   const p = proj(), shots = reviewShots();
   if (!shots.length) { if (!quiet) note("Nothing to share yet — shots can be shared once they're saved (a few seconds after they finish).", true); return null; }
-  const out = await api("/api/studio?fn=review", { method: "POST", body: JSON.stringify({ action: "publish", token: p.review || undefined, proj: p.id, title: p.name, client: (client(p.client) || {}).name || "", recipient: p.reviewFor || "", shots }) });
+  const out = await api("/api/studio?fn=review", { method: "POST", body: JSON.stringify({ action: "publish", token: p.review || undefined, proj: p.id, title: p.name, client: (client(p.client) || {}).name || "", recipient: p.reviewFor || "", shots, brand: reviewBrand() }) });
   p.review = out.token; p.reviewSig = reviewSig(shots); saveProjects();
   return out.token;
 }
@@ -3640,6 +3824,7 @@ $("shareReview").onclick = async e => {
   const p = proj(), anchor = e.currentTarget;
   if (!p.review) {
     const c = client(p.client) || {}, n = reviewShots().length;
+    if (!n && boardItems().length) return note("No shot is “Ready for client” yet — tap a shot's status in the storyboard and mark it ready.", true);
     if (!n) return note("Nothing to share yet — shots can be shared once they're saved (a few seconds after they finish).", true);
     const who = await uiDialog({ title: "Send for client review", text: `${n} shot${n > 1 ? "s" : ""} from “${p.name}” (${c.name || "client"}). They'll watch each shot and approve it or ask for changes — no account needed. Who is it for?`, input: true, value: p.reviewFor || c.contact || "", placeholder: "Their name or email — e.g. Ana, ana@brand.com", ok: "Share & copy link" });
     if (!who) return;
@@ -3672,6 +3857,10 @@ async function loadReviewFb(loud) {
     if (r.status === 404) { delete p.review; delete p.reviewSig; saveProjects(); renderReviewBtn(); return; }
     const j = await r.json(); const before = JSON.stringify(reviewFb[p.id] || {});
     reviewFb[p.id] = j.feedback || {};
+    { let ch = false; Object.entries(reviewFb[p.id]).forEach(([id, f]) => { if (!board().includes(id)) return; const m = shotMeta(id, f.status === "approved"); if (!m) return;
+        if (f.status === "approved" && m.status !== "approved") { m.status = "approved"; ch = true; }
+        else if (f.status === "changes" && m.status === "approved") { m.status = "doing"; ch = true; } });
+      if (ch && myTeamRole !== "viewer") saveProjects(); }
     const changed = before !== JSON.stringify(reviewFb[p.id]);
     if (changed) { renderBoard(); if (before !== "{}" || loud) { const v = Object.values(reviewFb[p.id]); note(`Client review: ✓ ${v.filter(x => x.status === "approved").length} approved · ✎ ${v.filter(x => x.status === "changes").length} need changes · 💬 ${v.reduce((t, x) => t + (x.comments || []).length, 0)} comments.`); } }
     else if (loud) note("No new client feedback yet.");
@@ -4331,7 +4520,15 @@ $("lookReset").onclick = e => { e.stopPropagation(); setLook({}); renderLook(); 
 $("lookSave").onclick = e => { e.stopPropagation(); const st = lookState(); client().look = Object.keys(st).length ? st : null; saveClients(); note(Object.keys(st).length ? `Saved — new projects for ${client().name} start with this look.` : `${client().name} no longer has a saved look.`); };
 
 /* ---------- brief modal ---------- */
-function openBrief() { renderCastList(); $("briefModal").classList.remove("hidden"); }
+function openBrief() { renderCastList(); renderKitBrand(); $("briefModal").classList.remove("hidden"); }
+function renderKitBrand() {
+  const c = client(); if (!c) return;
+  $("kitColor").value = c.reviewColor || "#E8B54B";
+  const logos = projRefs().filter(r => /^https:/.test(r.url || ""));
+  $("kitLogo").innerHTML = `<option value="">Studio name only</option>` + logos.map((r, i) => `<option value="${esc(r.url)}"${c.reviewLogo === r.url ? " selected" : ""}>${esc(r.name || "Brand photo " + (i + 1))}</option>`).join("");
+}
+$("kitColor").onchange = () => { client().reviewColor = $("kitColor").value; saveClients(); autoUpdateReview(); };
+$("kitLogo").onchange = () => { client().reviewLogo = $("kitLogo").value; saveClients(); autoUpdateReview(); };
 function closeBrief() { $("briefModal").classList.add("hidden"); }
 $("briefBtn").onclick = openBrief;
 $("briefClose").onclick = closeBrief;

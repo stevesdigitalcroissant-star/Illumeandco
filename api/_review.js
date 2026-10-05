@@ -66,10 +66,11 @@ module.exports = async (req, res) => {
     if (req.method === "GET" || req.method === "HEAD") {
       const r = await read(q.t);
       if (!r) return res.status(404).json({ error: "This review link isn't active any more." });
-      if (q.f) { // one shot's file
+      if (q.f) { // one shot's file (&v=prev: the version before it)
         const s = r.shots.find(x => x.id === q.f); if (!s) return res.status(404).end();
+        const fp = q.v === "prev" ? (s.prev && s.prev.path) : s.path; if (!fp) return res.status(404).end();
         const range = req.headers.range;
-        const b = await blob.get(s.path, { access: "private", headers: range ? { Range: range } : {} });
+        const b = await blob.get(fp, { access: "private", headers: range ? { Range: range } : {} });
         if (!b || !b.stream) return res.status(404).end();
         res.setHeader("Content-Type", (b.blob && b.blob.contentType) || "application/octet-stream");
         res.setHeader("Accept-Ranges", "bytes");
@@ -81,8 +82,9 @@ module.exports = async (req, res) => {
         return Readable.fromWeb(b.stream).on("error", () => res.end()).pipe(res);
       }
       return res.status(200).json({
-        title: r.title, client: r.client, recipient: r.recipient || "", updated: r.updated,
-        shots: r.shots.map(s => ({ id: s.id, mode: s.mode, dur: s.dur || null, note: s.note || "", src: `/api/studio?fn=review&t=${q.t}&f=${encodeURIComponent(s.id)}` })),
+        title: r.title, client: r.client, recipient: r.recipient || "", updated: r.updated, brand: r.brand || null,
+        shots: r.shots.map(s => ({ id: s.id, mode: s.mode, dur: s.dur || null, note: s.note || "", src: `/api/studio?fn=review&t=${q.t}&f=${encodeURIComponent(s.id)}`,
+          ...(s.prev ? { prev: { id: s.prev.id, mode: s.prev.mode, changed: s.prev.changed || "", src: `/api/studio?fn=review&t=${q.t}&f=${encodeURIComponent(s.id)}&v=prev` } } : {}) })),
         feedback: r.feedback || {},
       });
     }
@@ -94,12 +96,14 @@ module.exports = async (req, res) => {
       const takes = b.take === "*" ? r.shots.map(s => s.id) : [b.take];
       if (!takes.length || takes.some(id => !r.shots.some(s => s.id === id))) return res.status(400).json({ error: "Unknown shot." });
       const name = clean(b.name, 60) || "Client", text = clean(b.comment, 1000);
+      const num = (v, lo, hi) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, +n.toFixed(4))) : undefined; };
+      const pin = { x: num(b.x, 0, 1), y: num(b.y, 0, 1), at: num(b.at, 0, 3600) }; // a spot on the picture, or a moment in the video
       r.feedback = r.feedback || {};
       for (const id of takes) {
         const f = r.feedback[id] || (r.feedback[id] = { status: null, comments: [] });
         if (b.status === "approved" || b.status === "changes") { f.status = b.status; f.by = name; f.at = Date.now(); }
         if (b.status === "clear") { f.status = null; f.by = name; f.at = Date.now(); }
-        if (text) { f.comments.push({ name, text, t: Date.now() }); f.comments = f.comments.slice(-100); }
+        if (text) { f.comments.push({ name, text, t: Date.now(), ...(pin.x != null && pin.y != null ? { x: pin.x, y: pin.y } : {}), ...(pin.at != null ? { at: pin.at } : {}) }); f.comments = f.comments.slice(-100); }
       }
       r.updated = Date.now();
       await tellStudio(req, b.t, r, takes, b, name, text);
@@ -118,14 +122,18 @@ module.exports = async (req, res) => {
       if (c.teamRole === "viewer") return res.status(403).json({ error: "Viewers can't share review links — ask an editor." });
       const mine = `media/${db.fileKey(user.name)}/`;
       const list = (Array.isArray(b.shots) ? b.shots : []).slice(0, 200).filter(s => s && typeof s.path === "string" && !s.path.includes(".."));
-      const okPath = await Promise.all(list.map(s => s.path.startsWith(mine) || T.canReadMedia(user, s.path))); // your shots, or your team's
-      const shots = list.filter((s, i) => okPath[i])
-        .map(s => ({ id: clean(s.id, 80), path: s.path, mode: ["image", "video", "audio"].includes(s.mode) ? s.mode : "image", dur: Number(s.dur) || null, note: clean(s.note, 500) }));
+      const mayRead = async pth => typeof pth === "string" && !pth.includes("..") && (pth.startsWith(mine) || await T.canReadMedia(user, pth)); // your shots, or your team's
+      const okPath = await Promise.all(list.map(s => mayRead(s.path)));
+      const okPrev = await Promise.all(list.map(s => (s.prev ? mayRead(s.prev.path) : false)));
+      const MODES = ["image", "video", "audio"];
+      const shots = list.map((s, i) => okPath[i] && ({ id: clean(s.id, 80), path: s.path, mode: MODES.includes(s.mode) ? s.mode : "image", dur: Number(s.dur) || null, note: clean(s.note, 500),
+          ...(okPrev[i] ? { prev: { id: clean(s.prev.id, 80), path: s.prev.path, mode: MODES.includes(s.prev.mode) ? s.prev.mode : "image", changed: clean(s.prev.changed, 300) } } : {}) })).filter(Boolean);
       if (!shots.length) return res.status(400).json({ error: "No saved shots to share yet — shots appear here once they're saved." });
       let token = okToken(b.token) ? b.token : null, prev = token ? await read(token) : null;
       if (prev && prev.owner !== user.name && (prev.space || prev.owner) !== c.space) { token = null; prev = null; }
       if (!token) token = randomBytes(16).toString("base64url");
-      const r = { owner: (prev && prev.owner) || user.name, space: c.space, proj: clean(b.proj, 80), title: clean(b.title, 120) || "Storyboard", client: clean(b.client, 120), recipient: clean(b.recipient, 120).replace(/@.*/, ""), shots, feedback: (prev && prev.feedback) || {}, created: (prev && prev.created) || Date.now(), updated: Date.now() };
+      const r = { owner: (prev && prev.owner) || user.name, space: c.space, proj: clean(b.proj, 80), title: clean(b.title, 120) || "Storyboard", client: clean(b.client, 120), recipient: clean(b.recipient, 120).replace(/@.*/, ""), shots,
+        brand: { studio: clean(b.brand && b.brand.studio, 60), color: /^#[0-9a-f]{6}$/i.test((b.brand && b.brand.color) || "") ? b.brand.color : "", logo: /^https:\/\//.test((b.brand && b.brand.logo) || "") ? String(b.brand.logo).slice(0, 600) : "" }, feedback: (prev && prev.feedback) || {}, created: (prev && prev.created) || Date.now(), updated: Date.now() };
       await db.writeJson(path(token), r);
       return res.status(200).json({ token });
     }

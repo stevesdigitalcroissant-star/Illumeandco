@@ -84,18 +84,33 @@ form.add input:focus{border-color:var(--gold-line)}
 .namebox input{font:inherit;background:var(--field);color:var(--text);border:1px solid var(--line-2);border-radius:11px;padding:10px 12px}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--raised);border:1px solid var(--line-2);border-radius:12px;padding:10px 16px;font-size:14px;opacity:0;pointer-events:none;transition:opacity var(--ease);max-width:calc(100% - 32px)}
 .toast.show{opacity:1}
+.brand img{height:28px;max-width:140px;object-fit:contain;border-radius:6px;background:#fff1}
+.vers{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.vers button{font:inherit;font-size:12.5px;font-weight:600;border-radius:999px;padding:5px 11px;cursor:pointer;border:1px solid var(--line-2);background:var(--panel-2);color:var(--muted)}
+.vers button.on{border-color:var(--gold-line);color:var(--gold);background:var(--gold-soft)}
+.vers small{color:var(--muted);font-size:12.5px}
+.pin{position:absolute;z-index:3;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background:var(--gold);color:var(--gold-ink);font-size:12px;font-weight:700;display:grid;place-items:center;box-shadow:0 2px 10px rgba(0,0,0,.5);border:2px solid #fff;cursor:pointer}
+.pin.new{background:#fff;color:#000;animation:pulse 1s infinite alternate}
+@keyframes pulse{to{transform:scale(1.15)}}
+.frame.pinning{cursor:crosshair;outline:2px dashed var(--gold);outline-offset:-2px}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.tools button{font:inherit;font-size:12.5px;border-radius:999px;padding:5px 11px;cursor:pointer;border:1px solid var(--line-2);background:var(--panel-2);color:var(--muted)}
+.tools button.on{border-color:var(--gold);color:var(--gold)}
+.comments .where{font-size:12px;color:var(--gold);cursor:pointer;margin-right:4px}
+.comments .hl{border-color:var(--gold-line)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div>
-      <div class="brand"><i></i>Illume Studio · review</div>
+      <div class="brand" id="brand"><i></i><span id="brandName">Illume Studio</span> · review</div>
       <h1 id="title">Loading…</h1>
       <p class="sub" id="sub"></p>
     </div>
     <div class="actions">
       <button class="btn" id="playAll" type="button">▶ Play all</button>
+      <button class="btn" id="dlAll" type="button" title="Download every shot in one zip">⬇ Download all</button>
       <button class="btn gold" id="approveAll" type="button">✓ Approve all</button>
     </div>
   </header>
@@ -127,33 +142,90 @@ async function send(body) {
   if (!r.ok) { toast(j.error || "Couldn't send — please try again."); return false; }
   data.feedback = j.feedback; render(); return true;
 }
+const showPrev = {}; // shot id → looking at the previous version
+let pinning = null; // { id, x, y } — a spot picked on a picture, waiting for its comment
+const fmtT = t => Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0");
 function render() {
   const shots = data.shots, fb = data.feedback || {};
   const n = s => shots.filter(x => (fb[x.id] || {}).status === s).length;
-  $("summary").innerHTML = `<span>${shots.length} shot${shots.length > 1 ? "s" : ""}</span><span>✓ ${n("approved")} approved</span><span>✎ ${n("changes")} need changes</span>`;
+  $("summary").innerHTML = `<span>${shots.length} shot${shots.length > 1 ? "s" : ""}</span><span>✓ ${n("approved")} approved</span><span>✎ ${n("changes")} need changes</span>${shots.some(x => x.prev) ? `<span>↻ ${shots.filter(x => x.prev).length} updated</span>` : ""}`;
   const grid = $("grid"); grid.innerHTML = "";
   shots.forEach((s, i) => {
-    const f = fb[s.id] || {}, st = f.status;
-    const el = document.createElement("article"); el.className = "shot" + (st ? " " + st : "");
-    const media = s.mode === "video" ? `<video src="${s.src}" controls playsinline preload="metadata"></video>` : s.mode === "audio" ? `<audio src="${s.src}" controls style="position:absolute;left:12px;right:12px;bottom:12px;width:calc(100% - 24px)"></audio>` : `<img src="${s.src}" alt="Shot ${i + 1}" loading="lazy">`;
-    el.innerHTML = `<div class="frame"><span class="num">${i + 1}</span>${st ? `<span class="state ${st}">${st === "approved" ? "✓ Approved" : "✎ Changes"}</span>` : ""}${media}</div>
-      <div class="body">${s.note ? `<p class="note">${esc(s.note)}</p>` : ""}
-        <div class="decide"><button type="button" class="ap${st === "approved" ? " on" : ""}">✓ Approve</button><button type="button" class="ch${st === "changes" ? " on" : ""}">✎ Request changes</button></div>
-        <div class="comments">${(f.comments || []).map(c => `<div><b>${esc(c.name)}</b><small>${new Date(c.t).toLocaleDateString()}</small><br>${esc(c.text)}</div>`).join("")}</div>
-        <form class="add"><input placeholder="Add a comment for shot ${i + 1}…" maxlength="1000"><button class="btn" type="submit">Send</button></form>
+    const old = !!(s.prev && showPrev[s.id]), cur = old ? { ...s.prev } : s;
+    const f = fb[cur.id] || {}, st = old ? (fb[s.prev.id] || {}).status : f.status;
+    const el = document.createElement("article"); el.className = "shot" + (st && !old ? " " + st : "");
+    const media = cur.mode === "video" ? `<video src="${cur.src}" controls playsinline preload="metadata"></video>` : cur.mode === "audio" ? `<audio src="${cur.src}" controls style="position:absolute;left:12px;right:12px;bottom:12px;width:calc(100% - 24px)"></audio>` : `<img src="${cur.src}" alt="Shot ${i + 1}" loading="lazy">`;
+    const cms = f.comments || [];
+    const pins = cur.mode === "image" ? cms.map((c, k) => c.x != null ? `<span class="pin" data-c="${k}" style="left:${c.x * 100}%;top:${c.y * 100}%">${k + 1}</span>` : "").join("") + (pinning && pinning.id === cur.id ? `<span class="pin new" style="left:${pinning.x * 100}%;top:${pinning.y * 100}%">+</span>` : "") : "";
+    el.innerHTML = `<div class="frame${pinning && pinning.id === cur.id && pinning.x == null ? " pinning" : ""}"><span class="num">${i + 1}</span>${st && !old ? `<span class="state ${st}">${st === "approved" ? "✓ Approved" : "✎ Changes"}</span>` : ""}${media}${pins}</div>
+      <div class="body">${s.note ? `<p class="note"><b>${esc(s.note)}</b></p>` : ""}
+        ${s.prev ? `<div class="vers"><button type="button" data-v="prev" class="${old ? "on" : ""}">Before</button><button type="button" data-v="cur" class="${old ? "" : "on"}">Updated ✨</button>${s.prev.changed && !old ? `<small>You asked: “${esc(s.prev.changed)}”</small>` : ""}</div>` : ""}
+        ${old ? `<p class="note">This is the earlier version, for comparison. Approve or comment on the updated one.</p>` : `<div class="decide"><button type="button" class="ap${st === "approved" ? " on" : ""}">✓ Approve</button><button type="button" class="ch${st === "changes" ? " on" : ""}">✎ Request changes</button></div>`}
+        <div class="comments">${cms.map((c, k) => `<div data-k="${k}"><b>${esc(c.name)}</b><small>${new Date(c.t).toLocaleDateString()}</small><br>${c.x != null ? `<span class="where" data-pin="${k}">📍${k + 1}</span>` : ""}${c.at != null ? `<span class="where" data-at="${c.at}">▶ ${fmtT(c.at)}</span>` : ""}${esc(c.text)}</div>`).join("")}</div>
+        ${old ? "" : `<div class="tools">${cur.mode === "image" ? `<button type="button" class="pinBtn${pinning && pinning.id === cur.id ? " on" : ""}">📍 ${pinning && pinning.id === cur.id ? (pinning.x == null ? "Tap the spot on the picture" : "Spot picked — write below") : "Point at a spot"}</button>` : ""}${cur.mode === "video" ? `<small style="color:var(--faint);font-size:12px">⏱ Pause where you mean — your comment links to that moment</small>` : ""}</div>
+        <form class="add"><input placeholder="${pinning && pinning.id === cur.id && pinning.x != null ? "What should change at this spot?" : `Add a comment for shot ${i + 1}…`}" maxlength="1000"><button class="btn" type="submit">Send</button></form>`}
       </div>`;
+    el.querySelectorAll("[data-v]").forEach(b => b.onclick = () => { showPrev[s.id] = b.dataset.v === "prev"; render(); });
+    const vid = el.querySelector("video");
+    el.querySelectorAll("[data-at]").forEach(x => x.onclick = () => { if (vid) { vid.currentTime = Number(x.dataset.at); vid.play().catch(() => {}); } });
+    el.querySelectorAll("[data-pin],[data-c]").forEach(x => x.onclick = () => { const k = x.dataset.pin || x.dataset.c; el.querySelectorAll(".comments > div").forEach(d => d.classList.toggle("hl", d.dataset.k === k)); });
+    if (old) { grid.appendChild(el); return; }
+    const frame = el.querySelector(".frame");
+    const pb = el.querySelector(".pinBtn"); if (pb) pb.onclick = () => { pinning = pinning && pinning.id === s.id ? null : { id: s.id }; render(); };
+    frame.addEventListener("click", ev => {
+      if (!pinning || pinning.id !== s.id || cur.mode !== "image") return;
+      const im = frame.querySelector("img"), r = im.getBoundingClientRect(), nw = im.naturalWidth || r.width, nh = im.naturalHeight || r.height;
+      const sc = Math.min(r.width / nw, r.height / nh), w = nw * sc, h = nh * sc, ox = r.left + (r.width - w) / 2, oy = r.top + (r.height - h) / 2; // the picture inside object-fit:contain
+      const x = (ev.clientX - ox) / w, y = (ev.clientY - oy) / h; if (x < 0 || x > 1 || y < 0 || y > 1) return;
+      // pins are placed relative to the frame box, so convert back
+      pinning = { id: s.id, x: ((ox - r.left) + x * w) / r.width, y: ((oy - r.top) + y * h) / r.height }; render();
+      setTimeout(() => { const inp = document.querySelector(`article:nth-child(${i + 1}) form input`); if (inp) inp.focus(); }, 30);
+    });
+    const extra = () => { const o = {}; if (pinning && pinning.id === s.id && pinning.x != null) { o.x = pinning.x; o.y = pinning.y; } if (vid && vid.currentTime > 0.2) o.at = Math.round(vid.currentTime * 10) / 10; return o; };
     el.querySelector(".ap").onclick = () => send({ action: "feedback", take: s.id, status: st === "approved" ? "clear" : "approved" });
     el.querySelector(".ch").onclick = async () => {
       if (st === "changes") return send({ action: "feedback", take: s.id, status: "clear" });
       const input = el.querySelector("form input");
       const said = input.value.trim();
-      if (await send({ action: "feedback", take: s.id, status: "changes", comment: said })) toast(said ? "Sent — the studio will see your note." : "Marked — add a comment below to say what to change.");
+      if (await send({ action: "feedback", take: s.id, status: "changes", comment: said, ...extra() })) { pinning = null; render(); toast(said ? "Sent — the studio will see your note." : "Marked — add a comment below to say what to change."); }
     };
-    el.querySelector("form").onsubmit = async e => { e.preventDefault(); const input = e.target.querySelector("input"); if (!input.value.trim()) return; if (await send({ action: "feedback", take: s.id, comment: input.value })) { input.value = ""; toast("Comment sent to the studio."); } };
+    el.querySelector("form").onsubmit = async e => { e.preventDefault(); const input = e.target.querySelector("input"); if (!input.value.trim()) return; if (await send({ action: "feedback", take: s.id, comment: input.value, ...extra() })) { input.value = ""; pinning = null; render(); toast("Comment sent to the studio."); } };
     grid.appendChild(el);
   });
 }
-$("approveAll").onclick = async () => { if (await send({ action: "feedback", take: "*", status: "approved" })) toast("Every shot approved — thank you!"); };
+$("approveAll").onclick = async () => { if (await send({ action: "feedback", take: "*", status: "approved" })) { toast("Every shot approved — thank you!"); if (confirm("Every shot is approved. Download them all now, in one zip?")) downloadAll(); } };
+$("dlAll").onclick = () => downloadAll();
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) {
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const d = new Date(), time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  files.forEach(f => {
+    const name = enc.encode(f.name), crc = crc32(f.data), size = f.data.length, h = new DataView(new ArrayBuffer(30)), c = new DataView(new ArrayBuffer(46));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(10, time, true); h.setUint16(12, date, true); h.setUint32(14, crc, true); h.setUint32(18, size, true); h.setUint32(22, size, true); h.setUint16(26, name.length, true);
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(12, time, true); c.setUint16(14, date, true); c.setUint32(16, crc, true); c.setUint32(20, size, true); c.setUint32(24, size, true); c.setUint16(28, name.length, true); c.setUint32(42, off, true);
+    parts.push(h, name, f.data); central.push(c, name); off += 30 + name.length + size;
+  });
+  const cd = central.reduce((t, x) => t + x.byteLength, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cd, true); end.setUint32(16, off, true);
+  return new Blob([...parts, ...central, end], { type: "application/zip" });
+}
+const slug = t => String(t || "").normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").slice(0, 40) || "Shots";
+const EXT = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov", "audio/mpeg": "mp3", "audio/wav": "wav" };
+async function downloadAll() {
+  const btn = $("dlAll"); btn.disabled = true; const files = [];
+  try {
+    for (const [i, s] of data.shots.entries()) {
+      toast(`Preparing ${i + 1} of ${data.shots.length}…`);
+      const r = await fetch(s.src); if (!r.ok) throw new Error("a shot couldn't be downloaded");
+      const b = await r.blob();
+      files.push({ name: `${slug(data.client)}_${slug(data.title)}_Shot${String(i + 1).padStart(2, "0")}.${EXT[(b.type || "").split(";")[0]] || (s.mode === "video" ? "mp4" : "jpg")}`, data: new Uint8Array(await b.arrayBuffer()) });
+    }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(makeZip(files)); a.download = `${slug(data.client)}_${slug(data.title)}.zip`; document.body.appendChild(a); a.click(); a.remove();
+    toast("Downloaded — every shot in one zip.");
+  } catch (e) { toast("Couldn't download: " + e.message); }
+  btn.disabled = false;
+}
 let run = null;
 $("playAll").onclick = async () => {
   const me = run = {}; $("player").classList.remove("hidden");
@@ -179,6 +251,10 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closePlayer(
     if (!r.ok) throw new Error(j.error || "This review link isn't active any more.");
     data = j;
     document.title = `${j.client ? j.client + " — " : ""}${j.title} · review`;
+    const br = j.brand || {};
+    if (br.studio) $("brandName").textContent = br.studio;
+    if (br.logo) { const im = document.createElement("img"); im.alt = ""; im.src = "/api/media?url=" + encodeURIComponent(br.logo); im.onerror = () => im.remove(); $("brand").insertBefore(im, $("brand").firstChild); }
+    if (/^#[0-9a-f]{6}$/i.test(br.color || "")) { const r = document.documentElement.style; r.setProperty("--gold", br.color); r.setProperty("--gold-2", br.color); r.setProperty("--gold-line", br.color + "88"); r.setProperty("--gold-soft", br.color + "22"); const lum = (parseInt(br.color.slice(1, 3), 16) * 299 + parseInt(br.color.slice(3, 5), 16) * 587 + parseInt(br.color.slice(5, 7), 16) * 114) / 1000; r.setProperty("--gold-ink", lum > 150 ? "#14110C" : "#FFFFFF"); }
     $("title").textContent = j.title; $("sub").textContent = (j.recipient ? `Prepared for ${j.recipient} · ` : "") + (j.client ? j.client + " · " : "") + "Watch each shot, then approve it or tell us what to change.";
     if (j.recipient && !who) { who = j.recipient; } // their name is already known
     if (!j.shots.length) { $("grid").innerHTML = `<div class="empty"><b>Nothing here yet.</b>The studio hasn't added any shots.</div>`; return; }
