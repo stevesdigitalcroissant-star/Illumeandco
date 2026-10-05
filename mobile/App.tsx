@@ -107,7 +107,6 @@ export default function App() {
             mediaPlaybackRequiresUserAction={false}
             allowsBackForwardNavigationGestures
             allowsLinkPreview={false}
-            pullToRefreshEnabled
             setSupportMultipleWindows
             contentInsetAdjustmentBehavior="never"
             automaticallyAdjustContentInsets={false}

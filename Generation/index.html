@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<script>/* iPad/iPhone and the Illume app: a lighter sign-in screen (one still photo, no blur) so the keyboard never makes iOS drop the page */
+if (/IllumeApp|iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) document.documentElement.classList.add("lite");</script>
 <meta name="theme-color" content="#0C0B09">
 <meta name="robots" content="noindex">
 <script>try{var t=localStorage.getItem("il.theme");if(t!=="dark"&&t!=="light")t="dark";document.documentElement.dataset.theme=t}catch(e){}</script>
@@ -871,6 +873,10 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .gate:focus-within .gateShow i{animation-play-state:paused}
 .gate:focus-within form{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(18,16,13,.94);animation:none}
 @media (max-height:640px){.gate{align-items:flex-start}}
+
+.lite .gateShow i{animation:none;opacity:0;inset:0;transform:none}
+.lite .gateShow i:first-child{opacity:1}
+.lite .gate form{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(18,16,13,.92);animation:none}
 </style>
 </head>
 <body>
