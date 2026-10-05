@@ -336,6 +336,17 @@ details.modelMore summary{font-weight:500;color:var(--muted)}
 .gate .gateSwitch{font-size:13px;text-align:center}
 .gate input{background:rgba(0,0,0,.35);color:#F3EDE2;border-color:rgba(255,236,200,.14)}
 .gate .f > label{color:#B4AA9A}
+.gate .msg:empty{display:none} /* the error line only shows when there's an error */
+/* sign-in backdrop: Illume's own work, crossfading slowly with a gentle push-in */
+.gate{background:#080706}
+.gateShow{position:absolute;inset:0;overflow:hidden;z-index:-1}
+.gate{isolation:isolate}
+.gateShow i{position:absolute;inset:-4%;background:center/cover no-repeat;opacity:0;animation:gateFade 30s infinite;transform-origin:50% 40%}
+.gateShow i:nth-child(2){animation-delay:6s}.gateShow i:nth-child(3){animation-delay:12s}.gateShow i:nth-child(4){animation-delay:18s}.gateShow i:nth-child(5){animation-delay:24s}
+@keyframes gateFade{0%{opacity:0;transform:scale(1)}5%{opacity:1}20%{opacity:1}26%{opacity:0;transform:scale(1.08)}100%{opacity:0}}
+.gateShow::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(8,7,6,0),rgba(8,7,6,.55) 80%),linear-gradient(180deg,rgba(8,7,6,0) 30%,rgba(8,7,6,.7))}
+.gate form{background:rgba(18,16,13,.62)}
+@media (prefers-reduced-motion:reduce){.gateShow i{animation:none}.gateShow i:first-child{opacity:1}}
 
 /* ---------- brief modal ---------- */
 .modal{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:24px}
@@ -753,6 +764,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 <body>
 
 <div class="gate hidden" id="gate">
+  <div class="gateShow" aria-hidden="true"><i style="background-image:url(/images/work/fragrance-bottle.webp)"></i><i style="background-image:url(/images/work/salon-portrait.webp)"></i><i style="background-image:url(/images/work/chef-plating-a-dish.webp)"></i><i style="background-image:url(/images/work/hair-result-hero.webp)"></i><i style="background-image:url(/images/work/editorial-macro-texture.webp)"></i></div>
   <form id="gateForm">
     <h1>Illume Studio</h1>
     <p id="gateLead">Sign in to your studio. Your projects and reel are saved to your account, on any device.</p>
