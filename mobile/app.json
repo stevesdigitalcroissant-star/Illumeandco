@@ -16,7 +16,8 @@
         "NSPhotoLibraryUsageDescription": "Illume lets you pick photos as references for your shots.",
         "NSPhotoLibraryAddUsageDescription": "Illume saves the images and videos you create to your Photos.",
         "NSCameraUsageDescription": "Illume lets you take a photo to use as a reference for your shots."
-      }
+      },
+      "runtimeVersion": "exposdk:57.0.0"
     },
     "android": {
       "package": "online.illumeandco.illume",
@@ -41,6 +42,15 @@
         }
       ],
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "deac370f-b120-4d7a-93dc-65e2ef9b4e9e"
+      }
+    },
+    "owner": "seraphinity",
+    "updates": {
+      "url": "https://u.expo.dev/deac370f-b120-4d7a-93dc-65e2ef9b4e9e"
+    }
   }
 }

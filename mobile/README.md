@@ -12,6 +12,16 @@ on the website is in the app instantly. On top of the website it adds:
 - **An offline screen** with *Try again*, pull-to-refresh, and swipe back/forward.
 - Gold-dot **Illume** icon and splash, iPhone and iPad, portrait and landscape.
 
+## Already published: open it in Expo Go any time
+
+Illume is published to the Expo account **seraphinity** (project `@seraphinity/illume`) with EAS Update, built for Expo Go (runtime `exposdk:57.0.0`).
+
+- On the iPad/iPhone: open Expo Go, sign in as seraphinity (Profile tab) and open **illume** under Projects — or open
+  `exp://u.expo.dev/deac370f-b120-4d7a-93dc-65e2ef9b4e9e/group/57609cc8-0ebf-4251-8633-93b31b2d96e8`
+- Publishing a new version (only needed when `mobile/` changes — the studio itself updates on its own):
+  `cd mobile && EXPO_TOKEN=… npx eas-cli update --branch main --platform ios --environment production --message "…" --non-interactive`
+- When Expo Go moves to a new SDK, bump `expo` here and `ios.runtimeVersion` in app.json to match, then publish again.
+
 ## Try it on your iPhone/iPad with Expo Go (no App Store needed)
 
 You need a computer (Mac or Windows) once, on the same Wi-Fi as your phone.
