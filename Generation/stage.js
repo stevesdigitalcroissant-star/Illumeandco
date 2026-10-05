@@ -65,11 +65,23 @@ const CSS = `
 .stgFrame::before,.stgFrame::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 33.2%,rgba(255,236,200,.18) 33.3%,transparent 33.5%,transparent 66.5%,rgba(255,236,200,.18) 66.6%,transparent 66.8%)}
 .stgFrame::after{background:linear-gradient(180deg,transparent 33.2%,rgba(255,236,200,.18) 33.3%,transparent 33.5%,transparent 66.5%,rgba(255,236,200,.18) 66.6%,transparent 66.8%)}
 .stgSel{display:flex;flex-direction:column;gap:6px}
+.stgSel[hidden],.stgFrame[hidden]{display:none}
 .stgSel input{width:100%;background:#1B1814;border:1px solid rgba(255,236,200,.14);border-radius:9px;color:inherit;padding:7px 9px;font:inherit;font-size:13px}
 .stgRow{display:flex;gap:6px;flex-wrap:wrap}
 .stgSmall{font-size:12px;color:#8F8678}
 .stgDur{display:flex;align-items:center;gap:8px;font-size:13px}
 .stgDur input{flex:1;accent-color:#E8B54B}
+.stgRing{position:fixed;z-index:95;border:2px solid #E8B54B;border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.6),0 0 24px rgba(232,181,75,.6);pointer-events:none;transition:all .15s ease}
+.stgRing.none{box-shadow:0 0 0 9999px rgba(0,0,0,.6);border:0}
+.stgTip{position:fixed;z-index:96;width:min(340px,calc(100vw - 24px));background:#1B1814;border:1px solid rgba(232,181,75,.55);border-radius:16px;padding:16px 16px 12px;box-shadow:0 30px 70px -20px rgba(0,0,0,.9);transition:top .25s ease,left .25s ease}
+.stgTip small{color:#E8B54B;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.stgTip h4{margin:4px 0 6px;font-family:Georgia,serif;font-weight:400;font-size:20px}
+.stgTip p{margin:0 0 12px;color:#D9D0C2;font-size:14px;line-height:1.5}
+.stgTip p b{color:#FFE7B0}
+.stgTip .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.stgTip .row .sp{flex:1}
+.stgTip .wait{font-size:12.5px;color:#8F8678;font-style:italic}
+.stgTip .skip{background:none;border:0;color:#8F8678;font-size:12.5px;padding:6px 2px}
 @media (max-width:820px){.stgMain{flex-direction:column-reverse}.stgSide{width:auto;max-height:42vh;border-right:0;border-top:1px solid rgba(255,236,200,.1)}}
 `;
 
@@ -88,7 +100,7 @@ export function openStage(opts) {
   const root = document.createElement("div"); root.className = "stg";
   root.innerHTML = `
     <div class="stgTop"><b>Stage${opts.title ? " · " + esc(opts.title) : ""}</b>
-      <button class="stgBtn" data-a="help">How it works</button>
+      <button class="stgBtn" data-a="help">▶ Show me how</button>
       <button class="stgBtn" data-a="video">⬇ Preview video</button>
       <button class="stgBtn" data-a="movetext">Use the move in a video prompt</button>
       <button class="stgBtn gold" data-a="frame">Make the start frame →</button>
@@ -182,6 +194,7 @@ export function openStage(opts) {
     data.objects.forEach(o => { const g = meshes.get(o.id); if (!g) return; g.position.y = Math.max(0, g.position.y); o.pos = arr(g.position); o.rotY = +g.rotation.y.toFixed(3); o.scale = +g.scale.x.toFixed(3); });
   }
   function addObj(kind, extra = {}) {
+    setTimeout(() => tourEvent("add"), 0);
     const t = lensTarget, o = { id: uid(), kind, label: extra.label || KINDS[kind].label, pos: [+(t.x + (Math.random() - .5) * .8).toFixed(2), 0, +(t.z + (Math.random() - .5) * .4).toFixed(2)], rotY: 0, scale: 1, ...extra };
     if (kind !== "wall") { // a free spot near where the camera looks, not inside someone else
       const taken = data.objects.filter(x => x.kind !== "wall" && x.pos[1] < 0.1).map(x => new THREE.Vector3(x.pos[0], 0, x.pos[2]));
@@ -201,6 +214,7 @@ export function openStage(opts) {
   const keyDots = new THREE.Group(); scene.add(keyDots);
   const camState = () => ({ pos: arr(shotCam.position), target: arr(orbit.target), mm: data.mm });
   function setKey(which) {
+    setTimeout(() => tourEvent("k" + which), 0);
     const k = camState();
     if (which === "start") data.keys[0] = k;
     else if (which === "end") { if (data.keys.length < 1) data.keys[0] = k; else if (data.keys.length < 2) data.keys.push(k); else data.keys[data.keys.length - 1] = k; }
@@ -232,6 +246,7 @@ export function openStage(opts) {
   }
   let playing = null;
   function play(record) {
+    if (curves()) setTimeout(() => tourEvent("play"), 0);
     if (!curves()) return say("Set a start and an end first: frame the first moment, tap ① Set start, move the camera, tap ⚑ Set end.");
     setMode("lens"); const t0 = performance.now(), ms = data.dur * 1000;
     return new Promise(res => { playing = { t0, ms, res }; });
@@ -316,7 +331,7 @@ export function openStage(opts) {
     if (!quiet) changed();
   }
   function setMode(m) {
-    mode = m;
+    mode = m; setTimeout(() => tourEvent("mode-" + m), 0);
     root.querySelectorAll("[data-v]").forEach(b => b.classList.toggle("on", b.dataset.v === m));
     orbit.object = m === "lens" ? shotCam : dirCam;
     orbit.target.copy(m === "dir" ? dirTarget : lensTarget);
@@ -329,7 +344,7 @@ export function openStage(opts) {
   root.querySelector("[data-v=dir]").onclick = () => setMode("dir");
   root.querySelectorAll("[data-add]").forEach(b => b.onclick = () => addObj(b.dataset.add));
   root.querySelectorAll("[data-pic]").forEach(b => b.onclick = () => { const p = opts.pictures[Number(b.dataset.pic)]; addObj("card", { img: p.url, label: p.name || "Photo" }); });
-  root.querySelectorAll("[data-mm]").forEach(b => b.onclick = () => { setLens(Number(b.dataset.mm)); refreshDesc(); });
+  root.querySelectorAll("[data-mm]").forEach(b => b.onclick = () => { setLens(Number(b.dataset.mm)); refreshDesc(); tourEvent("lens"); });
   root.querySelectorAll("[data-tm]").forEach(b => b.onclick = () => { tcontrols.setMode(b.dataset.tm); tcontrols.showY = b.dataset.tm !== "translate" || selKind() !== "person"; root.querySelectorAll("[data-tm]").forEach(x => x.classList.toggle("on", x === b)); });
   const selKind = () => (data.objects.find(o => o.id === selected) || {}).kind;
   $q("[data-label]").oninput = e => { const o = data.objects.find(x => x.id === selected); if (o) { o.label = e.target.value; refreshDesc(); changed(); } };
@@ -341,7 +356,7 @@ export function openStage(opts) {
   root.querySelector("[data-a=kmid]").onclick = () => { if (mode !== "lens") setMode("lens"); setKey("mid"); refreshDesc(); };
   root.querySelector("[data-a=kclear]").onclick = () => { data.keys = []; drawPath(); renderKeys(); refreshDesc(); changed(); };
   root.querySelector("[data-a=play]").onclick = () => play();
-  root.querySelector("[data-a=help]").onclick = () => say("1) Add stand-ins and drag them into place (Director view). 2) In Through the lens, pick a lens and frame the first moment, then ① Set start. 3) Move the camera to where the shot ends, ⚑ Set end — ▶ Play to check. 4) Make the start frame: the studio turns this layout into a real image with your cast and look, and ▶ Animate on it uses this exact move.");
+  root.querySelector("[data-a=help]").onclick = () => startTour();
   root.querySelector("[data-a=movetext]").onclick = () => { const t = describeMove(); if (!t) return say("Set a start and an end first."); opts.onMoveText && opts.onMoveText(t, data.dur); close(); };
   root.querySelector("[data-a=frame]").onclick = async () => {
     const k = data.keys[0] || camState();
@@ -360,7 +375,7 @@ export function openStage(opts) {
     opts.onSaveVideo && opts.onSaveVideo(new Blob(chunks, { type: type.split(";")[0] }), type.includes("mp4") ? "mp4" : "webm");
   };
   root.querySelector("[data-a=close]").onclick = () => close();
-  const onKey = e => { if (e.key === "Escape") close(); if ((e.key === "Delete" || e.key === "Backspace") && selected && document.activeElement.tagName !== "INPUT") root.querySelector("[data-a=del]").click(); };
+  const onKey = e => { if (e.key === "Escape") { if (tour) return endTour(); close(); } if ((e.key === "Delete" || e.key === "Backspace") && selected && document.activeElement.tagName !== "INPUT") root.querySelector("[data-a=del]").click(); };
   document.addEventListener("keydown", onKey);
 
   // tap a stand-in to select it (Director view)
@@ -402,6 +417,7 @@ export function openStage(opts) {
       cam.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(shotCam.fov) / 2) * (h / f.h))); cam.updateProjectionMatrix();
       renderer.render(scene, cam); void scale;
     } else renderer.render(scene, dirCam);
+    if (tour) placeTour();
     requestAnimationFrame(tick);
   }
   async function renderStill(k) {
@@ -419,17 +435,95 @@ export function openStage(opts) {
     try { return c.toDataURL("image/jpeg", 0.9); } catch { return null; } // a photo card from another site would block this
   }
 
+  // ---------- the guided tour: shown the first time, replayed with “Show me how” ----------
+  const TOUR = [
+    { title: "Plan a shot like on a real set", text: "The Stage lets you place the camera, pick a lens and plan the move <b>before</b> paying for a single video. It takes about a minute — or load a sample scene to see a finished setup first.", center: true, sample: true },
+    { sel: ".stgGrid", title: "1 · Add who and what is in the shot", text: "Tap <b>Person</b>, <b>Bottle</b>, <b>Table</b>… Grey stand-ins appear on the set. Photo cards (your cast and brand photos) work too.", wait: "add", waitText: "Tap one to continue" },
+    { sel: ".stgView", title: "2 · Put them in place", text: "Drag the coloured <b>arrows</b> to move what you selected. <b>Turn</b> and <b>Size</b> are on the left. Tap anything on the set to select it; drag the empty floor to look around." },
+    { sel: "[data-v=lens]", title: "3 · Look through the camera", text: "Tap <b>🎥 Through the lens</b> to see exactly what the camera films.", wait: "mode-lens", waitText: "Tap it to continue" },
+    { sel: ".stgView", title: "4 · Frame the first moment", text: "<b>Drag</b> to circle around the subject · <b>two fingers</b> (or right-drag) to slide · <b>pinch</b> (or scroll) to go closer. The gold box is the frame — what's inside is what gets filmed." },
+    { sel: "[data-lenses]", title: "5 · Choose a lens", text: "<b>24mm</b> wide and dramatic · <b>35–50mm</b> natural, like the eye · <b>85mm</b> flattering close-ups with a soft background.", wait: "lens", waitText: "Pick one (or tap Next)", next: true },
+    { sel: "[data-a=kstart]", title: "6 · Lock the start", text: "Happy with the first frame? Tap <b>① Set start</b>.", wait: "kstart", waitText: "Tap it to continue" },
+    { sel: "[data-a=kend]", title: "7 · Where does the camera end up?", text: "Move the camera to the last frame — closer, around the subject, higher — then tap <b>⚑ Set end</b>.", wait: "kend", waitText: "Move the camera, then tap it" },
+    { sel: "[data-a=play]", title: "8 · Watch the move", text: "Tap <b>▶ Play the move</b>. Not right? Move the camera and tap ⚑ Set end again.", wait: "play", waitText: "Tap it to continue" },
+    { sel: "[data-desc]", title: "9 · Your move, in camera language", text: "This is what the video model receives — lens, angle, distance and every movement, worked out for you." },
+    { sel: "[data-a=frame]", title: "10 · Make it real", text: "<b>Make the start frame</b> turns this grey layout into a real image with your cast and look. Then <b>▶ Animate</b> on that image uses this exact move. That's it!", last: true },
+  ];
+  let tour = null; // { i, ring, tip }
+  function startTour() {
+    endTour(); setMode("dir");
+    tour = { i: 0, ring: document.createElement("div"), tip: document.createElement("div") };
+    tour.ring.className = "stgRing"; tour.tip.className = "stgTip";
+    document.body.append(tour.ring, tour.tip); showStep();
+  }
+  function endTour(done) {
+    if (!tour) return; tour.ring.remove(); tour.tip.remove(); tour = null;
+    try { localStorage.setItem("illume.stageTour", "1"); } catch {}
+    if (done) say("You're set. Tap “▶ Show me how” at the top any time to see the steps again.");
+  }
+  function showStep() {
+    const st = TOUR[tour.i];
+    if (st.sel === "[data-a=kend]" || st.sel === "[data-a=kstart]" || st.sel === "[data-lenses]") { if (mode !== "lens") setMode("lens"); }
+    tour.tip.innerHTML = `<small>Stage · ${tour.i === 0 ? "welcome" : `step ${tour.i} of ${TOUR.length - 1}`}</small><h4>${st.title}</h4><p>${st.text}</p><div class="row">`
+      + (st.sample ? `<button class="stgBtn gold" data-t="next">Show me</button><button class="stgBtn" data-t="sample">Load a sample scene</button>` : "")
+      + (!st.sample && tour.i > 0 ? `<button class="stgBtn" data-t="back">Back</button>` : "")
+      + (!st.sample && (!st.wait || st.next) ? `<button class="stgBtn gold" data-t="${st.last ? "done" : "next"}">${st.last ? "Got it" : "Next"}</button>` : "")
+      + (st.wait && !st.next ? `<span class="wait">${st.waitText}</span>` : st.wait ? `<span class="wait">${st.waitText}</span>` : "")
+      + `<span class="sp"></span><button class="skip" data-t="skip">Skip tour</button></div>`;
+    tour.tip.querySelectorAll("[data-t]").forEach(b => b.onclick = () => {
+      const t = b.dataset.t;
+      if (t === "next") { tour.i++; showStep(); }
+      else if (t === "back") { tour.i = Math.max(0, tour.i - 1); showStep(); }
+      else if (t === "sample") { loadSample(); endTour(); say("A sample scene: a model at a table with a product, and a camera move already set. Tap ▶ Play the move — then change anything you like. “▶ Show me how” walks you through it step by step."); }
+      else endTour(t === "done");
+    });
+    placeTour();
+  }
+  function tourEvent(name) {
+    if (!tour) return; const st = TOUR[tour.i];
+    if (st.wait === name) { tour.i++; if (tour.i >= TOUR.length) return endTour(true); setTimeout(() => tour && showStep(), name === "play" ? 900 : 250); }
+  }
+  function placeTour() {
+    const st = TOUR[tour.i], el = st.sel && root.querySelector(st.sel), vw = window.innerWidth, vh = window.innerHeight, tw = tour.tip.offsetWidth, th = tour.tip.offsetHeight;
+    if (!el || st.center) { tour.ring.className = "stgRing none"; Object.assign(tour.ring.style, { left: vw / 2 + "px", top: vh / 2 + "px", width: "0px", height: "0px" }); Object.assign(tour.tip.style, { left: (vw - tw) / 2 + "px", top: Math.max(12, (vh - th) / 2) + "px" }); return; }
+    const r = el.getBoundingClientRect(), pad = 6, big = r.width > vw * 0.5;
+    tour.ring.className = "stgRing";
+    Object.assign(tour.ring.style, { left: r.left - pad + "px", top: r.top - pad + "px", width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px" });
+    let left, top;
+    if (big) { left = r.left + 20; top = r.top + 64; } // over the 3D view: sit in its corner
+    else if (r.right + 16 + tw < vw) { left = r.right + 16; top = r.top; }
+    else if (r.bottom + 12 + th < vh) { left = r.left; top = r.bottom + 12; }
+    else { left = r.left; top = r.top - th - 12; }
+    Object.assign(tour.tip.style, { left: Math.max(12, Math.min(vw - tw - 12, left)) + "px", top: Math.max(12, Math.min(vh - th - 12, top)) + "px" });
+  }
+  function loadSample() {
+    meshes.forEach(g => scene.remove(g)); meshes.clear(); select(null);
+    const id = () => uid();
+    data.objects = [
+      { id: id(), kind: "wall", label: "Wall", pos: [0, 0, -1.8], rotY: 0, scale: 1 },
+      { id: id(), kind: "table", label: "Table", pos: [0, 0, 0], rotY: 0, scale: 1 },
+      { id: id(), kind: "bottle", label: "The product", pos: [0.15, 0.75, 0.05], rotY: 0, scale: 1 },
+      { id: id(), kind: "person", label: "Model", pos: [-0.35, 0, -0.85], rotY: 0.3, scale: 1 },
+    ];
+    data.objects.forEach(o => meshes.set(o.id, build(o)));
+    data.mm = 35; data.dur = 6; durEl.value = 6; $q("[data-durv]").textContent = "6s";
+    data.keys = [{ pos: [0.2, 1.25, 3.2], target: [0, 1.0, 0], mm: 35 }, { pos: [1.3, 1.05, 1.15], target: [0.1, 0.85, 0], mm: 50 }];
+    jumpTo(0); drawPath(); renderKeys(); refreshDesc(); changed();
+  }
+
   let saveT = null;
   function changed(light) { clearTimeout(saveT); saveT = setTimeout(() => { syncFromMeshes(); data.cam = { pos: arr(shotCam.position), target: arr(lensTarget) }; opts.onChange && opts.onChange(JSON.parse(JSON.stringify(data))); }, light ? 800 : 300); }
   function close() {
     if (!alive) return; alive = false; changed(); clearTimeout(saveT);
     syncFromMeshes(); data.cam = { pos: arr(shotCam.position), target: arr(lensTarget) }; opts.onChange && opts.onChange(JSON.parse(JSON.stringify(data)));
-    document.removeEventListener("keydown", onKey); ro.disconnect(); orbit.dispose(); tcontrols.dispose(); renderer.dispose(); root.remove();
+    endTour(); document.removeEventListener("keydown", onKey); ro.disconnect(); orbit.dispose(); tcontrols.dispose(); renderer.dispose(); root.remove();
     opts.onClose && opts.onClose();
   }
 
   setLens(data.mm, true); setMode("lens"); drawPath(); renderKeys(); refreshDesc(); resize(); requestAnimationFrame(tick);
-  if (!data.keys.length) say("Drag to frame the shot like a camera operator. Pick a lens, then ① Set start. Tap “How it works” for the steps.");
+  if (!data.keys.length) say("Drag to frame the shot like a camera operator. Pick a lens, then ① Set start. Tap “▶ Show me how” for the steps.");
+  let seen = false; try { seen = localStorage.getItem("illume.stageTour") === "1"; } catch {}
+  if (!seen && !opts.noTour) setTimeout(startTour, 400); // the first time: a guided tour
   return { close, describeMove, imagePrompt };
 }
 function an(w) { return (/^[aeiou]/i.test(w) ? "an " : "a ") + w; }
