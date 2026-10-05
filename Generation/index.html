@@ -850,6 +850,10 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 /* installed app: room for the iPhone/iPad status bar */
 @media (display-mode:standalone){body{padding-top:env(safe-area-inset-top)}.rail{padding-top:calc(env(safe-area-inset-top) + 18px)}}
 .installRow .btn{flex-shrink:0}
+
+/* account: forgot / reset / delete */
+.dangerZone{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.dangerZone .setP{margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -859,14 +863,15 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
   <form id="gateForm">
     <h1>Illume Studio</h1>
     <p id="gateLead">Sign in to your studio. Your projects and reel are saved to your account, on any device.</p>
-    <div class="f"><label for="gateUser">Email or username</label>
+    <div class="f" id="userWrap"><label for="gateUser">Email or username</label>
       <input type="text" id="gateUser" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
-    <div class="f"><label for="gatePass">Password</label>
+    <div class="f"><label for="gatePass" id="gatePassLabel">Password</label>
       <input type="password" id="gatePass" autocomplete="current-password" required></div>
     <div class="f hidden" id="codeWrap"><label for="gateCode">Sign-up code</label>
       <input type="text" id="gateCode" autocomplete="off"></div>
     <button class="go" type="submit" id="gateGo">Sign in</button>
-    <p class="gateSwitch"><span id="gateSwitchText">New here?</span> <a href="#" id="gateSwitch">Create an account</a></p>
+    <p class="gateSwitch" id="gateSwitchP"><span id="gateSwitchText">New here?</span> <a href="#" id="gateSwitch">Create an account</a></p>
+    <p class="gateSwitch" id="gateForgotP"><a href="#" id="gateForgot">Forgot password?</a></p>
     <div class="msg err" id="gateMsg"></div>
   </form>
 </div>
@@ -904,7 +909,12 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
           <div class="setRow"><span><small>Signed in as</small><b id="setWho"></b></span><span class="tag" id="setRole"></span></div>
           <p class="setP">Your clients, projects, takes and storyboards are saved to this account and follow you to any device.</p>
           <div class="setRow installRow" id="installRow"><span><small>Illume app</small><b id="installState">Put Illume on your home screen</b></span><button class="btn" id="installBtn" type="button">Install</button></div>
+          <div class="setRow hidden" id="resetRow"><span><small>Studio owner</small><b>Reset a member's password</b></span><button class="btn" id="resetMember" type="button">Make link</button></div>
           <button class="btn" id="signOut" type="button">Sign out</button>
+          <div class="dangerZone" id="delZone">
+            <p class="setP"><b>Delete my account</b> — removes your clients, projects, takes, saved files, review links and remaining credits for good. Credits aren't refunded.</p>
+            <button class="btn danger" id="delAccount" type="button">Delete my account…</button>
+          </div>
         </section>
 
         <section class="setSec" data-sec="credits">
@@ -1348,9 +1358,10 @@ function reportClient(where, err, extra) {
 }
 window.addEventListener("error", e => reportClient("window.onerror", e.error || { message: e.message }, { src: e.filename, line: e.lineno }));
 window.addEventListener("unhandledrejection", e => reportClient("unhandledrejection", e.reason || { message: String(e.reason) }));
-let gateSignup = false, gateNeedsCode = false;
+let gateSignup = false, gateNeedsCode = false, gateReset = null;
 function setGateMode(signup) {
   gateSignup = signup;
+  $("gateForgotP").classList.toggle("hidden", signup);
   $("gateGo").textContent = signup ? "Create account" : "Sign in";
   $("gateLead").textContent = signup ? "Pick a username and password. Your projects and reel are kept in your account, separate from everyone else's." : "Sign in to your studio. Your projects and reel are saved to your account, on any device.";
   $("gateSwitchText").textContent = signup ? "Already have an account?" : "New here?";
@@ -1364,8 +1375,41 @@ function showGate(m="") {
   (($("gateUser").value ? $("gatePass") : $("gateUser"))).focus();
 }
 $("gateSwitch").onclick = e => { e.preventDefault(); setGateMode(!gateSignup); };
+// "Choose a new password" — opened from a reset link (?reset=…)
+function setResetMode(token) {
+  gateReset = token;
+  $("gateLead").textContent = "Choose a new password for your studio. At least 8 characters.";
+  $("gateUser").required = false; $("userWrap").classList.add("hidden");
+  $("gatePassLabel").textContent = "New password"; $("gatePass").autocomplete = "new-password";
+  $("gateGo").textContent = "Save new password";
+  ["gateSwitchP", "gateForgotP", "codeWrap"].forEach(id => $(id).classList.add("hidden"));
+}
+$("gateForgot").onclick = async e => {
+  e.preventDefault();
+  const who = await uiAsk("Reset your password", { text: "Enter the email you signed up with. We'll send a link to choose a new password.", value: $("gateUser").value.trim(), placeholder: "you@example.com", ok: "Send link" });
+  if (!who) return;
+  try {
+    const r = await fetch("/api/auth", { method:"POST", headers: headers(), body: JSON.stringify({ action:"forgot", username: who }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || `Error ${r.status}`);
+    if (j.email) uiAlert(`If ${who} has an account, a reset link is on its way. It works for one hour — check spam too.`, "Check your email");
+    else uiAlert("Ask the studio owner for a reset link — they can make one for you in a few seconds.", "Ask the studio owner");
+  } catch (err) { $("gateMsg").textContent = err.message; }
+};
 $("gateForm").addEventListener("submit", async e => {
   e.preventDefault();
+  if (gateReset) {
+    $("gateGo").disabled = true; $("gateMsg").textContent = "";
+    try {
+      const r = await fetch("/api/auth", { method:"POST", headers: headers(), body: JSON.stringify({ action:"reset", token: gateReset, password: $("gatePass").value }) });
+      const j = await r.json().catch(() => ({ error:"Bad response from server." }));
+      if (!r.ok) throw new Error(j.error || `Error ${r.status}`);
+      $("gatePass").value = ""; history.replaceState(null, "", location.pathname);
+      await startStudio(j.user); note("Password changed — you're signed in.");
+    } catch (err) { $("gateMsg").textContent = err.message; }
+    finally { $("gateGo").disabled = false; }
+    return;
+  }
   const body = { action: gateSignup ? "signup" : "login", username: $("gateUser").value.trim(), password: $("gatePass").value, code: $("gateCode").value.trim(), ref: refFromLink() };
   $("gateGo").disabled = true; $("gateMsg").textContent = "";
   try {
@@ -1386,21 +1430,40 @@ $("signOut").onclick = async () => {
   await fetch("/api/auth", { method:"POST", headers: headers(), body: JSON.stringify({ action:"logout" }) }).catch(() => {});
   location.reload();
 };
+$("resetMember").onclick = async () => {
+  const who = await uiAsk("Reset a member's password", { text: "Their email or username. You'll get a link that lets them choose a new password — it works once, for 24 hours.", placeholder: "member@example.com", ok: "Make link" });
+  if (!who) return;
+  try {
+    const { link } = await api("/api/auth", { method:"POST", body: JSON.stringify({ action:"resetlink", username: who }) });
+    try { await navigator.clipboard.writeText(link); } catch {}
+    await uiDialog({ title: "Reset link ready", text: "Copied — send it to them by text or email. It works once, for 24 hours.", input: true, value: link, ok: "Done", cancel: null });
+  } catch (err) { uiAlert(err.message, "Couldn't make the link"); }
+};
+$("delAccount").onclick = async () => {
+  const pass = await uiDialog({ title: "Delete your account for good?", text: "Your clients, projects, takes, saved files, review links and remaining credits are removed — this can't be undone, and credits aren't refunded. Copies in your Google Drive stay there. Enter your password to confirm.", input: true, type: "password", placeholder: "Your password", ok: "Delete my account", danger: true });
+  if (!pass) return;
+  try {
+    await api("/api/auth", { method:"POST", body: JSON.stringify({ action:"delete", password: pass }) });
+    try { Object.keys(localStorage).filter(k => k.startsWith("il.")).forEach(k => localStorage.removeItem(k)); } catch {}
+    me = null; await uiAlert("Your account and everything in it have been deleted.", "Account deleted");
+    location.href = location.pathname;
+  } catch (err) { uiAlert(err.message, "Account not deleted"); }
+};
 
 
 /* ---------- the studio's own dialog (names, confirmations) ---------- */
 let uiDone = null;
-function uiDialog({ title, text = "", input = false, value = "", placeholder = "", ok = "OK", cancel = "Cancel", danger = false }) {
+function uiDialog({ title, text = "", input = false, value = "", placeholder = "", ok = "OK", cancel = "Cancel", danger = false, type = "text" }) {
   if (uiDone) uiDone(null);
   $("uiTitle").textContent = title; $("uiText").textContent = text;
-  $("uiInput").classList.toggle("hidden", !input); $("uiInput").value = value; $("uiInput").placeholder = placeholder;
+  $("uiInput").classList.toggle("hidden", !input); $("uiInput").type = type; $("uiInput").maxLength = type === "password" ? 200 : 80; $("uiInput").autocomplete = type === "password" ? "current-password" : "off"; $("uiInput").value = value; $("uiInput").placeholder = placeholder;
   $("uiOk").textContent = ok; $("uiOk").classList.toggle("danger", danger);
   $("uiCancel").textContent = cancel; $("uiCancel").classList.toggle("hidden", cancel === null);
   $("ui").classList.remove("hidden");
   setTimeout(() => (input ? $("uiInput") : $("uiOk")).focus(), 30);
   return new Promise(res => { uiDone = v => { uiDone = null; $("ui").classList.add("hidden"); res(v); }; });
 }
-$("uiForm").onsubmit = e => { e.preventDefault(); if (!uiDone) return; if ($("uiInput").classList.contains("hidden")) uiDone(true); else { const v = $("uiInput").value.trim(); if (!v) { $("uiInput").focus(); return; } uiDone(v); } };
+$("uiForm").onsubmit = e => { e.preventDefault(); if (!uiDone) return; if ($("uiInput").classList.contains("hidden")) uiDone(true); else { const v = $("uiInput").type === "password" ? $("uiInput").value : $("uiInput").value.trim(); if (!v) { $("uiInput").focus(); return; } uiDone(v); } };
 $("uiCancel").onclick = () => uiDone && uiDone(null);
 $("uiBackdrop").onclick = () => uiDone && uiDone(null);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && uiDone) uiDone(null); });
@@ -2920,6 +2983,8 @@ document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
   const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1600);
 });
 function renderSettings() {
+  $("resetRow").classList.toggle("hidden", !(me && me.role === "owner"));
+  $("delZone").classList.toggle("hidden", !!(me && me.role === "owner"));
   renderTrash(); renderInstall();
   if (!me) return;
   if (document.querySelector(`#setTabs [data-tab="${setTab}"]`).classList.contains("hidden")) setTab = "account";
@@ -3874,6 +3939,8 @@ async function startStudio(user) {
   try { info = await (await fetch("/api/auth", { cache:"no-store" })).json(); } catch {}
   gateNeedsCode = !!info.signupCode;
   setGateMode(!!refFromLink.fresh && !info.user);
+  const resetTok = new URLSearchParams(location.search).get("reset");
+  if (resetTok) { setResetMode(resetTok); return showGate(""); }
   if (info.user) return startStudio(info.user);
   showGate(info.ready === false ? "Accounts aren't switched on yet — the site owner needs to connect the Blob store in Vercel." : "");
 })();

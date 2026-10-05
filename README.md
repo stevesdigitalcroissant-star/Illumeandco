@@ -156,6 +156,7 @@ Set up once in Vercel (project `illume-site`), then redeploy:
 
 **Sales safety switch:** a pack can only be bought while the Atlas balance covers every credit members already hold *plus* that pack (1 credit = $1 / (100 × (1 + markup)) of Atlas). Otherwise it shows “Temporarily unavailable” and reopens by itself after an Atlas top-up. The owner sees the numbers in Settings → Credits.
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` *(optional)* | Turns on “Connect Google Drive”: each account can save every take into `Illume Studio / Client / Project` in its own Drive (`api/gdrive.js`, scope `drive.file`). OAuth redirect URI: `https://www.illumeandco.online/api/gdrive` |
+| `RESEND_API_KEY` / `RESET_FROM` *(optional)* | Emails “Forgot password?” links (via [Resend](https://resend.com); `RESET_FROM` like `Illume <studio@illumeandco.online>`, on a domain verified in Resend). Without them, members are told to ask the owner, who makes a one-time 24-hour link in Settings → Account → Reset a member's password. Members can delete their own account (and everything in it) in Settings → Account. |
 
 Files in the Blob store: `users/<name>.json` (password hash, never the password),
 `data/<name>.json` (that person's projects, reel and drafts), `owner.json`.

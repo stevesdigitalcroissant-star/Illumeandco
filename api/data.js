@@ -17,6 +17,7 @@ module.exports = async (req, res) => {
   const file = `data/${db.fileKey(user.name)}.json`;
   try {
     if (req.method === "GET") {
+      if (!(await db.getUser(user.name))) { db.endSession(req, res); return res.status(401).json({ error: "This account no longer exists." }); }
       const mf = `mcpdata/${db.fileKey(user.name)}.json`;
       if (req.query && req.query.only === "mcp") { const m = await db.readJson(mf).catch(() => null); return res.status(200).json({ data: { "il.mcp": (m && m.value) || null } }); }
       const [r, m] = await Promise.all([db.readJson(file), db.readJson(mf).catch(() => null)]);
