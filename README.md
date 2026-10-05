@@ -187,7 +187,7 @@ real time): 1080p/720p, soft fades or hard cuts, shot sound on/off, optional mus
 **Cast & products** (Brand kit): people, products and places with photos and a description, saved on
 the client. Tapping them in the composer adds “Featuring …” to the prompt and, for images, their photos
 as references. **Look** (composer pill): camera, lens, focus, framing and colour grade, added to the
-prompt as “Look: …”; can be saved as the client's default look. Both also work from Claude/ChatGPT
+prompt as “Look: …”; can be saved as the client's default look. Camera and Lens are a scrolling strip of the gear: real photos from Wikimedia Commons (licence + author credited on each card, list in `GEAR_PHOTO` in `Generation/index.html`) with Seedream for the ones without a free photo. The owner makes all pictures once with “✦ Make the Look pictures” (stored in Blob under `look/`). Both also work from Claude/ChatGPT
 (`create_take` → `cast`, `look`).
 
 **Settings** (⚙ in the sidebar) holds the account, credits (packs, history, owner gifts),

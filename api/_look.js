@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
   try {
     if (req.method === "GET" || req.method === "HEAD") {
       const idx = ((await db.readJson(INDEX).catch(() => null)) || {}).value || {};
-      if (!req.query.k) { res.setHeader("Cache-Control", "no-store"); return res.status(200).json({ have: Object.fromEntries(Object.entries(idx).map(([k, v]) => [k, v.v])) }); }
+      if (!req.query.k) { res.setHeader("Cache-Control", "no-store"); return res.status(200).json({ have: Object.fromEntries(Object.entries(idx).map(([k, v]) => [k, v.v])), src: Object.fromEntries(Object.entries(idx).map(([k, v]) => [k, v.src || "ai"])) }); }
       const e = idx[req.query.k]; if (!okKey(req.query.k) || !e) return res.status(404).end();
       const b = await blob.get(e.path, { access: "private" });
       if (!b || !b.stream) return res.status(404).end();
@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
     const path = `look/${b.key}.${type === "image/webp" ? "webp" : "jpg"}`;
     await blob.put(path, buf, { access: "private", contentType: type, addRandomSuffix: false, allowOverwrite: true });
     const idx = ((await db.readJson(INDEX).catch(() => null)) || {}).value || {};
-    idx[b.key] = { path, type, v: Date.now().toString(36) };
+    idx[b.key] = { path, type, v: Date.now().toString(36), src: b.src === "photo" ? "photo" : "ai" }; // "photo" = a real licensed photo, "ai" = made with Seedream
     await db.writeJson(INDEX, idx);
     res.status(200).json({ ok: true, v: idx[b.key].v });
   } catch (e) {
