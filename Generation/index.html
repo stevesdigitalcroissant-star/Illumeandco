@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0C0B09">
 <meta name="robots" content="noindex">
 <script>try{var t=localStorage.getItem("il.theme");if(t!=="dark"&&t!=="light")t="dark";document.documentElement.dataset.theme=t}catch(e){}</script>
@@ -864,6 +864,13 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .app.railOff{grid-template-columns:minmax(0,1fr)}
 .app.railOff .rail{display:none}
 .app.railOff .railShow{display:grid}
+
+/* sign-in on iPad/iPhone: no zoom-in on the fields, and keep the page calm while the keyboard is up */
+@media (pointer:coarse){.gate input{font-size:16px}}
+.gate{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.gate:focus-within .gateShow i{animation-play-state:paused}
+.gate:focus-within form{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(18,16,13,.94);animation:none}
+@media (max-height:640px){.gate{align-items:flex-start}}
 </style>
 </head>
 <body>
