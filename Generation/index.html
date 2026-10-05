@@ -1145,6 +1145,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         <div class="viewTabs" role="tablist" aria-label="View">
           <button type="button" role="tab" id="tabTakes" aria-selected="true">Takes <i id="nTakes"></i></button>
           <button type="button" role="tab" id="tabBoard" aria-selected="false">Storyboard <i id="nBoard"></i></button>
+          <button type="button" id="tabStage" title="Block the shot in 3D: stand-ins, a real lens and a camera move — then generate it">🎥 Stage</button>
         </div>
         <div class="ghRight">
           <span class="searchBox" id="searchBox"><input type="search" id="takeSearch" placeholder="Search takes…" aria-label="Search takes" autocomplete="off"><button type="button" id="searchAll" class="ghLink" title="Search this project, or every client">This project</button></span>
@@ -1873,6 +1874,49 @@ $("deliver").onclick = async () => {
   } catch (e) { reportClient("deliver", e); note("Couldn't build the zip: " + e.message, true); }
   finally { $("deliver").disabled = false; }
 };
+
+
+/* ---------- 3D Stage: block the shot, then generate it ---------- */
+let stagePlan = null, stageMod = null; // the move planned on the Stage for this project's next start frame
+async function openStageUI() {
+  const p = proj(); if (!p) return;
+  try { stageMod = stageMod || await import("/Generation/stage.js"); }
+  catch (e) { reportClient("stage-load", e); return note("Couldn't open the Stage: " + e.message, true); }
+  const pics = [];
+  clientCast().forEach(k => (k.refs || []).slice(0, 1).forEach(r => pics.push({ name: k.name, url: r.url })));
+  projRefs().slice(0, 6).forEach(r => pics.push({ name: r.name || "Brand photo", url: r.url }));
+  projTakes().filter(h => h.mode === "image" && h.url && (!h.status || h.status === "done")).slice(0, 9).forEach(h => pics.push({ name: (h.userPrompt || "Take").slice(0, 30), url: h.url }));
+  const same = u => /^(data:|\/)/.test(u) ? u : mediaSrc(u); // through our own domain, so the 3D view can use it
+  const aspect = (mode === "audio" ? "" : $("aspect").value) || "16:9";
+  stageMod.openStage({
+    title: p.name, data: p.stage || {}, aspect, duration: Number($("duration").value) || 5,
+    pictures: pics.filter(x => x.url).map(x => ({ name: x.name, url: same(x.url) })),
+    onChange: d => { if (myTeamRole === "viewer") return; p.stage = d; saveProjects(); },
+    onMoveText: (text, dur) => { setMode("video"); $("prompt").value = text; $("duration").value = String(dur); $("prompt").dispatchEvent(new Event("input")); refreshPills(); saveDraft(); note("The camera move is in the video prompt. Add a start image (or make one on the Stage), then Generate."); },
+    onStartFrame: async out => {
+      if (!out.image) return note("Couldn't render the layout (a photo card from another site blocked it) — remove that card and try again.", true);
+      stagePlan = { proj: p.id, move: out.moveText, dur: out.dur };
+      setMode("image"); refUrls = []; renderRefPicked();
+      const entry = { preview: out.image, url: null, name: "Stage layout", status: "uploading" }; refUrls.push(entry); renderRefPicked();
+      $("prompt").value = out.imagePrompt; if ($("aspect")) $("aspect").value = aspect; $("prompt").dispatchEvent(new Event("input")); refreshPills(); saveDraft();
+      // the video draft gets the move too, for when you switch to Video yourself
+      { const d = load(LS.draft + p.id, null) || {}; d.modes = d.modes || {}; d.modes.video = { ...(d.modes.video || {}), prompt: out.moveText, duration: String(out.dur) }; save(LS.draft + p.id, d); }
+      note("Layout attached — press Generate for a real start frame. Then ▶ Animate on it uses your exact camera move.");
+      try {
+        const data = out.image.slice(out.image.indexOf(",") + 1);
+        const up = await api("/api/upload", { method: "POST", body: JSON.stringify({ name: "stage-layout.jpg", type: "image/jpeg", data }) });
+        entry.url = up.url; entry.status = "ok";
+      } catch (e) { entry.status = "failed"; note("Couldn't upload the layout: " + e.message, true); }
+      renderRefPicked();
+    },
+    onSaveVideo: async (blob, ext) => {
+      const name = `${slug((client(p.client) || {}).name)}_${slug(p.name)}_camera-move.${ext}`;
+      if (inApp()) return appSave(blob, name);
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    },
+  });
+}
+$("tabStage").onclick = () => openStageUI();
 
 /* ---------- recently deleted: 14 days to change your mind ---------- */
 const TRASH_DAYS = 14, DAY = 864e5;
@@ -2672,6 +2716,7 @@ async function startGeneration({ mode, model, prompt, userPrompt, after, ref, pa
     const p = { ...params };
     if (p.seed != null) p.seed = Number(p.seed) + i;
     const item = { mode, model, prompt, userPrompt: userPrompt || prompt, after: i === 0 ? after : null, ref, params: p, proj: projId, client: (proj() || {}).client, started: Date.now(), by: me.name, recipe };
+    if (stagePlan && stagePlan.proj === projId && mode === "image") item.stage = { move: stagePlan.move, dur: stagePlan.dur }; // ▶ Animate on this take uses the Stage's move
     try {
       const { id, cost } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: ref, params: p }) });
       logSpend({ ...item, id }, cost || estOne || 0);
@@ -2890,7 +2935,13 @@ $("reuse").onclick = () => {
   $("prompt").focus();
 };
 $("asRef").onclick = () => { if (current) { const u = current.url; closeViewer(); addRef(u, "From takes"); } };
-$("animate").onclick = () => { if (!current) return; const u = current.url; closeViewer(); setMode("video"); setDrop(u, "From takes"); $("prompt").value = ""; $("prompt").focus(); };
+$("animate").onclick = () => {
+  if (!current) return; const u = current.url, st = current.stage; closeViewer(); setMode("video"); setDrop(u, "From takes");
+  $("prompt").value = st && st.move ? st.move : "";
+  if (st && st.dur) $("duration").value = String(st.dur);
+  if (st && st.move) { $("prompt").dispatchEvent(new Event("input")); refreshPills(); saveDraft(); note("The camera move from the Stage is in the prompt — press Generate."); }
+  $("prompt").focus();
+};
 
 // ---- full-screen viewer
 function openViewer() { $("viewer").classList.remove("hidden"); document.body.style.overflow = "hidden"; closePops(); }
