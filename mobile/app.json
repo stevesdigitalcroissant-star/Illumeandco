@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Illume",
+    "slug": "illume",
+    "scheme": "illume",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0C0B09",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "online.illumeandco.illume",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Illume lets you pick photos as references for your shots.",
+        "NSPhotoLibraryAddUsageDescription": "Illume saves the images and videos you create to your Photos.",
+        "NSCameraUsageDescription": "Illume lets you take a photo to use as a reference for your shots."
+      }
+    },
+    "android": {
+      "package": "online.illumeandco.illume",
+      "adaptiveIcon": {
+        "backgroundColor": "#0C0B09",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sharing",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 240,
+          "resizeMode": "contain",
+          "backgroundColor": "#0C0B09"
+        }
+      ],
+      "expo-web-browser"
+    ]
+  }
+}

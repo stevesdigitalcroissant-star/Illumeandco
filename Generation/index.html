@@ -1476,6 +1476,35 @@ function renderInstall() {
   };
 }
 
+
+/* ---------- inside the Illume iPhone/iPad app ---------- */
+// The app shows this page in a native frame. Files can't "download" there, so they're
+// handed to the app, which opens the iOS share sheet (Save to Photos, Files, AirDrop…).
+const inApp = () => !!(window.ReactNativeWebView && window.ReactNativeWebView.postMessage);
+const appPost = msg => { try { window.ReactNativeWebView.postMessage(JSON.stringify(msg)); } catch {} };
+async function appSave(blob, name) {
+  const id = "s" + Date.now().toString(36), CH = 3 * 256 * 1024; // whole 3-byte groups, so every chunk is valid base64 on its own
+  appPost({ type: "save-start", id, name, mime: blob.type || "application/octet-stream", size: blob.size });
+  for (let o = 0; o < blob.size; o += CH) {
+    const buf = new Uint8Array(await blob.slice(o, o + CH).arrayBuffer());
+    let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
+    appPost({ type: "save-chunk", id, data: btoa(bin) });
+  }
+  appPost({ type: "save-end", id });
+}
+// Any download link (a take's Download button…) goes through the app.
+document.addEventListener("click", async e => {
+  if (!inApp()) return;
+  const a = e.target.closest("a[download]"); if (!a || !a.href) return;
+  e.preventDefault();
+  try {
+    note("Preparing the file…");
+    const r = await fetch(a.href, { credentials: "same-origin" }); if (!r.ok) throw new Error("couldn't get the file");
+    const name = (new URL(a.href, location.href).searchParams.get("name")) || a.getAttribute("download") || "illume-file";
+    await appSave(await r.blob(), name);
+  } catch (err) { note("Couldn't save: " + err.message, true); }
+}, true);
+
 /* ---------- clients & projects ---------- */
 // Everything is organised as Client → Project. A client owns its brand kit
 // (style notes + brand photos), shared by all of its projects; each project
@@ -2275,6 +2304,7 @@ function poll(id, item) {
     removePending(id);
     if ((s.status === "completed" || s.status === "succeeded") && s.outputs.length) {
       const done = { ...item, id, url: s.outputs[0], status: "done", at: Date.now() };
+      if (inApp()) appPost({ type: "haptic", style: "success" });
       freshIds.add(id); setTimeout(() => { freshIds.delete(id); renderHistory(); }, 30000);
       upsertHistory(done);
       if (item.after) placeAfterInBoard(item.proj, item.after, id);
@@ -3225,6 +3255,7 @@ $("expGo").onclick = async () => {
     const ext = mime.startsWith("video/mp4") ? "mp4" : "webm";
     const file = new Blob(chunks, { type: mime.split(";")[0] });
     const name = `${(client().name || "Illume")} - ${(proj().name || "cut")} - cut.${ext}`.replace(/[\\/:*?"<>|]+/g, "_");
+    if (inApp()) { await appSave(file, name); status(`Done — choose “Save Video” or Files in the share sheet.`); note("Your cut is ready."); return; }
     const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 60000);
     status(`Done — “${name}” (${(file.size / 1048576).toFixed(1)} MB) is downloading.`);
