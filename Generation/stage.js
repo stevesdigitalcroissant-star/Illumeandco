@@ -69,6 +69,12 @@ const CSS = `
 .stgSel input{width:100%;background:#1B1814;border:1px solid rgba(255,236,200,.14);border-radius:9px;color:inherit;padding:7px 9px;font:inherit;font-size:13px}
 .stgRow{display:flex;gap:6px;flex-wrap:wrap}
 .stgSmall{font-size:12px;color:#8F8678}
+.stgAsk textarea{width:100%;background:#1B1814;border:1px solid rgba(232,181,75,.35);border-radius:10px;color:inherit;padding:8px 10px;font:inherit;font-size:13px;resize:vertical;min-height:70px}
+.stgAsk textarea:focus{outline:0;border-color:#E8B54B}
+.stgAsk .stgRow{margin-top:6px}
+.stgAsk [data-askmsg]{margin-top:6px}
+.stgAsk.busy [data-askmsg]::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:50%;border:2px solid #E8B54B;border-right-color:transparent;animation:stgSpin .8s linear infinite;vertical-align:-1px}
+@keyframes stgSpin{to{transform:rotate(360deg)}}
 .stgDur{display:flex;align-items:center;gap:8px;font-size:13px}
 .stgDur input{flex:1;accent-color:#E8B54B}
 .stgRing{position:fixed;z-index:95;border:2px solid #E8B54B;border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.6),0 0 24px rgba(232,181,75,.6);pointer-events:none;transition:all .15s ease}
@@ -107,6 +113,9 @@ export function openStage(opts) {
       <button class="stgBtn" data-a="close" aria-label="Close">✕</button></div>
     <div class="stgMain">
       <div class="stgSide">
+        <div class="stgAsk"><h5>✨ Describe the shot</h5><textarea data-ask rows="4" placeholder="e.g. A woman at a café table with a latte, wall behind her. Start wide at eye level, slow dolly in to a close-up on 85mm, 6 seconds."></textarea>
+          <div class="stgRow"><button class="stgBtn gold" data-a="build">Build it</button><button class="stgBtn" data-a="change" title="Apply what you typed as a change to the set you have now">Change current</button></div>
+          <div class="stgSmall" data-askmsg>Claude sets up the stand-ins, lens and camera move. Then adjust anything by hand.</div></div>
         <div><h5>Add to the set</h5><div class="stgGrid">
           <button class="stgBtn" data-add="person">🧍 Person</button><button class="stgBtn" data-add="bottle">🧴 Bottle</button>
           <button class="stgBtn" data-add="box">📦 Box</button><button class="stgBtn" data-add="can">🥫 Can</button>
@@ -162,12 +171,18 @@ export function openStage(opts) {
   function build(o) {
     const g = new THREE.Group(); g.userData.id = o.id;
     const add = (geo, mat, y, x = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; g.add(m); return m; };
-    if (o.kind === "person") {
+    if (o.kind === "person" && o.pose === "sitting") {
+      const m = grey(0xc9c2b6);
+      add(new THREE.CapsuleGeometry(0.2, 0.5, 6, 16), m, 0.82);    // torso
+      add(new THREE.SphereGeometry(0.12, 24, 16), m, 1.3);           // head
+      [-0.1, 0.1].forEach(x => { const th = add(new THREE.CapsuleGeometry(0.075, 0.32, 4, 10), m, 0.48, x, 0.2); th.rotation.x = Math.PI / 2; add(new THREE.CapsuleGeometry(0.07, 0.34, 4, 10), m, 0.24, x, 0.4); }); // thighs + shins
+      add(new THREE.BoxGeometry(0.035, 0.025, 0.06), grey(0x8a8378), 1.28, 0, 0.12);
+    } else if (o.kind === "person") {
       const m = grey(0xc9c2b6);
       add(new THREE.CapsuleGeometry(0.2, 0.75, 6, 16), m, 1.0);   // torso
       add(new THREE.SphereGeometry(0.12, 24, 16), m, 1.62);         // head
       add(new THREE.CapsuleGeometry(0.075, 0.6, 4, 10), m, 0.38, -0.1); add(new THREE.CapsuleGeometry(0.075, 0.6, 4, 10), m, 0.38, 0.1); // legs
-      add(new THREE.BoxGeometry(0.06, 0.04, 0.1), grey(0x8a8378), 1.62, 0, 0.12); // nose: which way they face
+      add(new THREE.BoxGeometry(0.035, 0.025, 0.06), grey(0x8a8378), 1.6, 0, 0.12); // nose: which way they face
     } else if (o.kind === "bottle") { const m = grey(0xdad3c6); add(new THREE.CylinderGeometry(0.045, 0.05, 0.2, 24), m, 0.1); add(new THREE.CylinderGeometry(0.018, 0.022, 0.08, 16), m, 0.24); add(new THREE.CylinderGeometry(0.024, 0.024, 0.04, 16), grey(0x8a8378), 0.29); }
     else if (o.kind === "box") add(new THREE.BoxGeometry(0.2, 0.2, 0.2), grey(0xd6cfc2), 0.1);
     else if (o.kind === "can") add(new THREE.CylinderGeometry(0.033, 0.033, 0.12, 24), grey(0xdad3c6), 0.06);
@@ -260,7 +275,7 @@ export function openStage(opts) {
   };
   function shotSize(k) {
     const s = subjectOf(k); if (!s) return "wide shot";
-    const h = (KINDS[s.kind] || { h: 1 }).h * (s.scale || 1), d = v3(k.pos).distanceTo(v3(k.target));
+    const h = (s.pose === "sitting" ? 1.3 : (KINDS[s.kind] || { h: 1 }).h) * (s.scale || 1), d = v3(k.pos).distanceTo(v3(k.target));
     const frac = h / (2 * d * Math.tan(THREE.MathUtils.degToRad(vfovFor(k.mm, aspect)) / 2));
     // frac = how many frames tall the whole subject is: a person filling the frame head-to-toe is a full shot, not a close-up
     if (s.kind === "person") return frac > 7 ? "extreme close-up" : frac > 3.4 ? "close-up" : frac > 2.1 ? "medium close-up" : frac > 1.35 ? "medium shot" : frac > 0.7 ? "full shot" : frac > 0.3 ? "wide shot" : "extreme wide shot";
@@ -437,7 +452,7 @@ export function openStage(opts) {
 
   // ---------- the guided tour: shown the first time, replayed with “Show me how” ----------
   const TOUR = [
-    { title: "Plan a shot like on a real set", text: "The Stage lets you place the camera, pick a lens and plan the move <b>before</b> paying for a single video. It takes about a minute — or load a sample scene to see a finished setup first.", center: true, sample: true },
+    { title: "Plan a shot like on a real set", text: "The Stage lets you place the camera, pick a lens and plan the move <b>before</b> paying for a single video. Fastest way: type the shot in <b>✨ Describe the shot</b> and tap Build it. Or take the 1-minute tour to do it by hand — or load a sample scene.", center: true, sample: true },
     { sel: ".stgGrid", title: "1 · Add who and what is in the shot", text: "Tap <b>Person</b>, <b>Bottle</b>, <b>Table</b>… Grey stand-ins appear on the set. Photo cards (your cast and brand photos) work too.", wait: "add", waitText: "Tap one to continue" },
     { sel: ".stgView", title: "2 · Put them in place", text: "Drag the coloured <b>arrows</b> to move what you selected. <b>Turn</b> and <b>Size</b> are on the left. Tap anything on the set to select it; drag the empty floor to look around." },
     { sel: "[data-v=lens]", title: "3 · Look through the camera", text: "Tap <b>🎥 Through the lens</b> to see exactly what the camera films.", wait: "mode-lens", waitText: "Tap it to continue" },
@@ -510,6 +525,36 @@ export function openStage(opts) {
     data.keys = [{ pos: [0.2, 1.25, 3.2], target: [0, 1.0, 0], mm: 35 }, { pos: [1.3, 1.05, 1.15], target: [0.1, 0.85, 0], mm: 50 }];
     jumpTo(0); drawPath(); renderKeys(); refreshDesc(); changed();
   }
+
+  // ---------- build the set from a description (Claude) ----------
+  function applyScene(sc) {
+    meshes.forEach(g => scene.remove(g)); meshes.clear(); select(null);
+    data.objects = sc.objects || []; data.objects.forEach(o => meshes.set(o.id, build(o)));
+    data.keys = (sc.keys || []).filter(Boolean);
+    if (sc.dur) { data.dur = sc.dur; durEl.value = sc.dur; $q("[data-durv]").textContent = sc.dur + "s"; }
+    if (data.keys.length) { jumpTo(0); } else setMode("lens");
+    drawPath(); renderKeys(); refreshDesc(); changed();
+  }
+  async function askClaude(asChange) {
+    const ta = $q("[data-ask]"), text = ta.value.trim(), box = $q(".stgAsk"), msg = $q("[data-askmsg]");
+    if (!text) { ta.focus(); msg.textContent = "Type what the shot should look like first."; return; }
+    if (box.classList.contains("busy")) return;
+    box.classList.add("busy"); msg.textContent = asChange ? "Changing the set…" : "Setting up the shot…";
+    root.querySelectorAll("[data-a=build],[data-a=change]").forEach(b => b.disabled = true);
+    try {
+      syncFromMeshes();
+      const r = await fetch("/api/studio?fn=stage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, scene: asChange ? { objects: data.objects, keys: data.keys, dur: data.dur } : null }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "Couldn't build the shot (" + r.status + ").");
+      applyScene(j.scene);
+      msg.textContent = (j.scene.notes || "Done.") + (j.scene.keys.length > 1 ? " Tap ▶ Play the move." : "");
+      if (j.scene.keys.length > 1) play();
+    } catch (e) { msg.textContent = e.message; }
+    finally { box.classList.remove("busy"); root.querySelectorAll("[data-a=build],[data-a=change]").forEach(b => b.disabled = false); }
+  }
+  root.querySelector("[data-a=build]").onclick = () => askClaude(false);
+  root.querySelector("[data-a=change]").onclick = () => askClaude(true);
+  $q("[data-ask]").addEventListener("keydown", e => { e.stopPropagation(); if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) askClaude(false); });
 
   let saveT = null;
   function changed(light) { clearTimeout(saveT); saveT = setTimeout(() => { syncFromMeshes(); data.cam = { pos: arr(shotCam.position), target: arr(lensTarget) }; opts.onChange && opts.onChange(JSON.parse(JSON.stringify(data))); }, light ? 800 : 300); }
