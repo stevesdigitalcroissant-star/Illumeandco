@@ -15,8 +15,8 @@
 const db = require("./_db");
 const T = require("./_team");
 
-const ALLOWED = /^il\.(clients|mcpseen|trash|projects|proj|hist|presets|pending|imported|spend|inboxSeen|favs4\.(image|video|audio)|model\.(image|video|audio)|draft\.[\w-]{1,40})$/;
-const SHARED = /^il\.(clients|projects|hist|presets|trash|spend)$/;
+const ALLOWED = /^il\.(clients|mcpseen|trash|projects|proj|hist|presets|pending|imported|spend|activity|inboxSeen|favs4\.(image|video|audio)|model\.(image|video|audio)|draft\.[\w-]{1,40})$/;
+const SHARED = /^il\.(clients|projects|hist|presets|trash|spend|activity)$/;
 const MAX_FILE = 3 * 1024 * 1024; // a whole reel of 1000 takes is well below this
 const fileOf = name => `data/${db.fileKey(name)}.json`;
 
@@ -35,7 +35,7 @@ function merge(k, mine, server, base) {
     if (theirs.length) { out.push(...theirs); changed = true; }
   }
   if (!changed) return mine;
-  if (k === "il.hist" || k === "il.trash" || k === "il.spend") out.sort((a, b) => (b.at || b.started || b.t || 0) - (a.at || a.started || a.t || 0));
+  if (k === "il.hist" || k === "il.trash" || k === "il.spend" || k === "il.activity") out.sort((a, b) => (b.at || b.started || b.t || 0) - (a.at || a.started || a.t || 0));
   return out;
 }
 

@@ -957,6 +957,61 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .kitBrand input[type=color]{width:42px;height:30px;padding:0;border:1px solid var(--line-2);border-radius:8px;background:none}
 .kitBrand select{width:auto;min-width:160px}
 .roleViewer #planShots,.roleViewer .shot .meta button:not(.nt),.roleViewer .notesPanel .send,.roleViewer .notesPanel textarea,.roleViewer .notesPanel .chips{display:none!important}
+
+/* calmer screen */
+#count{display:none}
+.hist .keepDot,.hist .driveDot{display:none}
+.ghRight .inMenu{display:none!important}
+.galleryHead .viewMore{font-size:16px;letter-spacing:1px;padding:6px 12px;color:var(--muted);border:1px solid var(--line);border-radius:10px;background:var(--raised)}
+.galleryHead .viewMore:hover{color:var(--text)}
+@media (hover:hover){
+  .shot .meta .who:not(.set),.shot .meta .nt:not(.has),.shot .meta .more{opacity:0;transition:opacity var(--ease)}
+  .shot:hover .meta .who,.shot:hover .meta .nt,.shot:hover .meta .more,.shot .meta button:focus{opacity:1}
+  .shot .ctl .l,.shot .ctl .r{display:none}
+}
+#balance.link{cursor:pointer}
+/* script */
+.scriptView{display:flex;flex-direction:column;gap:10px}
+.scriptView.hidden{display:none}
+.scriptBar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.scriptBar .sp{flex:1}
+.scriptBar .btn.primary{background:linear-gradient(180deg,var(--gold-2),var(--gold));color:var(--gold-ink);border-color:transparent;font-weight:600}
+#scriptText{min-height:52vh;resize:vertical;font:15px/1.7 var(--ui);padding:18px 20px;border-radius:16px;background:var(--panel);white-space:pre-wrap}
+.scriptHint{font-size:12.5px;color:var(--faint);margin:0}
+.shot .line{padding:4px 12px 0;font-size:12.5px;color:var(--gold);font-style:italic}
+/* overview */
+.ovBtn{margin-top:-4px}
+.ovPanel{width:min(1100px,96vw);max-height:90vh}
+.ovTabs{display:flex;gap:4px;margin:0 auto 0 18px}
+.ovTabs button{background:transparent;border:0;color:var(--muted);font:inherit;font-size:13.5px;font-weight:600;padding:6px 12px;border-radius:9px;cursor:pointer}
+.ovTabs button.on{background:var(--raised);color:var(--text)}
+.ovFilters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.ovFilters select,.ovFilters input{width:auto;padding:7px 10px;font-size:13px;border-radius:10px}
+.ovFilters input{min-width:180px}
+.ovChips{display:flex;gap:6px;flex-wrap:wrap}
+.ovChips button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:5px 11px;font:inherit;font-size:12.5px;cursor:pointer}
+.ovChips button.on{border-color:var(--gold-line);color:var(--gold);background:var(--gold-soft)}
+.ovChips button b{font-weight:700;margin-left:4px}
+.ovTable{display:flex;flex-direction:column;gap:2px}
+.ovRow{display:grid;grid-template-columns:64px minmax(0,2.2fr) minmax(0,1.4fr) 130px 90px minmax(0,1.6fr) 80px;gap:12px;align-items:center;padding:8px 10px;border-radius:12px;cursor:pointer;font-size:13px}
+.ovRow:hover{background:var(--panel-2)}
+.ovRow.head{cursor:default;color:var(--faint);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding-bottom:4px}
+.ovRow.head:hover{background:none}
+.ovThumb{width:64px;height:40px;border-radius:8px;background:var(--raised) center/cover no-repeat;display:grid;place-items:center;color:var(--faint);font-size:14px}
+.ovRow .t b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovRow .t small,.ovRow .c small{color:var(--faint);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovRow .c{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovSt{font-size:11.5px;font-weight:600;border-radius:999px;padding:3px 9px;border:1px solid var(--line-2);white-space:nowrap;justify-self:start}
+.ovSt.todo{color:var(--faint);border-style:dashed}.ovSt.doing{color:#9EC3FF;border-color:rgba(158,195,255,.4)}.ovSt.ready{color:var(--gold);border-color:var(--gold-line)}.ovSt.waiting{color:var(--gold);border-color:var(--gold-line);background:var(--gold-soft)}.ovSt.changes{color:#F0B36E;border-color:rgba(240,179,110,.5)}.ovSt.approved{color:var(--ok);border-color:rgba(127,211,155,.5)}.ovSt.delivered{color:var(--ok);background:var(--ok-soft);border-color:transparent}
+.ovRow .fb{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovRow .u{color:var(--faint);font-size:12px}
+.ovDay{margin:14px 0 6px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.ovAct{display:flex;gap:10px;align-items:baseline;padding:7px 10px;border-radius:10px;font-size:13.5px;cursor:pointer}
+.ovAct:hover{background:var(--panel-2)}
+.ovAct time{color:var(--faint);font-size:12px;width:56px;flex-shrink:0}
+.ovAct span{flex:1;min-width:0}
+.ovAct small{color:var(--faint)}
+@media (max-width:820px){.ovRow{grid-template-columns:52px minmax(0,1fr) 110px}.ovRow > :nth-child(3),.ovRow > :nth-child(5),.ovRow > :nth-child(6),.ovRow > :nth-child(7){display:none}.ovThumb{width:52px}}
 </style>
 </head>
 <body>
@@ -987,12 +1042,22 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
     <h2>Clients</h2>
     <div class="ctree" id="projects"></div>
     <button class="newproj" id="newClient">+ New client</button>
+    <button class="newproj ovBtn" id="overviewBtn" type="button" title="Every shot across every client — where it stands, who's on it, what the client said">▦ Overview</button>
     <button class="driveBtn hidden" id="driveBtn" type="button"></button>
     <div class="railFoot" id="railFoot">
       <button class="newproj" id="settings" type="button">⚙ Settings</button>
       <button class="btn iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark mode" title="Switch to light mode">☾</button>
     </div>
   </aside>
+
+  <!-- Overview: every shot across every client, and what happened -->
+  <div class="modal hidden" id="ovModal">
+    <div class="modal-backdrop" id="ovBackdrop"></div>
+    <div class="modal-panel ovPanel">
+      <div class="modal-head"><b>Overview</b><nav class="ovTabs" id="ovTabs"><button type="button" data-ov="content" class="on">All shots</button><button type="button" data-ov="activity">Activity</button></nav><button class="modal-x" id="ovClose" aria-label="Close">✕</button></div>
+      <div class="modal-body"><div class="ovFilters" id="ovFilters"></div><div id="ovBody"></div></div>
+    </div>
+  </div>
 
   <!-- Settings: account, credits, invites, Google Drive and Claude -->
   <div class="modal hidden" id="setModal">
@@ -1184,22 +1249,37 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         <div class="viewTabs" role="tablist" aria-label="View">
           <button type="button" role="tab" id="tabTakes" aria-selected="true">Takes <i id="nTakes"></i></button>
           <button type="button" role="tab" id="tabBoard" aria-selected="false">Storyboard <i id="nBoard"></i></button>
+          <button type="button" role="tab" id="tabScript" aria-selected="false" title="The script: scenes, voice-over and dialogue — turn it into shots">Script</button>
           <button type="button" id="tabStage" title="Block the shot in 3D: stand-ins, a real lens and a camera move — then generate it">🎥 Stage</button>
         </div>
         <div class="ghRight">
           <span class="searchBox" id="searchBox"><input type="search" id="takeSearch" placeholder="Search takes…" aria-label="Search takes" autocomplete="off"><button type="button" id="searchAll" class="ghLink" title="Search this project, or every client">This project</button></span>
           <span class="boardInfo hidden" id="boardInfo"></span>
           <button class="btn hidden" id="shareReview" type="button" title="Send this storyboard to your client — they approve or comment on each shot, no account needed">⤴ Client review</button>
-          <button class="btn hidden" id="planShots" type="button" title="Write the shot list first — each line becomes a shot to fill">＋ Plan shots</button>
-          <button class="btn hidden" id="deliver" type="button" title="Download every shot (or just the approved ones), named and numbered, in one zip">⬇ Deliver</button>
-          <button class="btn hidden" id="exportCut" type="button" title="Join every shot into one video file">⬇ Export cut</button>
+          <button class="btn viewMore" id="viewMore" type="button" title="More" aria-label="More">⋯</button>
+          <button class="btn hidden inMenu" id="planShots" type="button" title="Write the shot list first — each line becomes a shot to fill">＋ Plan shots</button>
+          <button class="btn hidden inMenu" id="deliver" type="button" title="Download every shot (or just the approved ones), named and numbered, in one zip">⬇ Deliver</button>
+          <button class="btn hidden inMenu" id="exportCut" type="button" title="Join every shot into one video file">⬇ Export cut</button>
           <button class="btn hidden" id="playAll" type="button">▶ Play all</button>
-          <button class="ghLink hidden" id="clearFailed" type="button">Clear failed</button>
-          <button class="ghLink" id="clearHist" type="button">Clear takes</button>
+          <button class="ghLink hidden inMenu" id="clearFailed" type="button">Clear failed</button>
+          <button class="ghLink inMenu" id="clearHist" type="button">Clear takes</button>
         </div>
       </div>
       <div class="hist" id="hist"></div>
       <div class="board hidden" id="board"></div>
+      <div class="scriptView hidden" id="scriptView">
+        <div class="scriptBar"><span id="scriptStats"></span><span class="sp"></span><button class="btn" type="button" id="scriptVoice" title="Make a voice-over from the selected text (or every spoken line)">🎙 Voice-over</button><button class="btn primary" type="button" id="scriptShots" title="Each block becomes a shot in the storyboard">→ Turn into shots</button></div>
+        <textarea id="scriptText" spellcheck="true" placeholder="Write the script here. Leave an empty line between shots.
+
+SCENE 1 — The café at sunrise
+Wide shot: steam rises from the espresso machine, warm light.
+VO: Every morning starts the same way.
+
+SCENE 2 — Close-up
+Hands pour the latte art, slow motion.
+MIA: This is my moment."></textarea>
+        <p class="scriptHint">One block per shot (an empty line between them). Lines like <b>MIA: …</b> or <b>VO: …</b> are spoken lines — they become the shot's dialogue and can be turned into a voice-over.</p>
+      </div>
     </section>
 
     <div class="toast msg" id="msg" role="status" aria-live="polite"></div>
@@ -1402,11 +1482,11 @@ const $ = id => document.getElementById(id);
 // follows them to any device and two people never see each other's work.
 // Only device conveniences (the model catalogue cache, the theme) stay in
 // this browser's localStorage.
-const isAccountKey = k => /^il\.(clients|mcpseen|trash|projects|proj|hist|presets|pending|imported|spend|inboxSeen|favs4\.|model\.|draft\.)/.test(k);
+const isAccountKey = k => /^il\.(clients|mcpseen|trash|projects|proj|hist|presets|pending|imported|spend|activity|inboxSeen|favs4\.|model\.|draft\.)/.test(k);
 // The studio's shared lists. In a team several people save them; each save
 // sends the ids this browser last saw, so the server can tell "I deleted it"
 // from "a teammate added it" and merge instead of overwriting.
-const SHARED_KEY = /^il\.(clients|projects|hist|presets|trash|spend)$/;
+const SHARED_KEY = /^il\.(clients|projects|hist|presets|trash|spend|activity)$/;
 const baseIds = {};
 const idsOf = v => (Array.isArray(v) ? v.map(x => x && x.id).filter(Boolean) : null);
 let syncing = false;
@@ -1656,7 +1736,8 @@ function applyRemote(keys) {
     refreshTitles();
   }
   renderProjects(); renderHistory(); renderBoard(); renderViewTabs(); renderTrash(); renderBudget();
-  if (keys.includes("il.projects")) checkMentions();
+  if (keys.includes("il.projects")) { checkMentions(); if (viewMode === "script") renderScript(); }
+  if (!$("ovModal").classList.contains("hidden")) renderOverview();
 }
 async function pullShared() {
   if (!me || document.hidden || !inTeam() || syncing) return;
@@ -1936,6 +2017,8 @@ $("deliver").onclick = async () => {
     const zip = makeZip(files), name = `${slug(c.name)}_${slug(p.name)}_${new Date().toISOString().slice(0, 10)}.zip`;
     if (inApp()) await appSave(zip, name);
     else { const a = document.createElement("a"); a.href = URL.createObjectURL(zip); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000); }
+    pick.forEach(it => { const m = shotMeta(it.id, true); m.delivered = Date.now(); }); saveProjects(); renderBoard();
+    logAct(`delivered ${files.length} shot${files.length > 1 ? "s" : ""}`, { proj: p.id });
     note(`Delivered — ${files.length} shot${files.length > 1 ? "s" : ""} in ${name}.`);
   } catch (e) { reportClient("deliver", e); note("Couldn't build the zip: " + e.message, true); }
   finally { $("deliver").disabled = false; }
@@ -1983,6 +2066,141 @@ async function openStageUI() {
   });
 }
 $("tabStage").onclick = () => openStageUI();
+
+
+/* ---------- activity: what happened, by whom ---------- */
+function logAct(what, extra = {}) {
+  if (!me || myTeamRole === "viewer") return;
+  const list = load("il.activity", []);
+  list.unshift({ id: "a" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), t: Date.now(), by: me.name, what, ...extra });
+  save("il.activity", list.slice(0, 600));
+}
+$("balance").onclick = () => { if (me && me.role === "owner") window.open("https://www.atlascloud.ai/console", "_blank", "noopener"); };
+
+/* ---------- script: write it, then turn it into shots ---------- */
+const SPOKEN = /^\s*([A-Z][A-Z0-9 .'’-]{0,24}|VO|V\.O\.)\s*:\s*(.+)$/;
+function renderScript() {
+  const p = proj(); if (!p) return;
+  const ta = $("scriptText"); if (document.activeElement !== ta) ta.value = p.script || "";
+  ta.readOnly = myTeamRole === "viewer";
+  scriptStats();
+}
+function scriptStats() {
+  const t = $("scriptText").value, spoken = t.split("\n").map(l => SPOKEN.exec(l)).filter(Boolean).map(m => m[2]).join(" ");
+  const words = s => (s.match(/[\w’']+/g) || []).length, blocks = t.split(/\n\s*\n/).filter(b => b.trim()).length;
+  const sec = Math.round(words(spoken) / 2.5);
+  $("scriptStats").textContent = t.trim() ? `${blocks} block${blocks === 1 ? "" : "s"} · ${words(t)} words${spoken ? ` · spoken lines ≈ ${fmtDur(sec)}` : ""}` : "";
+}
+let scriptTimer = null;
+$("scriptText").oninput = () => { const p = proj(); if (!p || myTeamRole === "viewer") return; p.script = $("scriptText").value; scriptStats(); clearTimeout(scriptTimer); scriptTimer = setTimeout(saveProjects, 700); };
+function scriptBlocks() {
+  return $("scriptText").value.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean).map(b => {
+    const lines = b.split("\n").map(x => x.trim()).filter(Boolean);
+    const spoken = lines.map(l => SPOKEN.exec(l)).filter(Boolean);
+    const head = /^(scene|int\.|ext\.|shot)\b/i.test(lines[0]) ? lines[0].replace(/^(scene\s*\d*|shot\s*\d*)\s*[—–:-]?\s*/i, "").trim() : "";
+    const action = lines.filter((l, i) => !SPOKEN.test(l) && !(head && i === 0)).join(" ");
+    return { block: b, title: (head || action || (spoken[0] && spoken[0][2]) || "Shot").slice(0, 48), brief: action || head, line: spoken.map(m => (/^v\.?o\.?$/i.test(m[1]) ? "" : m[1].trim()[0] + m[1].trim().slice(1).toLowerCase() + ": ") + m[2]).join(" ") };
+  });
+}
+function scriptToShots() {
+  const p = proj(); const blocks = scriptBlocks();
+  if (!blocks.length) return note("Write the script first — one block per shot, with an empty line between them.", true);
+  p.board = p.board || []; p.shotMeta = p.shotMeta || {};
+  const have = new Set(Object.values(p.shotMeta).map(m => m.script).filter(Boolean));
+  const fresh = blocks.filter(b => !have.has(b.block));
+  if (!fresh.length) return note("Every block of the script already has a shot in the storyboard.");
+  fresh.forEach(b => { const id = "sh_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); p.board.push(id); const m = shotMeta(id, true); Object.assign(m, { title: b.title, brief: b.brief || b.title, line: b.line || undefined, script: b.block }); if (!m.line) delete m.line; });
+  saveProjects(); logAct(`turned the script into ${fresh.length} shot${fresh.length > 1 ? "s" : ""}`, { proj: p.id });
+  setViewMode("board"); note(`${fresh.length} shot${fresh.length > 1 ? "s" : ""} added from the script — tap ✍ Write on one to start.`);
+}
+function scriptVoice() {
+  const ta = $("scriptText"), sel = ta.value.slice(ta.selectionStart, ta.selectionEnd).trim();
+  const text = sel || ta.value.split("\n").map(l => SPOKEN.exec(l)).filter(Boolean).map(m => m[2]).join(" ");
+  if (!text) return note("Select the words to voice, or add lines like “VO: …” to the script.", true);
+  setMode("audio"); $("prompt").value = text; $("prompt").dispatchEvent(new Event("input")); saveDraft(); $("prompt").focus();
+  note(sel ? "The selected text is in the Voice tab — pick a voice, then Generate." : "Every spoken line is in the Voice tab — pick a voice, then Generate.");
+}
+$("scriptShots").onclick = scriptToShots;
+$("scriptVoice").onclick = scriptVoice;
+
+/* ---------- overview: every shot, everywhere, and what happened ---------- */
+let ovTab = "content", ovF = { client: "", who: "", st: "", q: "" };
+const OV_ST = { todo: "To do", doing: "In progress", ready: "Ready to send", waiting: "Waiting on client", changes: "Changes asked", approved: "Approved", delivered: "Delivered" };
+function clientSaid() { // the latest client answer per take, from the review inbox
+  const out = new Map(); inbox.forEach(i => { if (i.take && i.take !== "*" && !out.has(i.take)) out.set(i.take, i); }); return out;
+}
+function ovRows() {
+  const h = new Map(load(LS.hist, []).map(x => [x.id, x])), said = clientSaid(), rows = [];
+  projects.forEach(p => {
+    const c = clients.find(x => x.id === p.client) || {};
+    (p.board || []).forEach((id, i) => {
+      const it = h.get(id), m = (p.shotMeta || {})[id] || {};
+      if (!it && !id.startsWith("sh_")) return;
+      const fb = (reviewFb[p.id] || {})[id] || null, last = said.get(id);
+      const cst = (fb && fb.status) || (last && last.status) || null;
+      let st;
+      if (m.delivered) st = "delivered";
+      else if (cst === "approved" || m.status === "approved") st = "approved";
+      else if (cst === "changes") st = "changes";
+      else if (!it) st = m.status === "doing" ? "doing" : "todo";
+      else if (m.status === "doing") st = "doing";
+      else st = p.review ? "waiting" : "ready"; // ready, and either already in the client's link or not sent yet
+      const cm = fb && fb.comments && fb.comments.length ? fb.comments[fb.comments.length - 1] : last && last.comment ? { name: last.name, text: last.comment } : null;
+      rows.push({ p, c, id, n: i + 1, it, m, st, who: m.who || (it && it.by) || "", said: cm, t: Math.max(m._t || 0, (it && (it.at || it.started)) || 0, m.delivered || 0, (last && last.t) || 0) });
+    });
+  });
+  return rows;
+}
+function renderOverview() {
+  const f = $("ovFilters"), body = $("ovBody");
+  document.querySelectorAll("#ovTabs button").forEach(b => b.classList.toggle("on", b.dataset.ov === ovTab));
+  if (ovTab === "activity") return renderActivityFeed();
+  const all = ovRows(), people = [...new Set(all.map(r => r.who).filter(Boolean))];
+  const pass = r => (!ovF.client || r.c.id === ovF.client) && (!ovF.who || r.who === ovF.who) && (!ovF.q || [r.m.title, r.m.brief, r.it && r.it.userPrompt, r.p.name, r.c.name].join(" ").toLowerCase().includes(ovF.q.toLowerCase()));
+  const base = all.filter(pass), rows = base.filter(r => !ovF.st || r.st === ovF.st).sort((a, b) => b.t - a.t);
+  const count = k => base.filter(r => r.st === k).length;
+  f.innerHTML = `<input type="search" id="ovQ" placeholder="Search shots, projects, clients…" value="${esc(ovF.q)}">
+    <select id="ovClient"><option value="">All clients</option>${clients.map(c => `<option value="${esc(c.id)}"${ovF.client === c.id ? " selected" : ""}>${esc(c.name)}</option>`).join("")}</select>
+    ${people.length > 1 ? `<select id="ovWho"><option value="">Everyone</option>${people.map(n => `<option value="${esc(n)}"${ovF.who === n ? " selected" : ""}>${esc(n === me.name ? "Me" : personName(n))}</option>`).join("")}</select>` : ""}
+    <div class="ovChips"><button type="button" data-st="" class="${!ovF.st ? "on" : ""}">All<b>${base.length}</b></button>${Object.entries(OV_ST).filter(([k]) => count(k)).map(([k, l]) => `<button type="button" data-st="${k}" class="${ovF.st === k ? "on" : ""}">${l}<b>${count(k)}</b></button>`).join("")}</div>`;
+  const q = $("ovQ"); q.oninput = () => { ovF.q = q.value; const pos = q.selectionStart; renderOverview(); const nq = $("ovQ"); nq.focus(); nq.setSelectionRange(pos, pos); };
+  $("ovClient").onchange = e => { ovF.client = e.target.value; renderOverview(); };
+  if ($("ovWho")) $("ovWho").onchange = e => { ovF.who = e.target.value; renderOverview(); };
+  f.querySelectorAll("[data-st]").forEach(b => b.onclick = () => { ovF.st = b.dataset.st; renderOverview(); });
+  if (!all.length) { body.innerHTML = `<div class="trashEmptyNote">No shots yet. Add takes to a storyboard (or plan shots) and they're tracked here — every client, every project.</div>`; return; }
+  const when = t => { if (!t) return ""; const d = (Date.now() - t) / 864e5; return d < 1 ? new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : d < 7 ? new Date(t).toLocaleDateString([], { weekday: "short" }) : new Date(t).toLocaleDateString([], { month: "short", day: "numeric" }); };
+  body.innerHTML = `<div class="ovTable"><div class="ovRow head"><span></span><span>Shot</span><span>Client · project</span><span>Status</span><span>Who</span><span>Client said</span><span>Updated</span></div>`
+    + rows.map((r, k) => { const img = r.it && r.it.mode === "image" && r.it.url ? r.it.url : ""; return `<div class="ovRow" data-k="${k}"><span class="ovThumb" style="${img ? `background-image:url('${esc(img)}')` : ""}">${img ? "" : r.it ? (r.it.mode === "video" ? "▶" : "♪") : "✎"}</span>
+      <span class="t"><b>${r.n}. ${esc(r.m.title || (r.it && (r.it.userPrompt || r.it.prompt)) || "Planned shot")}</b><small>${r.m.prev && r.m.prev.length ? `v${r.m.prev.length + 1} · ` : ""}${r.it ? { image: "Image", video: "Video", audio: "Voice" }[r.it.mode] : "Not made yet"}</small></span>
+      <span class="c">${esc(r.c.name || "")}<small>${esc(r.p.name)}</small></span>
+      <span class="ovSt ${r.st}">${OV_ST[r.st]}</span>
+      <span class="u">${esc(r.who ? (r.who === me.name ? "Me" : personName(r.who)) : "—")}</span>
+      <span class="fb">${r.said ? `${esc(r.said.name)}: “${esc(r.said.text)}”` : ""}</span>
+      <span class="u">${when(r.t)}</span></div>`; }).join("") + `</div>` + (rows.length ? "" : `<div class="trashEmptyNote">Nothing matches.</div>`);
+  body.querySelectorAll(".ovRow[data-k]").forEach(el => el.onclick = () => { const r = rows[Number(el.dataset.k)]; closeOverview(); if (r.p.id !== projId) selectProject(r.p.id); setViewMode("board"); });
+}
+function renderActivityFeed() {
+  $("ovFilters").innerHTML = `<small class="setP">Everything that happened in the studio — your team's work and your clients' answers.</small>`;
+  const acts = load("il.activity", []).map(a => ({ ...a, kind: "team" }));
+  inbox.forEach(i => acts.push({ t: i.t, by: i.name, what: inboxLine(i).replace(i.name + " ", "").replace(/ — .*$/, ""), proj: i.proj, kind: "client" }));
+  acts.sort((a, b) => b.t - a.t);
+  if (!acts.length) { $("ovBody").innerHTML = `<div class="trashEmptyNote">Nothing yet — takes, shots, notes, deliveries and client answers show up here.</div>`; return; }
+  const day = t => { const d = new Date(t), today = new Date(); const y = new Date(); y.setDate(today.getDate() - 1); return d.toDateString() === today.toDateString() ? "Today" : d.toDateString() === y.toDateString() ? "Yesterday" : d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" }); };
+  let last = "", html = "";
+  acts.slice(0, 200).forEach((a, k) => {
+    const d = day(a.t); if (d !== last) { html += `<div class="ovDay">${d}</div>`; last = d; }
+    const p = projects.find(x => x.id === a.proj), c = p && clients.find(x => x.id === p.client);
+    html += `<div class="ovAct" data-k="${k}"><time>${new Date(a.t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</time><span><b>${esc(a.kind === "client" ? a.by + " (client)" : a.by === me.name ? "You" : personName(a.by))}</b> ${esc(a.what)}${p ? ` <small>· ${esc(p.name)}${c ? " · " + esc(c.name) : ""}</small>` : ""}</span></div>`;
+  });
+  $("ovBody").innerHTML = html;
+  $("ovBody").querySelectorAll(".ovAct").forEach(el => el.onclick = () => { const a = acts[Number(el.dataset.k)], p = a && projects.find(x => x.id === a.proj); if (!p) return; closeOverview(); if (p.id !== projId) selectProject(p.id); setViewMode("board"); });
+}
+function openOverview() { $("ovModal").classList.remove("hidden"); renderOverview(); loadInbox().then(() => { if (!$("ovModal").classList.contains("hidden")) renderOverview(); }); }
+function closeOverview() { $("ovModal").classList.add("hidden"); }
+$("overviewBtn").onclick = openOverview;
+$("ovClose").onclick = closeOverview; $("ovBackdrop").onclick = closeOverview;
+$("ovTabs").onclick = e => { const b = e.target.closest("[data-ov]"); if (b) { ovTab = b.dataset.ov; renderOverview(); } };
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("ovModal").classList.contains("hidden")) closeOverview(); });
 
 /* ---------- recently deleted: 14 days to change your mind ---------- */
 const TRASH_DAYS = 14, DAY = 864e5;
@@ -2302,7 +2520,7 @@ function selectProject(id) {
   current = null; setStage(null); $("metaText").textContent = "";
   ["dl","animate","asRef","reuse"].forEach(i => $(i).classList.add("hidden"));
   restoreDraft();
-  renderProjects(); renderHistory(); renderRefGrid(); renderActivity(); renderBoard(); renderViewTabs(); renderBudget();
+  renderProjects(); renderHistory(); renderRefGrid(); renderActivity(); renderBoard(); renderViewTabs(); renderBudget(); if (viewMode === "script") renderScript();
 }
 $("projName").onchange = () => { const p = proj(); p.name = $("projName").value.trim() || "General"; saveProjects(); refreshTitles(); renderProjects(); };
 $("clientName").onchange = () => { const c = client(); c.name = $("clientName").value.trim() || c.name; saveClients(); refreshTitles(); renderProjects(); };
@@ -2330,7 +2548,8 @@ async function refreshBalance() {
     $("balance").textContent = Number.isFinite(n) ? "Atlas Cloud · " + n.toLocaleString(undefined, { style:"currency", currency: currency||"usd" }) : "";
     const low = Number.isFinite(n) && n < 3;
     $("balance").classList.toggle("low", low);
-    $("topUp").classList.toggle("hidden", !Number.isFinite(n));
+    $("topUp").classList.toggle("hidden", !(Number.isFinite(n) && n < 10)); // only when the balance gets low
+    $("balance").classList.add("link"); $("balance").title = "Atlas Cloud balance — tap to top up";
     if (low && !refreshBalance.warned) { refreshBalance.warned = true; note(`Your Atlas Cloud balance is low (${$("balance").textContent.replace("Atlas Cloud · ", "")}) — tap “＋ Top up” to add credit before your next video.`, true); }
     if (!low) refreshBalance.warned = false;
   } catch { $("balance").textContent = ""; } // stay quiet — this is a nice-to-have, not worth an error message
@@ -3209,6 +3428,7 @@ $("prompt").addEventListener("input", () => { if (mode === "video") renderCamMov
 /* ---------- takes (the gallery) ---------- */
 // Add an entry, or update the one with the same id (running → done/failed → kept).
 function upsertHistory(item) {
+  if (item.status === "done" && me && item.by === me.name && !item.lookTest && ((load(LS.hist, []).find(x => x.id === item.id) || {}).status === "running")) logAct(`made ${item.mode === "video" ? "a video" : item.mode === "audio" ? "a voice take" : "an image"}`, { proj: item.proj, take: item.id });
   if (item.fills && item.url && item.status === "done") setTimeout(() => fillShot(item), 0);
   if (item.status === "failed") unSpend(item.id); // failed takes are refunded — keep the spending honest
   const h = load(LS.hist, []); const i = h.findIndex(x => x.id === item.id);
@@ -3284,7 +3504,7 @@ window.addEventListener("resize", () => { clearTimeout(layoutMasonry.t); layoutM
 
 /* ---------- storyboard: a project's shots, in order ---------- */
 // Stored on the project (project.board = [take ids]) so it syncs with the account.
-let viewMode = (() => { try { return localStorage.getItem("il.viewMode") === "board" ? "board" : "takes"; } catch { return "takes"; } })();
+let viewMode = (() => { try { const v = localStorage.getItem("il.viewMode"); return v === "board" || v === "script" ? v : "takes"; } catch { return "takes"; } })();
 let continueFrom = null, playing = null;
 function board(pid) { const p = projects.find(x => x.id === (pid || projId)); if (!p) return []; return p.board || (p.board = []); }
 function boardItems() { const h = load(LS.hist, []); return board().map(id => h.find(x => x.id === id)).filter(x => x && x.url && (!x.status || x.status === "done")); }
@@ -3307,7 +3527,8 @@ const shotSeconds = it => it.mode === "image" ? 3 : (durations.get(it.id) || Num
 function renderViewTabs() {
   const n = projTakes().filter(x => x.status !== "failed").length, items = boardItems();
   $("nTakes").textContent = n || ""; $("nBoard").textContent = items.length || "";
-  $("tabTakes").setAttribute("aria-selected", viewMode === "takes"); $("tabBoard").setAttribute("aria-selected", viewMode === "board");
+  $("tabTakes").setAttribute("aria-selected", viewMode === "takes"); $("tabBoard").setAttribute("aria-selected", viewMode === "board"); $("tabScript").setAttribute("aria-selected", viewMode === "script");
+  $("scriptView").classList.toggle("hidden", viewMode !== "script"); $("viewMore").classList.toggle("hidden", viewMode === "script");
   $("hist").classList.toggle("hidden", viewMode !== "takes"); $("board").classList.toggle("hidden", viewMode !== "board");
   $("clearHist").classList.toggle("hidden", viewMode !== "takes");
   const failedN = projTakes().filter(x => x.status === "failed").length;
@@ -3324,7 +3545,21 @@ function renderViewTabs() {
   $("shareReview").classList.toggle("hidden", viewMode !== "board" || !items.length);
   renderReviewBtn();
 }
-function setViewMode(m) { viewMode = m; try { localStorage.setItem("il.viewMode", m); } catch {} renderViewTabs(); if (m === "board") renderBoard(); else layoutMasonry(); }
+function setViewMode(m) { viewMode = m; try { localStorage.setItem("il.viewMode", m); } catch {} renderViewTabs(); if (m === "board") renderBoard(); else if (m === "script") renderScript(); else layoutMasonry(); }
+$("tabScript").onclick = () => setViewMode("script");
+$("viewMore").onclick = e => {
+  const items = [];
+  if (viewMode === "takes") {
+    const f = projTakes().filter(x => x.status === "failed").length;
+    if (f) items.push({ text: `Clear failed takes (${f})`, run: () => $("clearFailed").click() });
+    items.push({ text: "Clear this project's takes…", danger: true, run: () => $("clearHist").click() });
+  } else {
+    items.push({ text: "＋ Plan shots", run: planShots });
+    if (boardItems().length) items.push({ text: "⬇ Deliver — every shot in a zip", run: () => $("deliver").click() });
+    if (boardItems().some(x => x.mode !== "audio")) items.push({ text: "⬇ Export cut — one video", run: () => $("exportCut").click() });
+  }
+  showMenu(e.currentTarget, items);
+};
 $("tabTakes").onclick = () => setViewMode("takes");
 $("tabBoard").onclick = () => setViewMode("board");
 let dragId = null;
@@ -3347,6 +3582,7 @@ function fillShot(item) {
   m.status = inTeam() ? "doing" : "ready"; // a new take: in a team it's checked before the client sees it
   delete p.shotMeta[f.entry]; p.shotMeta[item.id] = m; p.board[i] = item.id;
   if (fillTarget && fillTarget.entry === f.entry) fillTarget = null;
+  logAct(f.replace ? `made version ${m.prev.length + 1} of shot ${i + 1}` : `filled shot ${i + 1}${m.title ? " — " + m.title : ""}`, { proj: p.id, take: item.id });
   saveProjects(); if (p.id === projId) { renderBoard(); renderHistory(); }
   note(`Shot ${i + 1}${m.title ? " — " + m.title : ""} now has the new take${f.replace ? ` (version ${m.prev.length + 1})` : ""}.`);
 }
@@ -3356,18 +3592,18 @@ function planShots() {
     const lines = String(v).split(/\n+/).map(x => x.trim()).filter(Boolean).slice(0, 60); if (!lines.length) return;
     const p = proj(); p.board = p.board || [];
     lines.forEach(l => { const id = "sh_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); p.board.push(id); const m = shotMeta(id, true); const mm = /^([^:]{2,40}):\s*(.+)$/.exec(l) || /^(.{2,40}?)\s+[–—-]\s+(.+)$/.exec(l); m.title = mm ? mm[1].trim() : l.slice(0, 48); m.brief = l; });
-    saveProjects(); renderBoard(); note(`${lines.length} shot${lines.length > 1 ? "s" : ""} added — tap ✍ Write on one to start.`);
+    saveProjects(); renderBoard(); logAct(`planned ${lines.length} shot${lines.length > 1 ? "s" : ""}`, { proj: p.id }); note(`${lines.length} shot${lines.length > 1 ? "s" : ""} added — tap ✍ Write on one to start.`);
   });
 }
 $("planShots").onclick = planShots;
 function writeShot(id, n) {
   const m = shotMeta(id, true); fillTarget = { proj: projId, entry: id };
-  $("prompt").value = m.brief || m.title || ""; $("prompt").dispatchEvent(new Event("input")); saveDraft(); $("prompt").focus();
+  $("prompt").value = (m.brief || m.title || "") + (m.line && mode === "video" ? ` Spoken line: “${m.line}”` : ""); $("prompt").dispatchEvent(new Event("input")); saveDraft(); $("prompt").focus();
   if (m.status === "todo") { m.status = "doing"; if (!m.who && inTeam()) m.who = me.name; saveProjects(); renderBoard(); }
   note(`Writing shot ${n}${m.title ? " — " + m.title : ""}. Generate; the first take that finishes fills the shot.`);
 }
 function statusMenu(anchor, id) {
-  showMenu(anchor, Object.entries(SHOT_ST).filter(([k]) => k !== "todo" || id.startsWith("sh_")).map(([k, label]) => ({ text: (shotMeta(id, true).status === k ? "✓ " : "") + label, run: () => { shotMeta(id, true).status = k; saveProjects(); renderBoard(); if (k === "ready") note("It's in the client's review link (if it's shared)."); } })));
+  showMenu(anchor, Object.entries(SHOT_ST).filter(([k]) => k !== "todo" || id.startsWith("sh_")).map(([k, label]) => ({ text: (shotMeta(id, true).status === k ? "✓ " : "") + label, run: () => { shotMeta(id, true).status = k; saveProjects(); renderBoard(); logAct(`marked shot ${board().indexOf(id) + 1} “${label}”`, { proj: projId, take: id }); if (k === "ready") note("It's in the client's review link (if it's shared)."); } })));
 }
 function whoMenu(anchor, id) {
   const ms = (teamInfo && teamInfo.members) || [];
@@ -3400,7 +3636,7 @@ function openNotes(id, anchor) {
       const text = ta.value.trim(); if (!text) return ta.focus();
       const mentions = others.filter(x => mentionRe(x.name).test(text)).map(x => x.name);
       m.notes.push({ id: "n" + Date.now().toString(36), by: me.name, t: Date.now(), text: text.slice(0, 1000), mentions });
-      saveProjects(); syncNow(); paint(); renderBoard();
+      logAct(`left a note on shot ${n}`, { proj: projId, take: id }); saveProjects(); syncNow(); paint(); renderBoard();
       if (mentions.length) note(`${mentions.map(personName).join(", ")} will see it in their 🔔.`);
     };
   };
@@ -3415,7 +3651,8 @@ function renderBoard() {
   const h = load(LS.hist, []), p = proj();
   const entries = board().map(id => { const it = h.find(x => x.id === id); return { id, it: it && it.url && (!it.status || it.status === "done") ? it : null }; }).filter(e => e.it || e.id.startsWith("sh_"));
   if (!entries.length) {
-    box.innerHTML = `<div class="boardEmpty"><b>Build your sequence.</b>Tap ＋ on any take (or “＋ Storyboard” when it's open) to add it as a shot — or ＋ Plan shots to write the shot list first. Drag shots to reorder, then ▶ Play all to watch the cut. <br>Tip: <em>⏭ Continue shot</em> on a video drops the next shot right after it.</div>`;
+    box.innerHTML = `<div class="boardEmpty"><b>Build your sequence.</b>Tap ＋ on any take to add it as a shot — or plan the shots first: write them here, or in the Script tab.<br><button class="btn" type="button" id="planEmpty" style="margin-top:12px">＋ Plan shots</button></div>`;
+    $("planEmpty").onclick = planShots;
     renderViewTabs(); return;
   }
   // where things stand
@@ -3438,12 +3675,12 @@ function renderBoard() {
     const it = e.it, m = shotMeta(e.id) || {}, st = m.status || (it ? "ready" : "todo"), team = inTeam();
     const el = document.createElement("div"); el.className = "shot" + (it ? "" : " plan") + (it && viewing === it.id ? " on" : ""); el.draggable = true; el.dataset.id = e.id;
     const notesN = (m.notes || []).length;
-    const metaRow = `<div class="meta"><button type="button" class="stb st-${st}" title="Where this shot stands">${SHOT_ST[st]}</button>${team ? `<button type="button" class="who" title="Who's on it">${m.who ? "👤 " + esc(m.who === me.name ? "Me" : personName(m.who)) : "＋ Assign"}</button>` : ""}<button type="button" class="nt" title="Team notes">💬${notesN ? " " + notesN : ""}</button>${(m.prev || []).length ? `<span class="ver" title="Version ${m.prev.length + 1} — earlier versions are kept">v${m.prev.length + 1}</span>` : ""}<button type="button" class="more" title="More">⋯</button></div>`;
+    const metaRow = `<div class="meta"><button type="button" class="stb st-${st}" title="Where this shot stands">${SHOT_ST[st]}</button>${team ? `<button type="button" class="who${m.who ? " set" : ""}" title="Who's on it">${m.who ? "👤 " + esc(m.who === me.name ? "Me" : personName(m.who)) : "＋ Assign"}</button>` : ""}<button type="button" class="nt${notesN ? " has" : ""}" title="Team notes">💬${notesN ? " " + notesN : ""}</button>${(m.prev || []).length ? `<span class="ver" title="Version ${m.prev.length + 1} — earlier versions are kept">v${m.prev.length + 1}</span>` : ""}<button type="button" class="more" title="More">⋯</button></div>`;
     if (it) {
       const media = isVideoItem(it) ? `<video src="${mediaSrc(it.url)}" muted playsinline preload="metadata"></video>` : (it.mode === "audio" && !isImageUrl(it.url)) ? `<div class="aud" style="height:100%;display:grid;place-items:center;color:var(--gold);font-size:30px">♪</div>` : `<img src="${it.url}" alt="" loading="lazy" onerror="mediaFallback(this)">`;
       const fb = (reviewFb[projId] || {})[it.id] || {}, cm = fb.comments || [];
       el.innerHTML = `<div class="frame"><span class="num">${i + 1}</span><span class="dur">${it.mode === "image" ? "still" : fmtDur(shotSeconds(it))}</span>${media}${fb.status || cm.length ? `<span class="rv ${fb.status || ""}" title="Client review">${fb.status === "approved" ? "✓ Approved" : fb.status === "changes" ? "✎ Changes" : ""}${cm.length ? ` 💬${cm.length}` : ""}</span>` : ""}</div>
-        ${metaRow}${m.title ? `<div class="ttl">${esc(m.title)}</div>` : ""}<div class="txt">${esc(it.userPrompt || it.prompt || "")}</div>${cm.length ? `<div class="cmts">${cm.slice(-2).map(c => `<div><b>${esc(c.name)}:</b> ${c.at != null ? `<em>${fmtDur(c.at)}</em> ` : c.x != null ? "📍 " : ""}${esc(c.text)}</div>`).join("")}</div>` : ""}
+        ${metaRow}${m.title ? `<div class="ttl">${esc(m.title)}</div>` : ""}${m.line ? `<div class="line">“${esc(m.line)}”</div>` : ""}<div class="txt">${esc(it.userPrompt || it.prompt || "")}</div>${cm.length ? `<div class="cmts">${cm.slice(-2).map(c => `<div><b>${esc(c.name)}:</b> ${c.at != null ? `<em>${fmtDur(c.at)}</em> ` : c.x != null ? "📍 " : ""}${esc(c.text)}</div>`).join("")}</div>` : ""}
         <div class="ctl"><button class="grip" type="button" title="Drag to reorder" aria-label="Drag to reorder">⋮⋮</button><button type="button" class="l" title="Move earlier" aria-label="Move earlier">‹</button><button type="button" class="r" title="Move later" aria-label="Move later">›</button><button type="button" class="rm" title="Remove from the storyboard" aria-label="Remove">✕</button></div>`;
       el.querySelector(".frame").onclick = () => view(it, true);
       const v = el.querySelector("video");
@@ -3452,7 +3689,7 @@ function renderBoard() {
     } else {
       const writing = fillTarget && fillTarget.entry === e.id;
       el.innerHTML = `<div class="frame"><span class="num">${i + 1}</span><div class="planTxt"><b>${esc(m.title || "Shot " + (i + 1))}</b><span>${esc(m.brief && m.brief !== m.title ? m.brief : "")}</span></div></div>
-        ${metaRow}
+        ${metaRow}${m.line ? `<div class="line">“${esc(m.line)}”</div>` : ""}
         <div class="ctl"><button class="grip" type="button" title="Drag to reorder" aria-label="Drag to reorder">⋮⋮</button><button type="button" class="l" title="Move earlier" aria-label="Move earlier">‹</button><button type="button" class="r" title="Move later" aria-label="Move later">›</button><button type="button" class="write" title="Put this shot's description in the prompt">${writing ? "✍ Writing…" : "✍ Write"}</button><button type="button" class="rm" title="Remove this shot" aria-label="Remove">✕</button></div>`;
       el.querySelector(".write").onclick = () => writeShot(e.id, i + 1);
     }
@@ -3831,7 +4068,7 @@ $("shareReview").onclick = async e => {
     p.reviewFor = who; if (!c.contact) { c.contact = who; saveClients(); } saveProjects();
     try {
       const t = await publishReview(); if (!t) return;
-      await copyText(reviewUrl(t)); renderReviewBtn();
+      await copyText(reviewUrl(t)); renderReviewBtn(); logAct(`sent the review link to ${who}`, { proj: p.id });
       if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(who) && await uiConfirm(`The link is copied. Open an email to ${who} with the link ready to send?`, { title: "Review link ready", ok: "Open email", cancel: "Not now" }))
         location.href = `mailto:${encodeURIComponent(who)}?subject=${encodeURIComponent(`${c.name ? c.name + " — " : ""}${p.name}: for your review`)}&body=${encodeURIComponent(`Hi,\n\nHere are the shots for ${p.name}. Watch each one and approve it or tell us what to change — no account needed:\n\n${reviewUrl(t)}\n\nThanks!`)}`;
       else note(`Review link for ${who} copied — paste it in a message. They can approve or comment on every shot.`);
