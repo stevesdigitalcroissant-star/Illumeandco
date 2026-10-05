@@ -107,7 +107,7 @@ const TOOLS = [
     aspect_ratio: { type: "string", enum: ["16:9", "9:16", "1:1", "4:5", "4:3", "3:4", "21:9"], description: "Frame shape. Ignored for video with a start image (it follows the image)." },
     quality: { type: "string", enum: ["1k", "2k", "4k", "720p", "1080p"], description: "Image: 1k/2k/4k. Video: 720p/1080p/2k/4k." },
     duration_seconds: { type: "integer", minimum: 4, maximum: 30, description: "Video length in seconds: up to 30 on Seedance 2.5, up to 15 on other models." },
-    sound: { type: "string", enum: ["full", "no_music", "effects_only", "silent"], description: "Video audio: full (effects, music, voices — default), no_music (effects, ambience and voices), effects_only (no music, no voices), silent." },
+    sound: { type: "string", enum: ["full", "no_music", "music_no_voices", "effects_only", "silent"], description: "Video audio: full (effects, music, voices — default), no_music (effects, ambience and voices), music_no_voices (music and effects, no speech), effects_only (no music, no voices), silent." },
     camera_move: { type: "string", enum: Object.keys(CAM), description: "Video camera direction, added to the prompt." },
     reference_image_urls: { type: "array", items: { type: "string" }, description: "https image URLs. Image: references for edit models. Video: the first one is the start frame." },
     use_brand_style: { type: "boolean", description: "Put the client's brand-kit style notes in front of the prompt (default true)." },
@@ -164,7 +164,7 @@ async function callTool(user, req, name, a) {
     if (mode === "video" && a.camera_move && CAM[a.camera_move]) userPrompt = userPrompt.replace(/[.,]\s*$/, "") + ", " + CAM[a.camera_move];
     const style = (tgt.client.style || "").trim();
     let prompt = (a.use_brand_style !== false && style && mode !== "audio") ? style + ". " + userPrompt : userPrompt;
-    const ASK = { no_music: "Audio: realistic sound effects, ambience and any dialogue only. No music, no soundtrack, no score, no background song.", effects_only: "Audio: realistic sound effects and ambience only. No music, no soundtrack, no score, no singing, no voices or speech." };
+    const ASK = { music_no_voices: "Audio: background music and realistic sound effects only. No voices, no dialogue, no speech, no narration, no singing.", no_music: "Audio: realistic sound effects, ambience and any dialogue only. No music, no soundtrack, no score, no background song.", effects_only: "Audio: realistic sound effects and ambience only. No music, no soundtrack, no score, no singing, no voices or speech." };
     if (mode === "video" && ASK[a.sound]) prompt = prompt.replace(/[\s.]*$/, ".") + " " + ASK[a.sound];
     const want = (Array.isArray(a.cast) ? a.cast : []).map(norm);
     const cast = (tgt.client.cast || []).filter(x => x.name && want.includes(norm(x.name)));

@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
         return Readable.fromWeb(b.stream).on("error", () => res.end()).pipe(res);
       }
       return res.status(200).json({
-        title: r.title, client: r.client, updated: r.updated,
+        title: r.title, client: r.client, recipient: r.recipient || "", updated: r.updated,
         shots: r.shots.map(s => ({ id: s.id, mode: s.mode, dur: s.dur || null, note: s.note || "", src: `/api/studio?fn=review&t=${q.t}&f=${encodeURIComponent(s.id)}` })),
         feedback: r.feedback || {},
       });
@@ -84,7 +84,7 @@ module.exports = async (req, res) => {
       let token = okToken(b.token) ? b.token : null, prev = token ? await read(token) : null;
       if (prev && prev.owner !== user.name) { token = null; prev = null; }
       if (!token) token = randomBytes(16).toString("base64url");
-      const r = { owner: user.name, proj: clean(b.proj, 80), title: clean(b.title, 120) || "Storyboard", client: clean(b.client, 120), shots, feedback: (prev && prev.feedback) || {}, created: (prev && prev.created) || Date.now(), updated: Date.now() };
+      const r = { owner: user.name, proj: clean(b.proj, 80), title: clean(b.title, 120) || "Storyboard", client: clean(b.client, 120), recipient: clean(b.recipient, 120).replace(/@.*/, ""), shots, feedback: (prev && prev.feedback) || {}, created: (prev && prev.created) || Date.now(), updated: Date.now() };
       await db.writeJson(path(token), r);
       return res.status(200).json({ token });
     }

@@ -6,6 +6,10 @@
   },
   "rewrites": [
     {
+      "source": "/illume-sw.js",
+      "destination": "/Generation/app/sw.js"
+    },
+    {
       "source": "/generation",
       "destination": "/Generation/index.html"
     },
@@ -76,6 +80,19 @@
         {
           "key": "X-Robots-Tag",
           "value": "noindex"
+        }
+      ]
+    },
+    {
+      "source": "/illume-sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
         }
       ]
     }

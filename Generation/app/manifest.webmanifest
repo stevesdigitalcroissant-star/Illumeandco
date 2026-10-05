@@ -1,0 +1,17 @@
+{
+  "name": "Illume",
+  "short_name": "Illume",
+  "description": "Illume Studio — images, videos and voiceovers for your clients, organised by client and project.",
+  "id": "/generation",
+  "start_url": "/generation",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0C0B09",
+  "theme_color": "#0C0B09",
+  "icons": [
+    { "src": "/Generation/app/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/Generation/app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/Generation/app/icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ]
+}

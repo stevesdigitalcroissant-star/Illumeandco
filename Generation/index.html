@@ -7,6 +7,13 @@
 <meta name="robots" content="noindex">
 <script>try{var t=localStorage.getItem("il.theme");if(t!=="dark"&&t!=="light")t="dark";document.documentElement.dataset.theme=t}catch(e){}</script>
 <title>Illume Studio</title>
+<link rel="manifest" href="/Generation/app/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/Generation/app/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/Generation/app/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Illume">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Fraunces:opsz,wght,SOFT@9..144,300;9..144,400;9..144,500&display=swap" rel="stylesheet">
 <style>
@@ -810,6 +817,39 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .lookTests span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-right:2px}
 .lookTests button{width:44px;height:33px;border-radius:8px;border:1px solid var(--line);background:#000 center/cover no-repeat;cursor:pointer;padding:0}
 .lookTests button:hover,.lookTests button.on{border-color:var(--gold)}
+
+/* ===== v13: compact composer ===== */
+.cmpTop .castRow{margin-left:auto;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;max-width:60%}
+.cmpTop .castRow::-webkit-scrollbar{display:none}
+.composer .cmpBar .pillBtn{padding-left:11px;padding-right:11px}
+.composer{gap:10px}
+.pi-move{width:14px;height:14px;display:inline-block;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12h14M13 7l5 5-5 5'/%3E%3Cpath d='M3 6h5M3 18h5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12h14M13 7l5 5-5 5'/%3E%3Cpath d='M3 6h5M3 18h5'/%3E%3C/svg%3E") center/contain no-repeat}
+#moveWrap.set .pillBtn{color:var(--gold-2);border-color:var(--gold-line)}
+.movesPop{width:min(460px,calc(100vw - 24px))}
+.moveGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.moveOpt{display:flex;align-items:center;gap:10px;text-align:left;font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 10px;cursor:pointer;transition:border-color var(--ease),background var(--ease)}
+.moveOpt svg{width:26px;height:26px;flex-shrink:0;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.moveOpt span{display:flex;flex-direction:column;min-width:0}
+.moveOpt b{font-size:13px;font-weight:600}
+.moveOpt small{font-size:11.5px;color:var(--faint)}
+.moveOpt:hover{border-color:var(--gold-line)}
+.moveOpt.on{border-color:var(--gold);background:var(--gold-soft)}
+.moveOpt.on svg{stroke:var(--gold-2)}.moveOpt.on b{color:var(--gold-2)}
+@media (max-width:640px){.cmpTop .castRow{max-width:100%;margin-left:0;flex-basis:100%}}
+
+/* recently deleted */
+.trashList{display:flex;flex-direction:column;gap:8px}
+.trashRow{display:flex;align-items:center;gap:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.trashRow .th{width:52px;height:40px;border-radius:9px;flex-shrink:0;background:var(--raised) center/cover no-repeat;display:grid;place-items:center;color:var(--faint);font-size:16px}
+.trashRow .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.trashRow b{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trashRow small{font-size:12px;color:var(--faint)}
+.trashRow .btn{padding:6px 11px;font-size:12.5px}
+.trashEmptyNote{color:var(--faint);font-size:13px;text-align:center;padding:18px;border:1px dashed var(--line-2);border-radius:14px}
+
+/* installed app: room for the iPhone/iPad status bar */
+@media (display-mode:standalone){body{padding-top:env(safe-area-inset-top)}.rail{padding-top:calc(env(safe-area-inset-top) + 18px)}}
+.installRow .btn{flex-shrink:0}
 </style>
 </head>
 <body>
@@ -857,11 +897,13 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         <button data-tab="invite" role="tab">Invite &amp; earn</button>
         <button data-tab="claude" role="tab">Claude &amp; ChatGPT</button>
         <button data-tab="drive" role="tab">Google Drive</button>
+        <button data-tab="trash" role="tab" id="tabTrash">Recently deleted</button>
       </nav>
       <div class="modal-body">
         <section class="setSec" data-sec="account">
           <div class="setRow"><span><small>Signed in as</small><b id="setWho"></b></span><span class="tag" id="setRole"></span></div>
           <p class="setP">Your clients, projects, takes and storyboards are saved to this account and follow you to any device.</p>
+          <div class="setRow installRow" id="installRow"><span><small>Illume app</small><b id="installState">Put Illume on your home screen</b></span><button class="btn" id="installBtn" type="button">Install</button></div>
           <button class="btn" id="signOut" type="button">Sign out</button>
         </section>
 
@@ -911,6 +953,12 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
           <h4>Disconnect</h4>
           <p class="setP">Signs Claude out everywhere — every connected app and every personal key stops working.</p>
           <button class="btn danger" id="mcpRevoke" type="button">Revoke all Claude access</button>
+        </section>
+
+        <section class="setSec" data-sec="trash">
+          <p class="setP">Deleted takes, projects and clients wait here for 14 days, then they're removed for good — files included.</p>
+          <div class="trashList" id="trashList"></div>
+          <button class="btn danger hidden" id="trashEmpty" type="button">Empty now</button>
         </section>
 
         <section class="setSec" data-sec="drive">
@@ -1030,9 +1078,8 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
           <button role="tab" data-mode="video" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="15" height="14" rx="3"/><path d="M17 10l5-3v10l-5-3"/></svg>Video</button>
           <button role="tab" data-mode="audio" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/></svg>Voice</button>
         </div>
+        <div class="castRow hidden" id="castRow" aria-label="Cast and products"></div>
       </div>
-      <div class="camMoves hidden" id="camMoves" aria-label="Camera moves"></div>
-      <div class="castRow hidden" id="castRow" aria-label="Cast and products"></div>
 
       <div class="cmpMain">
         <div class="refSlot" id="refBlock">
@@ -1058,9 +1105,10 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
           <div class="pill" id="durWrap"><button class="pillBtn" type="button" data-pop="duration"><i class="pi pi-time"></i><span id="pillDur">Auto</span></button>
             <input type="number" id="duration" class="sr" tabindex="-1" aria-hidden="true" min="4" max="30" step="1" placeholder="Auto"></div>
         </div>
+        <div class="pill hidden" id="moveWrap"><button class="pillBtn" type="button" data-pop="moves" title="How the camera moves during the shot"><i class="pi pi-move"></i><span id="pillMove">Move</span></button></div>
         <div class="pill" id="soundWrap"><button class="pillBtn" type="button" data-pop="sound" title="What the video should sound like"><i class="pi pi-sound"></i><span id="pillSound">Sound</span></button>
           <input type="checkbox" id="genAudio" class="sr" tabindex="-1" aria-hidden="true" checked>
-          <select id="sound" class="sr" tabindex="-1" aria-hidden="true"><option value="full">Full</option><option value="nomusic">No music</option><option value="sfx">Effects only</option><option value="off">Silent</option></select></div>
+          <select id="sound" class="sr" tabindex="-1" aria-hidden="true"><option value="full">Full</option><option value="nomusic">No music</option><option value="music">Music, no voices</option><option value="sfx">Effects only</option><option value="off">Silent</option></select></div>
         <div class="pill" id="lookWrap"><button class="pillBtn" type="button" data-pop="look" title="Camera, lens, framing and colour grade"><i class="pi pi-lens"></i><span id="pillLook">Look</span></button>
           <input type="hidden" id="look" value=""></div>
         <div class="pill" id="countPill"><button class="pillBtn" type="button" data-pop="count" title="How many takes at once"><span id="pillCount">×1</span></button></div>
@@ -1117,6 +1165,10 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
     </div>
     <p class="gearNote hidden" id="gearNote">Camera and lens names describe a look — trademarks belong to their owners; no affiliation. Real photos via Wikimedia Commons, credited on each card.</p>
   </div>
+</div>
+<div class="pop movesPop hidden" id="pop-moves">
+  <div class="popTitle">Camera move <span class="hint">how the camera travels · pick one or two</span></div>
+  <div class="moveGrid" id="camMoves"></div>
 </div>
 <div class="pop hidden" id="pop-kit"><div class="popTitle" id="kitPopTitle">Brand photos</div><div class="refgrid" id="kitPicks"></div></div>
 <div class="pop hidden" id="pop-list"></div>
@@ -1215,7 +1267,7 @@ const $ = id => document.getElementById(id);
 // follows them to any device and two people never see each other's work.
 // Only device conveniences (the model catalogue cache, the theme) stay in
 // this browser's localStorage.
-const isAccountKey = k => /^il\.(clients|mcpseen|projects|proj|hist|presets|pending|imported|favs4\.|model\.|draft\.)/.test(k);
+const isAccountKey = k => /^il\.(clients|mcpseen|trash|projects|proj|hist|presets|pending|imported|favs4\.|model\.|draft\.)/.test(k);
 const account = {};           // this person's data, as loaded from the server
 let unsynced = {}, syncTimer = null, syncWarned = false;
 const clone = v => (v == null ? v : JSON.parse(JSON.stringify(v)));
@@ -1356,6 +1408,74 @@ const uiAsk = (title, opts = {}) => uiDialog({ title, input: true, ok: "Create",
 const uiConfirm = (text, opts = {}) => uiDialog({ title: opts.title || "Are you sure?", text, ok: opts.ok || "Yes", danger: !!opts.danger, ...opts }).then(Boolean);
 const uiAlert = (text, title = "Heads up") => uiDialog({ title, text, ok: "OK", cancel: null });
 
+
+/* ---------- recently deleted: 14 days to change your mind ---------- */
+const TRASH_DAYS = 14, DAY = 864e5;
+const trashList = () => load("il.trash", []);
+function trashAdd(entry) { const t = trashList(); t.unshift({ id: "x" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: Date.now(), ...entry }); save("il.trash", t.slice(0, 300)); renderTrash(); }
+// boards a take sat in, so restoring puts it back in the same place
+const boardSpots = ids => { const out = {}; projects.forEach(p => (p.board || []).forEach((id, i) => { if (ids.includes(id)) (out[id] = out[id] || []).push([p.id, i]); })); return out; };
+function fileGone(items) { // delete the permanent copies — unless a live take still uses the same file
+  const live = new Set(load(LS.hist, []).map(h => h.url));
+  items.forEach(it => { if (/^\/api\/file\?p=/.test(it.url || "") && !live.has(it.url)) fetch(it.url, { method: "DELETE" }).catch(() => {}); });
+}
+function purgeTrash(force) {
+  const t = trashList(), keep = [], gone = [];
+  t.forEach(e => (force === true || force === e.id || Date.now() - e.t > TRASH_DAYS * DAY ? gone : keep).push(e));
+  if (!gone.length) return;
+  save("il.trash", keep);
+  gone.forEach(e => fileGone(e.items || []));
+  renderTrash();
+}
+function restoreTrash(id) {
+  const t = trashList(), e = t.find(x => x.id === id); if (!e) return;
+  if (e.client && !clients.some(c => c.id === e.client.id)) { clients.push(e.client); saveClients(); }
+  (e.projects || []).forEach(p => { if (!projects.some(x => x.id === p.id)) { if (!clients.some(c => c.id === p.client)) p.client = clients[0].id; projects.push(p); } });
+  const h = load(LS.hist, []), have = new Set(h.map(x => x.id));
+  (e.items || []).forEach(it => { if (!have.has(it.id)) h.push(it); });
+  h.sort((a, b) => (b.at || b.started || 0) - (a.at || a.started || 0)); save(LS.hist, h);
+  Object.entries(e.spots || {}).forEach(([id, list]) => list.forEach(([pid, i]) => { const p = projects.find(x => x.id === pid); if (p) { p.board = p.board || []; if (!p.board.includes(id)) p.board.splice(Math.min(i, p.board.length), 0, id); } }));
+  saveProjects(); save("il.trash", t.filter(x => x.id !== id));
+  renderProjects(); renderHistory(); renderBoard(); renderTrash();
+  note(`Restored ${e.label}.`);
+}
+const ago = t => { const d = Math.floor((Date.now() - t) / DAY); return d < 1 ? "today" : d === 1 ? "yesterday" : `${d} days ago`; };
+function renderTrash() {
+  const t = trashList(), box = $("trashList"); if (!box) return;
+  $("tabTrash").textContent = t.length ? `Recently deleted (${t.length})` : "Recently deleted";
+  $("trashEmpty").classList.toggle("hidden", !t.length);
+  box.innerHTML = t.length ? "" : `<div class="trashEmptyNote">Nothing deleted recently.</div>`;
+  t.forEach(e => {
+    const left = Math.max(1, TRASH_DAYS - Math.floor((Date.now() - e.t) / DAY)), pic = (e.items || []).find(i => i.url && i.mode !== "audio");
+    const r = document.createElement("div"); r.className = "trashRow";
+    r.innerHTML = `<span class="th" style="${pic ? `background-image:url('${esc(/^\//.test(pic.url) ? pic.url : mediaSrc(pic.url))}')` : ""}">${pic ? "" : e.kind === "client" ? "◆" : e.kind === "project" ? "▤" : "♪"}</span>
+      <span class="tx"><b>${esc(e.label)}</b><small>${esc(e.kind === "takes" ? "Take" + ((e.items || []).length > 1 ? "s" : "") : e.kind === "project" ? "Project" : "Client")} · deleted ${ago(e.t)} · gone in ${left} day${left > 1 ? "s" : ""}</small></span>
+      <button class="btn" type="button" data-a="restore">Restore</button><button class="btn danger" type="button" data-a="del" title="Delete now, for good">✕</button>`;
+    r.querySelector('[data-a="restore"]').onclick = () => restoreTrash(e.id);
+    r.querySelector('[data-a="del"]').onclick = async () => { if (await uiConfirm("It's removed for good, files included.", { title: `Delete “${e.label}” now?`, ok: "Delete for good", danger: true })) purgeTrash(e.id); };
+    box.appendChild(r);
+  });
+}
+$("trashEmpty").onclick = async () => { if (await uiConfirm("Everything in Recently deleted is removed for good, files included.", { title: "Empty Recently deleted?", ok: "Empty", danger: true })) purgeTrash(true); };
+
+
+/* ---------- the Illume app (installable) ---------- */
+const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true || /IllumeApp/.test(navigator.userAgent);
+let installPrompt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installPrompt = e; });
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/illume-sw.js", { scope: "/" }).catch(() => {});
+function renderInstall() {
+  if (!$("installRow")) return;
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  $("installState").textContent = isStandalone() ? "You're using the Illume app ✓" : "Put Illume on your home screen";
+  $("installBtn").classList.toggle("hidden", isStandalone());
+  $("installBtn").onclick = async () => {
+    if (installPrompt) { installPrompt.prompt(); await installPrompt.userChoice.catch(() => {}); installPrompt = null; return; }
+    uiAlert(ios ? "In Safari, tap the Share button (the square with the arrow), then “Add to Home Screen”, then Add. Illume opens full-screen like an app."
+      : "In Chrome or Edge, open the browser menu (⋮) and choose “Install Illume” or “Add to Home screen”.", "Install Illume");
+  };
+}
+
 /* ---------- clients & projects ---------- */
 // Everything is organised as Client → Project. A client owns its brand kit
 // (style notes + brand photos), shared by all of its projects; each project
@@ -1426,8 +1546,10 @@ function clientMenu(anchor, c) {
     { text: "Delete client…", danger: true, run: async () => {
       if (clients.length < 2) return uiAlert("This is your only client — create another one first.");
       const n = histCount(mine.map(p => p.id));
-      if (!(await uiConfirm(`Its ${mine.length} project(s) and ${n} saved generation(s) are removed from the reel. This can't be undone.`, { title: `Delete “${c.name}”?`, ok: "Delete client", danger: true }))) return;
+      if (!(await uiConfirm(`Its ${mine.length} project(s) and ${n} take(s) go to Settings → Recently deleted, where you can restore them for 14 days.`, { title: `Delete “${c.name}”?`, ok: "Delete client", danger: true }))) return;
       const ids = new Set(mine.map(p => p.id));
+      const takes = load(LS.hist, []).filter(h => ids.has(h.proj));
+      trashAdd({ kind: "client", label: c.name, client: JSON.parse(JSON.stringify(c)), projects: JSON.parse(JSON.stringify(mine)), items: takes });
       save(LS.hist, load(LS.hist, []).filter(h => !ids.has(h.proj)));
       projects = projects.filter(p => !ids.has(p.id)); clients = clients.filter(x => x.id !== c.id);
       saveClients(); selectProject(projects[0].id);
@@ -1443,7 +1565,8 @@ function projectMenu(anchor, p) {
     { text: "Delete project…", danger: true, run: async () => {
       const siblings = projects.filter(x => x.client === p.client);
       if (projects.length < 2) return uiAlert("This is your only project.");
-      if (!(await uiConfirm(`Its ${histCount([p.id])} saved generation(s) are removed too. This can't be undone.`, { title: `Delete “${p.name}”?`, ok: "Delete project", danger: true }))) return;
+      if (!(await uiConfirm(`It and its ${histCount([p.id])} take(s) go to Settings → Recently deleted, where you can restore them for 14 days.`, { title: `Delete “${p.name}”?`, ok: "Delete project", danger: true }))) return;
+      trashAdd({ kind: "project", label: p.name, projects: [JSON.parse(JSON.stringify(p))], items: load(LS.hist, []).filter(h => h.proj === p.id) });
       save(LS.hist, load(LS.hist, []).filter(h => h.proj !== p.id));
       projects = projects.filter(x => x.id !== p.id);
       if (siblings.length < 2) newProjectFor(p.client, "General"); // a client always keeps one project
@@ -1663,7 +1786,7 @@ function updateSel() {
   $("selName").textContent = id ? (hit ? shortName(hit.name) : id) : "No model chosen";
   $("selId").textContent = hit ? id : "";
   const c = typeof client === "function" && clients.length ? client() : null;
-  $("goLabel").textContent = c ? "Generate for " + c.name : ({ image:"Generate image", video:"Generate video", audio:"Generate voice" })[mode];
+  $("goLabel").textContent = "Generate"; $("go").setAttribute("aria-label", c ? `Generate for ${c.name}` : "Generate");
   $("go").title = id ? "Model: " + (hit ? shortName(hit.name) : id) : "Choose a model";
   if (mode==="audio") {
     const song = isSongModel(id) || isSongModel(hit && hit.name);
@@ -1742,14 +1865,14 @@ function setMode(m) {
   if (!restoringDraft && projId && mode && mode !== m) flushModeState(mode);
   mode = m;
   document.querySelectorAll('.tabs [role=tab]').forEach(t => t.setAttribute("aria-selected", t.dataset.mode===m));
-  $("goLabel").textContent = { image:"Generate image", video:"Generate video", audio:"Generate voice" }[m];
+  $("goLabel").textContent = "Generate";
   $("promptLabel").textContent = m==="audio" ? "Script" : "Prompt";
   $("prompt").placeholder = m==="audio" ? "The words to be spoken. Add tone or pacing notes if the model supports them."
     : m==="video" ? "Describe the motion and the camera: what moves, how fast, where the lens goes." : "Describe the shot: subject, lens, light, mood.";
   $("refBlock").classList.toggle("hidden", m==="audio");
   if (clients.length) updateKitToggle();
   $("formatBlock").classList.toggle("hidden", m==="audio");
-  $("camMoves").classList.toggle("hidden", m!=="video"); if (m === "video") renderCamMoves();
+  $("moveWrap").classList.toggle("hidden", m!=="video"); if (m === "video") renderCamMoves();
   $("refHint").textContent = m==="video" ? "The first frame of your video (only the first image is used). Pick any aspect ratio under Options — the image is reshaped to it. Empty = text-to-video." : "Optional, up to 10, for edit models";
   $("durWrap").classList.toggle("hidden", m!=="video");
   updateAspectWrap();
@@ -2339,7 +2462,7 @@ async function keepBackfill() {
 }
 
 // ---- composer pills + pop-overs
-const POPS = { model: "pop-model", count: "pop-count", presets: "pop-presets", kit: "pop-kit", look: "pop-look" };
+const POPS = { model: "pop-model", count: "pop-count", presets: "pop-presets", kit: "pop-kit", look: "pop-look", moves: "pop-moves" };
 const RATIO_DIMS = r => { const [w, h] = String(r).split(":").map(Number); if (!w || !h) return [14, 14]; const k = 18 / Math.max(w, h); return [Math.max(7, Math.round(w * k)), Math.max(7, Math.round(h * k))]; };
 let openPop = null;
 function closePops() {
@@ -2398,12 +2521,14 @@ window.addEventListener("resize", closePops);
 const SOUND_OPTS = [
   { value: "full", label: "Full sound", hint: "effects, music and voices" },
   { value: "nomusic", label: "No music", hint: "effects, ambience and voices" },
+  { value: "music", label: "Music, no voices", hint: "music and effects, no speech" },
   { value: "sfx", label: "Effects only", hint: "no music, no voices" },
   { value: "off", label: "Silent", hint: "no audio track" },
 ];
 const SOUND_ASK = {
   nomusic: "Audio: realistic sound effects, ambience and any dialogue only. No music, no soundtrack, no score, no background song.",
   sfx: "Audio: realistic sound effects and ambience only. No music, no soundtrack, no score, no singing, no voices or speech.",
+  music: "Audio: background music and realistic sound effects only. No voices, no dialogue, no speech, no narration, no singing.",
 };
 // Keep every pill's label in step with the real settings underneath.
 function refreshPills() {
@@ -2418,7 +2543,7 @@ function refreshPills() {
   $("pillLook").textContent = lkLabels.length ? lkLabels.slice(0, 2).join(" · ") + (lkLabels.length > 2 ? ` +${lkLabels.length - 2}` : "") : "Look";
   $("lookWrap").classList.toggle("set", !!lkLabels.length);
   renderCastRow();
-  $("pillSound").textContent = { full: "Sound", nomusic: "No music", sfx: "Effects only", off: "Silent" }[$("sound").value] || "Sound";
+  $("pillSound").textContent = { full: "Sound", nomusic: "No music", music: "No voices", sfx: "Effects only", off: "Silent" }[$("sound").value] || "Sound";
   $("soundWrap").classList.toggle("muted", $("sound").value === "off");
   $("pillCount").textContent = "×" + genCount;
   $("pillModel").textContent = $("selName").textContent || "Model";
@@ -2427,22 +2552,30 @@ function refreshPills() {
 
 // ---- camera moves (video): one tap adds or removes a direction in the prompt
 const CAM_MOVES = [
-  ["Dolly in", "slow dolly-in toward the subject"], ["Dolly out", "slow dolly-out revealing the scene"],
-  ["Orbit", "smooth 180° orbit around the subject"], ["Crane up", "crane shot rising up and over the scene"],
-  ["Tracking", "tracking shot moving alongside the subject"], ["Handheld", "subtle handheld camera, documentary feel"],
-  ["Macro push-in", "macro push-in on the product details"], ["Static", "locked-off static camera"],
-  ["Slow motion", "slow motion, 120fps feel"], ["Whip pan", "fast whip pan transition"],
+  ["Dolly in", "slow dolly-in toward the subject", "Glides closer — builds focus", "M4 12h12M12 7l5 5-5 5"],
+  ["Dolly out", "slow dolly-out revealing the scene", "Pulls back to reveal", "M20 12H8M12 7l-5 5 5 5"],
+  ["Orbit", "smooth 180° orbit around the subject", "Circles the subject", "M5 12a7 4 0 1 0 14 0 7 4 0 1 0-14 0M17 9l2 3-3 1"],
+  ["Crane up", "crane shot rising up and over the scene", "Rises up and over", "M12 20V6M7 11l5-5 5 5"],
+  ["Tracking", "tracking shot moving alongside the subject", "Moves alongside", "M3 15h18M3 9h12M15 6l3 3-3 3"],
+  ["Handheld", "subtle handheld camera, documentary feel", "Real, slightly shaky", "M3 12c2-3 4 3 6 0s4 3 6 0 4 3 6 0"],
+  ["Macro push-in", "macro push-in on the product details", "Creeps into the detail", "M12 12m-3 0a3 3 0 1 0 6 0 3 3 0 1 0-6 0M12 3v4M12 17v4M3 12h4M17 12h4"],
+  ["Static", "locked-off static camera", "Camera doesn't move", "M6 6h12v12H6z"],
+  ["Slow motion", "slow motion, 120fps feel", "Time slows down", "M12 12m-8 0a8 8 0 1 0 16 0 8 8 0 1 0-16 0M12 8v4l3 2"],
+  ["Whip pan", "fast whip pan transition", "Fast swish to the next", "M3 12h14M13 7l5 5-5 5M3 8h6M3 16h6"],
 ];
 const escRe = t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 function renderCamMoves() {
   const box = $("camMoves"); box.innerHTML = ""; const text = $("prompt").value.toLowerCase();
-  CAM_MOVES.forEach(([label, phrase]) => {
-    const b = document.createElement("button"); b.type = "button"; b.className = "chip" + (text.includes(phrase.toLowerCase()) ? " on" : ""); b.textContent = label; b.title = phrase;
-    b.onclick = () => {
+  const on = CAM_MOVES.filter(([, phrase]) => text.includes(phrase.toLowerCase())).map(x => x[0]);
+  if ($("pillMove")) { $("pillMove").textContent = on.length ? on[0] + (on.length > 1 ? ` +${on.length - 1}` : "") : "Move"; $("moveWrap").classList.toggle("set", !!on.length); }
+  CAM_MOVES.forEach(([label, phrase, hint, path]) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "moveOpt" + (text.includes(phrase.toLowerCase()) ? " on" : ""); b.title = phrase;
+    b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg><span><b>${esc(label)}</b><small>${esc(hint)}</small></span>`;
+    b.onclick = e => { e.stopPropagation(); // keep the panel open so you can pick a second move
       const el = $("prompt"); let v = el.value;
       if (v.toLowerCase().includes(phrase.toLowerCase())) v = v.replace(new RegExp(",?\\s*" + escRe(phrase), "i"), "").replace(/^\s*,\s*/, "").trim();
       else v = (v.trim() ? v.trim().replace(/[.,]$/, "") + ", " : "") + phrase;
-      el.value = v; el.dispatchEvent(new Event("input"));
+      el.value = v; el.dispatchEvent(new Event("input")); saveDraft();
     };
     box.appendChild(b);
   });
@@ -2506,7 +2639,8 @@ function renderHistory() {
   layoutMasonry(); renderViewTabs();
 }
 setInterval(() => document.querySelectorAll("#hist .tick").forEach(el => { el.textContent = clock(Number(el.dataset.t)); }), 1000);
-$("clearHist").onclick = async () => { if (await uiConfirm("They're removed from this project's list. Files already saved permanently stay in storage.", { title: "Clear this project's takes?", ok: "Clear takes", danger: true })) { save(LS.hist, load(LS.hist, []).filter(x => x.proj!==projId)); renderHistory(); renderProjects(); } };
+$("clearHist").onclick = async () => { if (await uiConfirm("They go to Settings → Recently deleted, where you can restore them for 14 days.", { title: "Clear this project's takes?", ok: "Clear takes", danger: true })) {
+  { const mine = projTakes().filter(h => h.status !== "failed" && h.status !== "running"); if (mine.length) trashAdd({ kind: "takes", label: `${mine.length} takes from ${(proj() || {}).name || "a project"}`, items: mine, spots: boardSpots(mine.map(h => h.id)) }); } save(LS.hist, load(LS.hist, []).filter(x => x.proj!==projId)); renderHistory(); renderProjects(); } };
 
 
 /* ---------- masonry: cards keep their real shape ---------- */
@@ -2684,19 +2818,18 @@ async function deleteTakes(ids, ask) {
   if (ask) {
     const inDrive = items.some(h => h.drive);
     const what = items.length === 1 ? "this take" : `these ${items.length} takes`;
-    if (!(await uiConfirm(`${items.some(h => /^\/api\/file/.test(h.url || "")) ? "Its saved file is deleted too. " : ""}${inDrive ? "Copies already in your Google Drive stay there. " : ""}This can't be undone.`, { title: `Delete ${what}?`, ok: "Delete", danger: true }))) return;
+    if (!(await uiConfirm(`${items.length === 1 ? "It goes" : "They go"} to Settings → Recently deleted, where you can restore ${items.length === 1 ? "it" : "them"} for 14 days.${inDrive ? " Copies already in your Google Drive stay there." : ""}`, { title: `Delete ${what}?`, ok: "Delete", danger: true }))) return;
   }
   const set = new Set(ids);
+  const done = items.filter(h => h.status !== "failed" && h.status !== "running");
+  if (done.length) trashAdd({ kind: "takes", label: done.length === 1 ? (done[0].userPrompt || done[0].prompt || "Take").slice(0, 60) : `${done.length} takes`, items: done, spots: boardSpots(done.map(h => h.id)) });
   save(LS.hist, all.filter(h => !set.has(h.id)));
   if (items.some(h => h.via === "claude")) { const seen = Object.assign({ ops: [], gone: [] }, load("il.mcpseen", {})); seen.gone = [...seen.gone, ...items.filter(h => h.via === "claude").map(h => h.id)].slice(-500); save("il.mcpseen", seen); }
   projects.forEach(p => { if (p.board) p.board = p.board.filter(id => !set.has(id)); }); saveProjects();
   ids.forEach(id => { removePending(id); freshIds.delete(id); });
   if (viewing && set.has(viewing)) { closeViewer(); viewing = null; current = null; }
   renderProjects(); renderHistory(); renderBoard(); renderActivity();
-  note(items.length === 1 ? "Take deleted." : `${items.length} takes deleted.`);
-  for (const it of items) {
-    if (/^\/api\/file\?p=/.test(it.url || "")) fetch(it.url.replace(/^\/api\/file\?p=/, "/api/file?p="), { method: "DELETE" }).catch(() => {});
-  }
+  note(done.length ? `${items.length === 1 ? "Take" : items.length + " takes"} deleted — restore from Settings → Recently deleted for 14 days.` : (items.length === 1 ? "Take removed." : `${items.length} takes removed.`));
 }
 $("delTake").onclick = () => { const id = (current && current.id) || (failedView && failedView.id) || viewing; if (id) deleteTakes([id], true); };
 $("clearFailed").onclick = () => { const ids = projTakes().filter(x => x.status === "failed").map(x => x.id); if (ids.length) deleteTakes(ids, true); };
@@ -2757,6 +2890,7 @@ document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
   const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1600);
 });
 function renderSettings() {
+  renderTrash(); renderInstall();
   if (!me) return;
   if (document.querySelector(`#setTabs [data-tab="${setTab}"]`).classList.contains("hidden")) setTab = "account";
   document.querySelectorAll("#setTabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === setTab));
@@ -2916,7 +3050,7 @@ const reviewSig = shots => shots.map(x => x.id).join(",");
 async function publishReview(quiet) {
   const p = proj(), shots = reviewShots();
   if (!shots.length) { if (!quiet) note("Nothing to share yet — shots can be shared once they're saved (a few seconds after they finish).", true); return null; }
-  const out = await api("/api/studio?fn=review", { method: "POST", body: JSON.stringify({ action: "publish", token: p.review || undefined, proj: p.id, title: p.name, client: (client(p.client) || {}).name || "", shots }) });
+  const out = await api("/api/studio?fn=review", { method: "POST", body: JSON.stringify({ action: "publish", token: p.review || undefined, proj: p.id, title: p.name, client: (client(p.client) || {}).name || "", recipient: p.reviewFor || "", shots }) });
   p.review = out.token; p.reviewSig = reviewSig(shots); saveProjects();
   return out.token;
 }
@@ -2937,12 +3071,22 @@ function renderReviewBtn() {
 $("shareReview").onclick = async e => {
   const p = proj(), anchor = e.currentTarget;
   if (!p.review) {
-    try { const t = await publishReview(); if (!t) return; await copyText(reviewUrl(t)); note("Review link copied — send it to your client. They can watch every shot, approve it or ask for changes, no account needed."); renderReviewBtn(); }
-    catch (err) { note("Couldn't share: " + err.message, true); }
+    const c = client(p.client) || {}, n = reviewShots().length;
+    if (!n) return note("Nothing to share yet — shots can be shared once they're saved (a few seconds after they finish).", true);
+    const who = await uiDialog({ title: "Send for client review", text: `${n} shot${n > 1 ? "s" : ""} from “${p.name}” (${c.name || "client"}). They'll watch each shot and approve it or ask for changes — no account needed. Who is it for?`, input: true, value: p.reviewFor || c.contact || "", placeholder: "Their name or email — e.g. Ana, ana@brand.com", ok: "Share & copy link" });
+    if (!who) return;
+    p.reviewFor = who; if (!c.contact) { c.contact = who; saveClients(); } saveProjects();
+    try {
+      const t = await publishReview(); if (!t) return;
+      await copyText(reviewUrl(t)); renderReviewBtn();
+      if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(who) && await uiConfirm(`The link is copied. Open an email to ${who} with the link ready to send?`, { title: "Review link ready", ok: "Open email", cancel: "Not now" }))
+        location.href = `mailto:${encodeURIComponent(who)}?subject=${encodeURIComponent(`${c.name ? c.name + " — " : ""}${p.name}: for your review`)}&body=${encodeURIComponent(`Hi,\n\nHere are the shots for ${p.name}. Watch each one and approve it or tell us what to change — no account needed:\n\n${reviewUrl(t)}\n\nThanks!`)}`;
+      else note(`Review link for ${who} copied — paste it in a message. They can approve or comment on every shot.`);
+    } catch (err) { note("Couldn't share: " + err.message, true); }
     return;
   }
   showMenu(anchor, [
-    { text: "Copy review link", run: async () => { await copyText(reviewUrl(p.review)); note("Review link copied."); } },
+    { text: `Copy review link${p.reviewFor ? ` (for ${p.reviewFor})` : ""}`, run: async () => { await copyText(reviewUrl(p.review)); note("Review link copied."); } },
     { text: "Open the client's view ↗", run: () => window.open(reviewUrl(p.review), "_blank", "noopener") },
     { text: "Refresh client feedback", run: () => loadReviewFb(true) },
     "-",
@@ -3681,6 +3825,7 @@ async function startStudio(user) {
   mergeMcp(account["il.mcp"]);
   try { localStorage.removeItem("il.ref"); } catch {}
   stripeReturn(); // also loads the credits
+  setTimeout(() => purgeTrash(), 5000); // anything older than 14 days goes for good
   loadLookPics();
   setTimeout(keepBackfill, 4000); // after the page has settled
   autoGrow();

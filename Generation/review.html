@@ -179,7 +179,8 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closePlayer(
     if (!r.ok) throw new Error(j.error || "This review link isn't active any more.");
     data = j;
     document.title = `${j.client ? j.client + " — " : ""}${j.title} · review`;
-    $("title").textContent = j.title; $("sub").textContent = (j.client ? j.client + " · " : "") + "Watch each shot, then approve it or tell us what to change.";
+    $("title").textContent = j.title; $("sub").textContent = (j.recipient ? `Prepared for ${j.recipient} · ` : "") + (j.client ? j.client + " · " : "") + "Watch each shot, then approve it or tell us what to change.";
+    if (j.recipient && !who) { who = j.recipient; } // their name is already known
     if (!j.shots.length) { $("grid").innerHTML = `<div class="empty"><b>Nothing here yet.</b>The studio hasn't added any shots.</div>`; return; }
     render();
   } catch (e) {
