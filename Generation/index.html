@@ -1012,6 +1012,35 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .ovAct span{flex:1;min-width:0}
 .ovAct small{color:var(--faint)}
 @media (max-width:820px){.ovRow{grid-template-columns:52px minmax(0,1fr) 110px}.ovRow > :nth-child(3),.ovRow > :nth-child(5),.ovRow > :nth-child(6),.ovRow > :nth-child(7){display:none}.ovThumb{width:52px}}
+
+/* simple mode: the advanced tools are one switch away (Settings → Account) */
+.simple #tabStage,.simple #lookWrap,.simple #setTabs [data-tab="spend"],.simple #setTabs [data-tab="claude"],.simple #setTabs [data-tab="invite"]{display:none!important}
+.switch{position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0}
+.switch input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0;z-index:1}
+.switch i{position:absolute;inset:0;border-radius:999px;background:var(--raised);border:1px solid var(--line-2);transition:background var(--ease)}
+.switch i::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform var(--ease),background var(--ease)}
+.switch input:checked + i{background:var(--gold-soft);border-color:var(--gold-line)}
+.switch input:checked + i::after{transform:translateX(18px);background:var(--gold)}
+.legalLinks{font-size:12.5px;color:var(--faint);margin:14px 0 0}
+.legalLinks a,.gateLegal a{color:var(--muted)}
+.gate .gateLegal{font-size:11.5px;color:#8F8678;text-align:center;margin:0}
+/* first steps */
+.guide{border:1px solid var(--gold-line);background:linear-gradient(180deg,var(--gold-soft),transparent);border-radius:18px;padding:16px 18px;margin:0 0 14px;display:flex;flex-direction:column;gap:10px}
+.guide.hidden{display:none}
+.guide .gTop{display:flex;align-items:center;gap:10px}
+.guide .gTop b{font-family:var(--display);font-weight:400;font-size:20px;flex:1}
+.guide .gTop button{background:none;border:0;color:var(--faint);cursor:pointer;font:inherit;font-size:12.5px}
+.guide ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.guide li{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:11px 12px;font-size:13.5px}
+.guide li i{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center;font-style:normal;font-size:12px;color:var(--faint);flex-shrink:0}
+.guide li.done i{background:var(--ok);border-color:var(--ok);color:#0C1A10}
+.guide li.done span{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--faint)}
+.guide li span{flex:1}
+.guide li button{margin-top:6px;display:block}
+.guide .gFoot{display:flex;gap:8px;flex-wrap:wrap}
+#uiText{white-space:pre-line}
+.draftBtn{font-weight:600}
+.draftBtn.on{background:rgba(158,195,255,.14)!important;border-color:rgba(158,195,255,.5)!important;color:#BFD6FF!important}
 </style>
 </head>
 <body>
@@ -1031,6 +1060,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
     <p class="gateSwitch" id="gateSwitchP"><span id="gateSwitchText">New here?</span> <a href="#" id="gateSwitch">Create an account</a></p>
     <p class="gateSwitch" id="gateForgotP"><a href="#" id="gateForgot">Forgot password?</a></p>
     <div class="msg err" id="gateMsg"></div>
+    <p class="gateLegal">By continuing you agree to the <a href="/terms" target="_blank" rel="noopener">Terms</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy policy</a>.</p>
   </form>
 </div>
 
@@ -1046,6 +1076,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
     <button class="driveBtn hidden" id="driveBtn" type="button"></button>
     <div class="railFoot" id="railFoot">
       <button class="newproj" id="settings" type="button">⚙ Settings</button>
+      <button class="btn iconbtn" id="helpBtn" type="button" aria-label="Help" title="Help, and how to reach us">?</button>
       <button class="btn iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark mode" title="Switch to light mode">☾</button>
     </div>
   </aside>
@@ -1078,9 +1109,11 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         <section class="setSec" data-sec="account">
           <div class="setRow"><span><small>Signed in as</small><b id="setWho"></b></span><span class="tag" id="setRole"></span></div>
           <p class="setP">Your clients, projects, takes and storyboards are saved to this account and follow you to any device.</p>
+          <div class="setRow"><span><small>Advanced tools</small><b>3D Stage, camera &amp; lens looks, spending, Claude</b></span><label class="switch"><input type="checkbox" id="advToggle"><i></i></label></div>
           <div class="setRow installRow" id="installRow"><span><small>Illume app</small><b id="installState">Put Illume on your home screen</b></span><button class="btn" id="installBtn" type="button">Install</button></div>
           <div class="setRow hidden" id="resetRow"><span><small>Studio owner</small><b>Reset a member's password</b></span><button class="btn" id="resetMember" type="button">Make link</button></div>
           <button class="btn" id="signOut" type="button">Sign out</button>
+          <p class="legalLinks"><a href="/terms" target="_blank" rel="noopener">Terms</a> · <a href="/privacy" target="_blank" rel="noopener">Privacy</a> · <a href="/refunds" target="_blank" rel="noopener">Credits &amp; refunds</a></p>
           <div class="dangerZone" id="delZone">
             <p class="setP"><b>Delete my account</b> — removes your clients, projects, takes, saved files, review links and remaining credits for good. Credits aren't refunded.</p>
             <button class="btn danger" id="delAccount" type="button">Delete my account…</button>
@@ -1245,6 +1278,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 
     <!-- the work: every take, newest first; progress shows on the card itself -->
     <section class="gallery">
+      <div class="guide hidden" id="guide"></div>
       <div class="galleryHead">
         <div class="viewTabs" role="tablist" aria-label="View">
           <button type="button" role="tab" id="tabTakes" aria-selected="true">Takes <i id="nTakes"></i></button>
@@ -1268,7 +1302,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
       <div class="hist" id="hist"></div>
       <div class="board hidden" id="board"></div>
       <div class="scriptView hidden" id="scriptView">
-        <div class="scriptBar"><span id="scriptStats"></span><span class="sp"></span><button class="btn" type="button" id="scriptVoice" title="Make a voice-over from the selected text (or every spoken line)">🎙 Voice-over</button><button class="btn primary" type="button" id="scriptShots" title="Each block becomes a shot in the storyboard">→ Turn into shots</button></div>
+        <div class="scriptBar"><span id="scriptStats"></span><span class="sp"></span><button class="btn" type="button" id="scriptTpl" title="Start from a ready-made structure">Templates</button><button class="btn" type="button" id="scriptVoice" title="Make a voice-over from the selected text (or every spoken line)">🎙 Voice-over</button><button class="btn primary" type="button" id="scriptShots" title="Each block becomes a shot in the storyboard">→ Turn into shots</button></div>
         <textarea id="scriptText" spellcheck="true" placeholder="Write the script here. Leave an empty line between shots.
 
 SCENE 1 — The café at sunrise
@@ -1326,6 +1360,7 @@ MIA: This is my moment."></textarea>
           <select id="sound" class="sr" tabindex="-1" aria-hidden="true"><option value="full">Full</option><option value="nomusic">No music</option><option value="music">Music, no voices</option><option value="sfx">Effects only</option><option value="off">Silent</option></select></div>
         <div class="pill" id="lookWrap"><button class="pillBtn" type="button" data-pop="look" title="Camera, lens, framing and colour grade"><i class="pi pi-lens"></i><span id="pillLook">Look</span></button>
           <input type="hidden" id="look" value=""></div>
+        <div class="pill hidden" id="draftWrap"><button class="pillBtn draftBtn" type="button" id="draftBtn" title="Draft: 720p, 5 seconds — a cheap test of the motion. Tap again for your full settings.">Draft</button></div>
         <div class="pill" id="countPill"><button class="pillBtn" type="button" data-pop="count" title="How many takes at once"><span id="pillCount">×1</span></button></div>
         <div class="pill"><label class="pillBtn toggle kitToggle hidden" id="kitToggle" title="Adds this client's style notes (Brand kit) in front of your prompt"><input type="checkbox" id="useBrief" checked><span class="kitDia">◆</span><span id="kitToggleText">Brand style</span></label></div>
         <div class="pill"><button class="pillBtn" type="button" data-pop="presets" title="Saved prompts" aria-label="Saved prompts"><span>☆</span></button></div>
@@ -2202,6 +2237,86 @@ $("ovClose").onclick = closeOverview; $("ovBackdrop").onclick = closeOverview;
 $("ovTabs").onclick = e => { const b = e.target.closest("[data-ov]"); if (b) { ovTab = b.dataset.ov; renderOverview(); } };
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("ovModal").classList.contains("hidden")) closeOverview(); });
 
+
+/* ---------- simple mode: the advanced tools sit behind one switch ---------- */
+function advancedOn() { try { const v = localStorage.getItem("illume.advanced"); return v == null ? !!(me && me.role === "owner") : v === "1"; } catch { return false; } }
+function applyAdvanced() {
+  const on = advancedOn();
+  document.documentElement.classList.toggle("simple", !on);
+  if ($("advToggle")) $("advToggle").checked = on;
+  if (!on && ["spend", "claude", "invite"].includes(setTab)) { setTab = "account"; }
+}
+$("advToggle").onchange = () => { try { localStorage.setItem("illume.advanced", $("advToggle").checked ? "1" : "0"); } catch {} applyAdvanced(); renderSettings(); note($("advToggle").checked ? "Advanced tools are on: 3D Stage, camera & lens looks, spending and the Claude connection." : "Simple mode: the essentials only. Switch advanced tools back on here any time."); };
+
+/* ---------- Draft: 720p · 5 s to test the motion cheaply ---------- */
+let draftPrev = null;
+function renderDraft() { const b = $("draftBtn"); if (!b) return; b.classList.toggle("on", !!draftPrev); b.textContent = draftPrev ? "Draft · 720p 5s" : "Draft"; }
+$("draftBtn").onclick = () => {
+  if (!draftPrev) {
+    draftPrev = { res: $("resolution").value, dur: $("duration").value };
+    if ([...$("resolution").options].some(o => o.value === "720p")) $("resolution").value = "720p";
+    $("duration").value = "5";
+    note("Draft on — 720p, 5 seconds: a cheap test of the motion. When it looks right, tap Draft again and generate the final.");
+  } else {
+    $("resolution").value = draftPrev.res; $("duration").value = draftPrev.dur; draftPrev = null;
+    note("Back to your full settings for the final take.");
+  }
+  renderDraft(); refreshPills(); updateEstimate(); saveDraft();
+};
+
+/* ---------- templates: start from a structure, not a blank page ---------- */
+const TEMPLATES = [
+  { name: "15-second product ad", hint: "3 shots · video · 16:9", mode: "video", aspect: "16:9", script: "SCENE 1 — Hero reveal\nThe product on a clean surface, soft light sweeps across it, slow push-in.\nVO: Meet the one you'll reach for every day.\n\nSCENE 2 — The detail\nMacro close-up of the texture and the logo, shallow focus.\n\nSCENE 3 — End card\nThe product centred, calm background, space at the top for the logo.\nVO: Available now." },
+  { name: "Instagram Reel", hint: "3 shots · video · 9:16", mode: "video", aspect: "9:16", script: "SCENE 1 — The hook\nA striking close-up that makes people stop scrolling, quick movement.\n\nSCENE 2 — In use\nSomeone using the product in a real moment, handheld feel, natural light.\n\nSCENE 3 — The call to action\nThe product in hand, facing camera.\nVO: Tap the link to get yours." },
+  { name: "Product photo set", hint: "4 stills · image · 4:5", mode: "image", aspect: "4:5", script: "Hero shot\nThe product centred on a clean backdrop, soft studio light, crisp shadow.\n\nLifestyle\nThe product in its natural setting, warm daylight, lived-in details.\n\nDetail\nMacro of the texture and finish, shallow depth of field.\n\nFlat lay\nTop-down arrangement with complementary props, even light." },
+  { name: "Restaurant / café promo", hint: "3 shots · video · 9:16", mode: "video", aspect: "9:16", script: "SCENE 1 — The room\nWide shot of the space at golden hour, guests laughing, warm light.\n\nSCENE 2 — The plate\nOverhead of the signature dish arriving, steam rising.\n\nSCENE 3 — The invite\nThe entrance, sign in focus.\nVO: Your table is waiting." },
+];
+async function pickTemplate() {
+  const p = proj(); if (!p) return;
+  const box = document.createElement("div"); box.className = "inboxPanel"; box.style.left = "50%"; box.style.top = "18%"; box.style.transform = "translateX(-50%)";
+  box.innerHTML = `<h4>Start from a template</h4>` + TEMPLATES.map((t, i) => `<button type="button" data-t="${i}"><b>${esc(t.name)}</b><small>${esc(t.hint)}</small></button>`).join("");
+  document.body.appendChild(box);
+  setTimeout(() => document.addEventListener("click", function off(ev) { if (!box.contains(ev.target)) { box.remove(); document.removeEventListener("click", off); } }), 0);
+  box.querySelectorAll("[data-t]").forEach(b => b.onclick = async () => {
+    const t = TEMPLATES[Number(b.dataset.t)]; box.remove();
+    if ((p.script || "").trim() && !(await uiConfirm("Your script stays — the template is added below it, and its shots are added to the storyboard.", { title: `Add “${t.name}”?`, ok: "Add it" }))) return;
+    p.script = ((p.script || "").trim() ? p.script.trim() + "\n\n" : "") + t.script; saveProjects();
+    if (mode !== t.mode) setMode(t.mode);
+    if ($("aspect") && [...$("aspect").options].some(o => o.value === t.aspect || o.text === t.aspect)) { $("aspect").value = t.aspect; refreshPills(); saveDraft(); }
+    setViewMode("script"); renderScript(); scriptToShots();
+    note(`“${t.name}” is set up — ${t.mode === "video" ? "video" : "images"}, ${t.aspect}. Edit the script or tap ✍ Write on the first shot.`);
+  });
+}
+$("scriptTpl").onclick = e => { e.stopPropagation(); pickTemplate(); };
+
+/* ---------- first steps: a short guide until the basics are done ---------- */
+function renderGuide() {
+  const g = $("guide"); if (!g || !me) return;
+  let off = false; try { off = localStorage.getItem("illume.guideDone") === "1"; } catch {}
+  const h = load(LS.hist, []), made = h.some(x => x.status === "done" || (!x.status && x.url));
+  const boarded = projects.some(p => (p.board || []).some(id => !id.startsWith("sh_")));
+  const shared = projects.some(p => p.review);
+  if (off || myTeamRole === "viewer" || (made && boarded && shared) || viewMode === "script") { g.classList.add("hidden"); return; }
+  g.classList.remove("hidden");
+  const step = (done, title, body, btn) => `<li class="${done ? "done" : ""}"><i>${done ? "✓" : ""}</i><span><b>${title}</b><br>${body}${!done && btn ? btn : ""}</span></li>`;
+  g.innerHTML = `<div class="gTop"><b>Your first project, in three steps</b><button type="button" id="guideHide">Hide</button></div><ol>
+    ${step(made, "Make your first take", "Describe a shot and press Generate.", `<button class="btn" type="button" id="guideTry">Try an example</button>`)}
+    ${step(boarded, "Build the storyboard", "Tap ＋ on a take you like — it becomes shot 1.", "")}
+    ${step(shared, "Send it to your client", "Storyboard → Client review: they approve or comment, no account needed.", "")}</ol>
+    <div class="gFoot"><button class="btn" type="button" id="guideTpl">Start from a template</button><button class="btn" type="button" id="guideHelp">How it works</button></div>`;
+  $("guideHide").onclick = () => { try { localStorage.setItem("illume.guideDone", "1"); } catch {} g.classList.add("hidden"); };
+  const t = $("guideTry"); if (t) t.onclick = () => { if (mode !== "image") setMode("image"); $("prompt").value = "A glass perfume bottle on warm stone, soft morning light through a window, shallow depth of field, editorial product photo"; $("prompt").dispatchEvent(new Event("input")); saveDraft(); $("prompt").focus(); note("An example is in the prompt — press Generate."); };
+  $("guideTpl").onclick = e => { e.stopPropagation(); pickTemplate(); };
+  $("guideHelp").onclick = () => openHelp();
+}
+
+/* ---------- help ---------- */
+async function openHelp() {
+  const go = await uiDialog({ title: "How Illume Studio works", text: "1. Pick Image, Video or Voice, describe the shot, press Generate — every take lands in Takes.\n2. Tap ＋ on the takes you like to build the Storyboard (or write the Script and turn it into shots).\n3. Storyboard → Client review sends your client a private link to approve or comment on each shot.\n4. Settings → Credits shows what you have; every Generate button shows the cost first.\n\nStuck, or something looks wrong? Email us and we'll help.", ok: "Email us", cancel: "Close" });
+  if (go) location.href = `mailto:illumeandco.online@gmail.com?subject=${encodeURIComponent("Illume Studio — help")}&body=${encodeURIComponent(`\n\n—\nAccount: ${me ? me.name : ""}\nPage: ${location.href}\nDevice: ${navigator.userAgent}`)}`;
+}
+$("helpBtn").onclick = () => openHelp();
+
 /* ---------- recently deleted: 14 days to change your mind ---------- */
 const TRASH_DAYS = 14, DAY = 864e5;
 const trashList = () => load("il.trash", []);
@@ -2382,7 +2497,7 @@ function projectMenu(anchor, p) {
   const others = clients.filter(c => c.id !== p.client);
   showMenu(anchor, [
     { text: "Rename project", run: async () => { const n = await uiAsk("Rename project", { value: p.name, ok: "Save" }); if (n) { p.name = n; saveProjects(); refreshTitles(); renderProjects(); } } },
-    ...(canManage() ? [{ text: p.budget ? `Budget: ${fmtSpend(p.budget)}…` : "Set a budget…", run: () => setBudget(p) }] : []),
+    ...(canManage() && advancedOn() ? [{ text: p.budget ? `Budget: ${fmtSpend(p.budget)}…` : "Set a budget…", run: () => setBudget(p) }] : []),
     ...(others.length ? ["-", { label: "Move to client" }, ...others.map(c => ({ text: "→ " + c.name, run: () => { const from = client(p.client); if (projects.some(x => x.client === c.id && x.name === p.name)) p.name += " (from " + from.name + ")"; p.client = c.id; saveProjects(); openClients.add(c.id); if (p.id === projId) selectProject(p.id); else renderProjects(); } }))] : []),
     "-",
     { text: "Delete project…", danger: true, run: async () => {
@@ -2705,6 +2820,7 @@ function setMode(m) {
   $("resWrap").classList.toggle("hidden", m==="audio");
   updateResolutionOptions();
   $("soundWrap").classList.toggle("hidden", m!=="video");
+  $("draftWrap").classList.toggle("hidden", m!=="video"); renderDraft();
   $("lookWrap").classList.toggle("hidden", m==="audio");
   const favs = load(LS.favs+m, []);
   const stored = getRaw(LS.model+m);
@@ -3438,6 +3554,7 @@ function upsertHistory(item) {
 const addHistory = upsertHistory;
 const clock = t => { const s = Math.max(0, Math.floor((Date.now() - t) / 1000)); return Math.floor(s/60) + ":" + String(s%60).padStart(2, "0"); };
 function renderHistory() {
+  renderGuide();
   const h = shownTakes(); const box = $("hist"); box.innerHTML = "";
   const n = h.filter(x => x.status !== "failed").length;
   $("count").textContent = n ? `${n} take${n>1?"s":""}` : "";
@@ -3545,7 +3662,7 @@ function renderViewTabs() {
   $("shareReview").classList.toggle("hidden", viewMode !== "board" || !items.length);
   renderReviewBtn();
 }
-function setViewMode(m) { viewMode = m; try { localStorage.setItem("il.viewMode", m); } catch {} renderViewTabs(); if (m === "board") renderBoard(); else if (m === "script") renderScript(); else layoutMasonry(); }
+function setViewMode(m) { viewMode = m; try { localStorage.setItem("il.viewMode", m); } catch {} renderViewTabs(); renderGuide(); if (m === "board") renderBoard(); else if (m === "script") renderScript(); else layoutMasonry(); }
 $("tabScript").onclick = () => setViewMode("script");
 $("viewMore").onclick = e => {
   const items = [];
@@ -3870,6 +3987,7 @@ document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
   const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1600);
 });
 function renderSettings() {
+  applyAdvanced();
   $("resetRow").classList.toggle("hidden", !(me && me.role === "owner"));
   $("delZone").classList.toggle("hidden", !!(me && me.role === "owner"));
   renderTrash(); renderInstall(); renderTeam(); renderSpend();
@@ -4843,7 +4961,7 @@ async function startStudio(user) {
   loadDrive();
   if (me.role === "owner") refreshBalance();
   renderActivity();
-  loadTeam().then(maybeJoin); loadInbox(); renderBudget();
+  loadTeam().then(maybeJoin); loadInbox(); renderBudget(); applyAdvanced(); renderGuide();
 }
 (async () => {
   let info = {};

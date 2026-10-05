@@ -6,6 +6,18 @@
   },
   "rewrites": [
     {
+      "source": "/refunds",
+      "destination": "/Generation/legal/refunds.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/Generation/legal/privacy.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/Generation/legal/terms.html"
+    },
+    {
       "source": "/illume-sw.js",
       "destination": "/Generation/app/sw.js"
     },
