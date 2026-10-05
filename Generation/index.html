@@ -665,6 +665,9 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .lookSum span:hover{text-decoration:line-through}
 .lookSum em{font-style:normal;font-size:12.5px;color:var(--faint);padding:4px 2px}
 .lookBtns{display:flex;gap:8px;margin-top:auto}
+.lookMake{justify-content:center;font-size:12.5px;color:var(--gold-2);border-color:var(--gold-line);background:var(--gold-soft)}
+.lookMake:disabled{opacity:.7;cursor:default}
+.lookTile .vis .ph.real{transform:none}
 .lookBtns .btn{flex:1;justify-content:center;font-size:12.5px}
 .lookTabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .lookTabs button{flex:1;white-space:nowrap;font:inherit;font-size:13px;font-weight:600;border:0;border-radius:10px;padding:8px 12px;background:none;color:var(--muted);cursor:pointer;position:relative}
@@ -1003,6 +1006,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
     <div class="lookMonitor" id="lookMonitor" aria-hidden="true"></div>
     <div class="lookSum" id="lookSum"></div>
     <div class="lookBtns"><button class="btn" id="lookSave" type="button">◆ Save as client look</button><button class="btn" id="lookReset" type="button">Reset</button></div>
+    <button class="btn lookMake hidden" id="lookMake" type="button" title="Studio owner: create a real picture for every option with Seedream">✦ Make pictures with Seedream</button>
   </div>
   <div class="lookMain">
     <nav class="lookTabs" id="lookTabs" role="tablist"></nav>
@@ -3092,6 +3096,7 @@ const LOOK_VIS = {
 };
 // one picture, with any mix of treatments
 function lookLayers(v) {
+  if (v.src) return `<div class="lv"><div class="ph real" style="background-image:url('${v.src}')"></div></div>`; // a real Seedream picture: shown as made
   const img = FRAME[v.img] || FRAME.scene, vars = [];
   if (v.z) vars.push(`--z:${v.z}`); if (v.pos) vars.push(`--pos:${v.pos}`);
   if (v.gr) vars.push(`--gr:${v.gr}`); if (v.vg) vars.push(`--vg:${v.vg}`); if (v.lb) vars.push(`--lb:${v.lb}%`);
@@ -3118,13 +3123,87 @@ function monitorVis(st) {
   return v;
 }
 let lookTab = "camera";
+/* ---------- real pictures for the Look tiles, made once with Seedream ---------- */
+let lookHave = {}, lookMaking = false;
+const lookKey = (g, label) => (g + "-" + label).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");
+async function loadLookPics() { try { lookHave = (await api("/api/studio?fn=look", { cache: "no-store" })).have || {}; } catch { lookHave = {}; } }
+// The same subject across a whole tab, so the only thing that changes is the option itself.
+const LOOK_SUBJECT = {
+  camera: "A chef plating a dish under warm pendant lights in a busy restaurant kitchen",
+  lens: "A woman in a camel trench coat standing on a rainy city street at dusk, shop lights reflecting on the wet pavement",
+  depth: "A glass perfume bottle standing on a rough stone block in a candlelit room, warm lights glowing in the background",
+  framing: "A young woman with curly red hair sitting in a cosy café",
+  grade: "Portrait of a woman with a sleek blonde bob against a plain studio backdrop",
+};
+const LOOK_SUBJECT_FOR = {
+  "camera-drone": "Aerial view of a winding coastal road and turquoise sea at golden hour",
+  "camera-iphone-ugc": "A young woman filming herself holding a coffee cup in a sunny kitchen, vertical phone video still",
+  "lens-macro": "A golden honey drip falling from a wooden dipper",
+  "framing-extreme-close-up": "Extreme close-up of the eye and lashes of a young woman with curly red hair",
+  "framing-top-down": "A café table with a latte, a croissant and a notebook, seen from directly above",
+  "framing-low-angle": "A young woman with curly red hair standing outside a café, seen from below",
+};
+function lookPicPrompt(g, label, phrase) {
+  const k = lookKey(g, label);
+  return `${LOOK_SUBJECT_FOR[k] || LOOK_SUBJECT[g]}. ${phrase}. Cinematic, photorealistic still frame. No text, no watermark, no borders.`;
+}
+const SEEDREAM = "bytedance/seedream-v5.0-pro/text-to-image";
+async function shrinkPic(url) { // 480×360 tile, centre-cropped
+  const img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error("couldn't load the picture")); i.src = mediaSrc(url); });
+  const W = 480, H = 360, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const k = Math.max(W / img.naturalWidth, H / img.naturalHeight), w = img.naturalWidth * k, h = img.naturalHeight * k;
+  c.getContext("2d").drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+  let d = c.toDataURL("image/webp", 0.82); if (!d.startsWith("data:image/webp")) d = c.toDataURL("image/jpeg", 0.85); // Safari can't write webp
+  return d.slice(d.indexOf(",") + 1);
+}
+async function makeOnePic(job) {
+  const { id } = await api("/api/generate", { method: "POST", body: JSON.stringify({ mode: "image", model: SEEDREAM, prompt: job.prompt, params: { aspect_ratio: "4:3", resolution: "2k" } }) });
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    const st = await api(`/api/status?id=${encodeURIComponent(id)}`, { cache: "no-store" }).catch(() => null);
+    if (!st) continue;
+    if (st.status === "failed" || st.status === "canceled") throw new Error(st.error || "Seedream couldn't make it");
+    if ((st.status === "completed" || st.status === "succeeded") && st.outputs.length) return shrinkPic(st.outputs[0]);
+  }
+  throw new Error("took too long");
+}
+$("lookMake").onclick = async e => {
+  e.stopPropagation(); if (lookMaking) return;
+  const all = LOOK.flatMap(g => g.opts.map(([label, phrase]) => ({ key: lookKey(g.key, label), prompt: lookPicPrompt(g.key, label, phrase) })));
+  const missing = all.filter(j => !lookHave[j.key]), jobs = missing.length ? missing : all;
+  let each = null;
+  try { const est = await api("/api/studio?fn=estimate", { method: "POST", body: JSON.stringify({ mode: "image", model: SEEDREAM, prompt: jobs[0].prompt, params: { aspect_ratio: "4:3", resolution: "2k" } }) }); each = Number(est.price); } catch {}
+  const cost = Number.isFinite(each) ? ` — about ${(each * jobs.length).toLocaleString(undefined, { style: "currency", currency: "usd" })} on your Atlas balance` : "";
+  if (!confirm(`${missing.length ? "Make" : "Remake"} ${jobs.length} Look picture${jobs.length > 1 ? "s" : ""} with Seedream${cost}? Every account will see them. It takes a few minutes — keep this tab open.`)) return;
+  lookMaking = true; $("lookMake").disabled = true;
+  let done = 0, failed = 0, saving = Promise.resolve();
+  const tick = () => { $("lookMake").textContent = `✦ Making pictures… ${done + failed}/${jobs.length}`; };
+  tick();
+  const queue = jobs.slice();
+  await Promise.all([0, 1, 2].map(async () => { // three at a time
+    while (queue.length) {
+      const job = queue.shift();
+      try {
+        const data = await makeOnePic(job);
+        const saved = saving.catch(() => {}).then(async () => { const out = await api("/api/studio?fn=look", { method: "POST", body: JSON.stringify({ action: "save", key: job.key, data }) }); lookHave[job.key] = out.v; });
+        saving = saved; await saved; done++; // saves go one at a time (they share one index file)
+        if (!$("pop-look").classList.contains("hidden")) renderLook();
+      } catch (err) { failed++; reportClient("lookpic", err, { key: job.key }); }
+      tick();
+    }
+  }));
+  lookMaking = false; $("lookMake").disabled = false;
+  note(failed ? `${done} pictures made, ${failed} failed — press the button again to retry the missing ones.` : `All ${done} Look pictures are ready.`, !!failed);
+  if (me && me.role === "owner") refreshBalance();
+  renderLook();
+};
 function renderLook() {
   const st = lookState();
   $("lookTabs").innerHTML = LOOK.map(g => `<button type="button" role="tab" data-k="${g.key}" class="${g.key === lookTab ? "on" : ""}${st[g.key] ? " set" : ""}">${g.title}</button>`).join("");
   $("lookTabs").querySelectorAll("button").forEach(b => b.onclick = e => { e.stopPropagation(); lookTab = b.dataset.k; renderLook(); });
   const g = LOOK.find(x => x.key === lookTab), vis = LOOK_VIS[lookTab];
   $("lookGrid").innerHTML = g.opts.map(([label]) => {
-    const v = { img: vis.img, ...(vis.opt[label] || {}) };
+    const k = lookKey(g.key, label), v = lookHave[k] ? { src: `/api/studio?fn=look&k=${k}&v=${lookHave[k]}` } : { img: vis.img, ...(vis.opt[label] || {}) };
     return `<button type="button" class="lookTile${st[g.key] === label ? " on" : ""}" data-l="${esc(label)}"><span class="vis">${lookLayers(v)}</span><b>${esc(label)}</b><small>${esc(vis.hint[label] || "")}</small></button>`;
   }).join("");
   $("lookGrid").querySelectorAll(".lookTile").forEach(b => b.onclick = e => { e.stopPropagation(); const cur = lookState(); cur[g.key] = cur[g.key] === b.dataset.l ? null : b.dataset.l; setLook(cur); renderLook(); });
@@ -3132,6 +3211,9 @@ function renderLook() {
   const chosen = LOOK.filter(x => st[x.key]);
   $("lookSum").innerHTML = chosen.length ? chosen.map(x => `<span data-k="${x.key}" title="Remove">${esc(st[x.key])}</span>`).join("") : `<em>Pick a camera, lens, focus, framing and grade — or leave it to the model.</em>`;
   $("lookSum").querySelectorAll("span").forEach(sp => sp.onclick = e => { e.stopPropagation(); const cur = lookState(); cur[sp.dataset.k] = null; setLook(cur); renderLook(); });
+  const total = LOOK.reduce((t, x) => t + x.opts.length, 0), made = Object.keys(lookHave).length;
+  $("lookMake").classList.toggle("hidden", !(me && me.role === "owner"));
+  if (!lookMaking) $("lookMake").textContent = made >= total ? "↻ Remake pictures with Seedream" : made ? `✦ Make the ${total - made} missing pictures` : "✦ Make pictures with Seedream";
   $("lookSave").textContent = "◆ Save for client"; $("lookSave").title = `Make this ${client().name}'s default look — new projects start with it`;
 }
 $("lookReset").onclick = e => { e.stopPropagation(); setLook({}); renderLook(); };
@@ -3201,6 +3283,7 @@ async function startStudio(user) {
   mergeMcp(account["il.mcp"]);
   try { localStorage.removeItem("il.ref"); } catch {}
   stripeReturn(); // also loads the credits
+  loadLookPics();
   setTimeout(keepBackfill, 4000); // after the page has settled
   autoGrow();
   const dq = new URLSearchParams(location.search).get("drive");
