@@ -854,6 +854,16 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 /* account: forgot / reset / delete */
 .dangerZone{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
 .dangerZone .setP{margin-bottom:10px}
+
+/* side panel: hide / show */
+.railTop{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.railBtn{display:grid;place-items:center;width:36px;height:36px;flex-shrink:0;border-radius:11px;border:1px solid var(--line);background:transparent;color:var(--faint);cursor:pointer;transition:color .15s,background .15s,border-color .15s}
+.railBtn:hover{color:var(--text);background:var(--panel-2);border-color:var(--line-2)}
+.head .titles{margin-right:auto}
+.railShow{display:none}
+.app.railOff{grid-template-columns:minmax(0,1fr)}
+.app.railOff .rail{display:none}
+.app.railOff .railShow{display:grid}
 </style>
 </head>
 <body>
@@ -879,7 +889,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 <div class="app">
   <!-- clients & projects -->
   <aside class="rail">
-    <div class="wordmark"><i></i>Illume Studio</div>
+    <div class="railTop"><div class="wordmark"><i></i>Illume Studio</div><button class="railBtn" id="railHide" type="button" aria-label="Hide the side panel" title="Hide the side panel"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
     <div class="whoami" id="whoami"></div>
     <h2>Clients</h2>
     <div class="ctree" id="projects"></div>
@@ -1043,6 +1053,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 
   <main class="main">
     <div class="head">
+      <button class="railBtn railShow" id="railShow" type="button" aria-label="Show the side panel" title="Show clients &amp; projects"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button>
       <div class="titles">
         <input class="clientTitle" id="clientName" value="" aria-label="Client name" title="Client — click to rename">
         <div class="projLine"><span class="lbl">Project</span><input id="projName" value="General" aria-label="Project name" title="Project — click to rename"></div>
@@ -1471,6 +1482,16 @@ const uiAsk = (title, opts = {}) => uiDialog({ title, input: true, ok: "Create",
 const uiConfirm = (text, opts = {}) => uiDialog({ title: opts.title || "Are you sure?", text, ok: opts.ok || "Yes", danger: !!opts.danger, ...opts }).then(Boolean);
 const uiAlert = (text, title = "Heads up") => uiDialog({ title, text, ok: "OK", cancel: null });
 
+
+/* ---------- side panel: hide / show (remembered on this device) ---------- */
+function setRail(off) {
+  document.querySelector(".app").classList.toggle("railOff", off);
+  try { localStorage.setItem("illume.railOff", off ? "1" : "0"); } catch {}
+}
+try { if (localStorage.getItem("illume.railOff") === "1") document.querySelector(".app").classList.add("railOff"); } catch {}
+$("railHide").onclick = () => setRail(true);
+$("railShow").onclick = () => setRail(false);
+document.addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && e.key === "\\") { e.preventDefault(); setRail(!document.querySelector(".app").classList.contains("railOff")); } });
 
 /* ---------- recently deleted: 14 days to change your mind ---------- */
 const TRASH_DAYS = 14, DAY = 864e5;
