@@ -877,6 +877,52 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .lite .gateShow i{animation:none;opacity:0;inset:0;transform:none}
 .lite .gateShow i:first-child{opacity:1}
 .lite .gate form{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(18,16,13,.92);animation:none}
+
+/* team, budgets, alerts, search, deliver */
+.byTag{position:absolute;left:8px;top:8px;z-index:2;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:#F3EDE2;background:rgba(12,11,9,.72);border:1px solid rgba(255,236,200,.18);border-radius:999px;padding:2px 8px;pointer-events:none}
+.hist button .tag ~ .byTag{top:34px}
+.projTag{position:absolute;right:8px;bottom:8px;z-index:2;font-size:10.5px;color:#F3EDE2;background:rgba(12,11,9,.72);border-radius:8px;padding:2px 7px;max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.budgetPill,.inboxBtn{cursor:pointer;font:inherit;font-size:12px;font-weight:600}
+.budgetPill:hover,.inboxBtn:hover{border-color:var(--gold-line);color:var(--text)}
+.budgetPill.warn{color:#FFE7B0;border-color:rgba(232,181,75,.55);background:rgba(232,181,75,.12)}
+.budgetPill.over{color:#FFD9D6;border-color:rgba(240,122,110,.5);background:var(--danger-soft)}
+.inboxBtn.new{color:var(--gold-ink);background:linear-gradient(180deg,var(--gold-2),var(--gold));border-color:transparent}
+.inboxPanel{position:fixed;z-index:60;width:min(380px,calc(100vw - 24px));max-height:min(480px,70vh);overflow:auto;background:var(--panel);border:1px solid var(--line-2);border-radius:16px;box-shadow:0 30px 80px -20px rgba(0,0,0,.7);padding:8px}
+.inboxPanel h4{margin:6px 8px 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.inboxPanel button{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:12px;padding:10px;color:var(--text);cursor:pointer;font:inherit}
+.inboxPanel button:hover{background:var(--panel-2)}
+.inboxPanel button.unseen{background:rgba(232,181,75,.08)}
+.inboxPanel b{font-weight:600}.inboxPanel small{display:block;color:var(--faint);font-size:12px;margin-top:2px}
+.inboxPanel q{display:block;color:var(--muted);font-size:13px;margin-top:4px;quotes:"“" "”"}
+.inboxPanel .empty{padding:18px;text-align:center;color:var(--faint);font-size:13px}
+.searchBox{display:inline-flex;align-items:center;gap:6px}
+.searchBox input{width:min(220px,40vw);padding:7px 11px;border-radius:999px;font-size:13px}
+.searchBox .ghLink{white-space:nowrap}
+.searchBox .ghLink.on{color:var(--gold)}
+.changesBox{grid-column:1/-1;background:rgba(240,122,110,.07);border:1px solid rgba(240,122,110,.32);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.changesBox > b{font-size:13.5px}
+.changesBox .chRow{display:flex;align-items:center;gap:10px;font-size:13px}
+.changesBox .chRow span{flex:1;min-width:0;color:var(--muted)}
+.changesBox .chRow em{font-style:normal;color:var(--text);font-weight:600;margin-right:6px}
+.changesBox .btn{padding:6px 12px;font-size:12.5px}
+.teamList{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.teamRow{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.teamRow .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--raised);color:var(--gold);font-weight:700;font-size:12px;flex-shrink:0}
+.teamRow .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px}
+.teamRow select{width:auto;padding:6px 10px;font-size:12.5px}
+.teamRow .tag{font-size:11.5px}
+.teamRow .btn{padding:6px 11px;font-size:12.5px}
+.spendTabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.spendTabs button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:5px 11px;font:inherit;font-size:12.5px;cursor:pointer}
+.spendTabs button.on{color:var(--gold-ink);background:linear-gradient(180deg,var(--gold-2),var(--gold));border-color:transparent;font-weight:600}
+.spendTotal{font-family:var(--display);font-size:30px;margin:4px 0 2px}
+.spendTable{display:flex;flex-direction:column;gap:4px;margin:12px 0}
+.spendTable .r{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;font-size:13.5px}
+.spendTable .r.c{background:var(--panel-2);font-weight:600}
+.spendTable .r.p{padding-left:24px;color:var(--muted)}
+.spendTable .bar{height:4px;border-radius:4px;background:var(--gold);opacity:.6;margin:0 10px 6px}
+/* viewers watch and comment: nothing that changes the studio */
+.roleViewer .composer,.roleViewer .delTake,.roleViewer #clearHist,.roleViewer #clearFailed,.roleViewer .addBoard,.roleViewer #newClient,.roleViewer .crow .more,.roleViewer .crow.add,.roleViewer #shareReview,.roleViewer .shot .ctl,.roleViewer #trashEmpty,.roleViewer #reuse,.roleViewer #animate,.roleViewer #continueShot,.roleViewer .changesBox .btn{display:none!important}
 </style>
 </head>
 <body>
@@ -921,7 +967,9 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
       <div class="modal-head"><b>Settings</b><button class="modal-x" id="setClose" aria-label="Close">✕</button></div>
       <nav class="setTabs" id="setTabs" role="tablist">
         <button data-tab="account" role="tab">Account</button>
+        <button data-tab="team" role="tab" id="tabTeam">Team</button>
         <button data-tab="credits" role="tab" id="tabCredits">Credits</button>
+        <button data-tab="spend" role="tab">Spending</button>
         <button data-tab="invite" role="tab">Invite &amp; earn</button>
         <button data-tab="claude" role="tab">Claude &amp; ChatGPT</button>
         <button data-tab="drive" role="tab">Google Drive</button>
@@ -988,6 +1036,14 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
           <button class="btn danger" id="mcpRevoke" type="button">Revoke all Claude access</button>
         </section>
 
+        <section class="setSec" data-sec="team">
+          <div id="teamBody"></div>
+        </section>
+
+        <section class="setSec" data-sec="spend">
+          <div id="spendBody"></div>
+        </section>
+
         <section class="setSec" data-sec="trash">
           <p class="setP">Deleted takes, projects and clients wait here for 14 days, then they're removed for good — files included.</p>
           <div class="trashList" id="trashList"></div>
@@ -1012,7 +1068,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
         <p id="uiText"></p>
         <input id="uiInput" autocomplete="off" maxlength="80">
       </div>
-      <div class="uiBtns"><button class="btn" type="button" id="uiCancel">Cancel</button><button class="go uiOk" type="submit" id="uiOk">OK</button></div>
+      <div class="uiBtns"><button class="btn" type="button" id="uiCancel">Cancel</button><button class="btn hidden" type="button" id="uiAlt"></button><button class="go uiOk" type="submit" id="uiOk">OK</button></div>
     </form>
   </div>
 
@@ -1073,6 +1129,8 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
       </div>
       <div class="headTools">
         <button class="activity hidden" id="activity" type="button" title="Generations in progress — click to see"></button>
+        <button class="balance inboxBtn hidden" id="inboxBtn" type="button" title="What your clients said on review links"></button>
+        <button class="balance budgetPill hidden" id="budgetPill" type="button"></button>
         <span class="count" id="count"></span>
         <span class="balance" id="balance" title="Atlas Cloud balance — refreshes after every generation"></span>
         <button class="balance credPill hidden" id="credPill" type="button" title="Your credits — tap to buy more"></button>
@@ -1089,8 +1147,10 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
           <button type="button" role="tab" id="tabBoard" aria-selected="false">Storyboard <i id="nBoard"></i></button>
         </div>
         <div class="ghRight">
+          <span class="searchBox" id="searchBox"><input type="search" id="takeSearch" placeholder="Search takes…" aria-label="Search takes" autocomplete="off"><button type="button" id="searchAll" class="ghLink" title="Search this project, or every client">This project</button></span>
           <span class="boardInfo hidden" id="boardInfo"></span>
           <button class="btn hidden" id="shareReview" type="button" title="Send this storyboard to your client — they approve or comment on each shot, no account needed">⤴ Client review</button>
+          <button class="btn hidden" id="deliver" type="button" title="Download every shot (or just the approved ones), named and numbered, in one zip">⬇ Deliver</button>
           <button class="btn hidden" id="exportCut" type="button" title="Join every shot into one video file">⬇ Export cut</button>
           <button class="btn hidden" id="playAll" type="button">▶ Play all</button>
           <button class="ghLink hidden" id="clearFailed" type="button">Clear failed</button>
@@ -1226,7 +1286,7 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
     <button class="btn hidden" id="continueShot" type="button" title="Use this video's last frame as the start of the next shot">⏭ Continue shot</button>
     <button class="btn hidden" id="animate" type="button">▶ Animate</button>
     <button class="btn hidden" id="asRef" type="button">＋ Use as reference</button>
-    <button class="btn hidden" id="reuse" type="button">↺ Reuse prompt</button>
+    <button class="btn hidden" id="reuse" type="button" title="Same model, prompt, look, cast, sound, length and seed — ready to generate again">↺ Use these settings</button>
     <button class="btn hidden" id="toBoard" type="button">＋ Storyboard</button>
     <a class="btn hidden" id="inDrive" target="_blank" rel="noopener">Open in Google Drive ↗</a>
     <button class="btn danger" id="delTake" type="button">🗑 Delete</button>
@@ -1301,7 +1361,14 @@ const $ = id => document.getElementById(id);
 // follows them to any device and two people never see each other's work.
 // Only device conveniences (the model catalogue cache, the theme) stay in
 // this browser's localStorage.
-const isAccountKey = k => /^il\.(clients|mcpseen|trash|projects|proj|hist|presets|pending|imported|favs4\.|model\.|draft\.)/.test(k);
+const isAccountKey = k => /^il\.(clients|mcpseen|trash|projects|proj|hist|presets|pending|imported|spend|inboxSeen|favs4\.|model\.|draft\.)/.test(k);
+// The studio's shared lists. In a team several people save them; each save
+// sends the ids this browser last saw, so the server can tell "I deleted it"
+// from "a teammate added it" and merge instead of overwriting.
+const SHARED_KEY = /^il\.(clients|projects|hist|presets|trash|spend)$/;
+const baseIds = {};
+const idsOf = v => (Array.isArray(v) ? v.map(x => x && x.id).filter(Boolean) : null);
+let syncing = false;
 const account = {};           // this person's data, as loaded from the server
 let unsynced = {}, syncTimer = null, syncWarned = false;
 const clone = v => (v == null ? v : JSON.parse(JSON.stringify(v)));
@@ -1309,21 +1376,32 @@ function queueSync(k, v) { unsynced[k] = v; clearTimeout(syncTimer); syncTimer =
 async function syncNow() {
   const batch = unsynced; if (!Object.keys(batch).length) return;
   unsynced = {};
+  const base = {}; Object.keys(batch).forEach(k => { if (baseIds[k]) base[k] = baseIds[k]; });
+  syncing = true;
   try {
-    const r = await fetch("/api/data", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ set: batch }) });
+    const r = await fetch("/api/data", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ set: batch, base }) });
     if (r.status === 401) { unsynced = { ...batch, ...unsynced }; return showGate("Your session ended — sign in again. Nothing is lost."); }
-    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `Error ${r.status}`);
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || `Error ${r.status}`);
+    const merged = j.merged || {}, got = [];
+    Object.keys(batch).forEach(k => {
+      if (!SHARED_KEY.test(k) || k in unsynced) return; // edited again meanwhile: the next save merges
+      if (merged[k]) { account[k] = merged[k]; got.push(k); }
+      baseIds[k] = idsOf(merged[k] || batch[k]);
+    });
+    if (got.length) applyRemote(got);
     if (syncWarned) { syncWarned = false; note("Saved to your account."); }
   } catch (err) {
     unsynced = { ...batch, ...unsynced }; // keep it, newer edits win
     if (!syncWarned) { syncWarned = true; note("Couldn't save to your account just now — retrying. Keep this tab open.", true); reportClient("sync", err); }
     clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 5000);
-  }
+  } finally { syncing = false; }
 }
 // Leaving the page: send anything not yet saved.
 window.addEventListener("pagehide", () => {
   if (!Object.keys(unsynced).length) return;
-  try { navigator.sendBeacon("/api/data", new Blob([JSON.stringify({ set: unsynced })], { type:"application/json" })); unsynced = {}; } catch {}
+  const base = {}; Object.keys(unsynced).forEach(k => { if (baseIds[k]) base[k] = baseIds[k]; });
+  try { navigator.sendBeacon("/api/data", new Blob([JSON.stringify({ set: unsynced, base })], { type:"application/json" })); unsynced = {}; } catch {}
 });
 const load = (k, d) => {
   if (isAccountKey(k)) return k in account ? clone(account[k]) : d;
@@ -1477,7 +1555,8 @@ $("delAccount").onclick = async () => {
 
 /* ---------- the studio's own dialog (names, confirmations) ---------- */
 let uiDone = null;
-function uiDialog({ title, text = "", input = false, value = "", placeholder = "", ok = "OK", cancel = "Cancel", danger = false, type = "text" }) {
+function uiDialog({ title, text = "", input = false, value = "", placeholder = "", ok = "OK", cancel = "Cancel", danger = false, type = "text", alt = null }) {
+  $("uiAlt").textContent = alt || ""; $("uiAlt").classList.toggle("hidden", !alt);
   if (uiDone) uiDone(null);
   $("uiTitle").textContent = title; $("uiText").textContent = text;
   $("uiInput").classList.toggle("hidden", !input); $("uiInput").type = type; $("uiInput").maxLength = type === "password" ? 200 : 80; $("uiInput").autocomplete = type === "password" ? "current-password" : "off"; $("uiInput").value = value; $("uiInput").placeholder = placeholder;
@@ -1489,6 +1568,7 @@ function uiDialog({ title, text = "", input = false, value = "", placeholder = "
 }
 $("uiForm").onsubmit = e => { e.preventDefault(); if (!uiDone) return; if ($("uiInput").classList.contains("hidden")) uiDone(true); else { const v = $("uiInput").type === "password" ? $("uiInput").value : $("uiInput").value.trim(); if (!v) { $("uiInput").focus(); return; } uiDone(v); } };
 $("uiCancel").onclick = () => uiDone && uiDone(null);
+$("uiAlt").onclick = () => uiDone && uiDone("alt");
 $("uiBackdrop").onclick = () => uiDone && uiDone(null);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && uiDone) uiDone(null); });
 const uiAsk = (title, opts = {}) => uiDialog({ title, input: true, ok: "Create", ...opts });
@@ -1505,6 +1585,294 @@ try { if (localStorage.getItem("illume.railOff") === "1") document.querySelector
 $("railHide").onclick = () => setRail(true);
 $("railShow").onclick = () => setRail(false);
 document.addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && e.key === "\\") { e.preventDefault(); setRail(!document.querySelector(".app").classList.contains("railOff")); } });
+
+
+/* ---------- team: one shared studio ---------- */
+let teamInfo = null, myTeamRole = null;
+const inTeam = () => !!(teamInfo && teamInfo.members.length > 1);
+const canManage = () => !myTeamRole || myTeamRole === "lead"; // on your own, or the team lead
+const personName = n => String(n || "").split("@")[0];
+async function loadTeam() {
+  try { teamInfo = (await api("/api/studio?fn=team", { cache: "no-store" })).team; } catch { teamInfo = null; }
+  myTeamRole = teamInfo ? teamInfo.you : null;
+  document.documentElement.classList.toggle("roleViewer", myTeamRole === "viewer");
+  if (me) $("whoami").textContent = "Signed in as " + me.name + (inTeam() ? " · " + teamInfo.name : "");
+  renderTeam(); renderHistory(); renderBoard();
+}
+// Teammates' changes appear by themselves: the shared lists are re-read every 20 seconds.
+function applyRemote(keys) {
+  if (keys.some(k => k === "il.clients" || k === "il.projects")) {
+    clients = load(LS.clients, clients); projects = load(LS.projects, projects);
+    if (projects.length && !projects.some(p => p.id === projId)) return selectProject(projects[0].id);
+    refreshTitles();
+  }
+  renderProjects(); renderHistory(); renderBoard(); renderViewTabs(); renderTrash(); renderBudget();
+}
+async function pullShared() {
+  if (!me || document.hidden || !inTeam() || syncing) return;
+  try {
+    const { data } = await api("/api/data?only=shared", { cache: "no-store" });
+    const changed = [];
+    Object.entries(data || {}).forEach(([k, v]) => {
+      if (k in unsynced || syncing) return;
+      if (JSON.stringify(account[k]) !== JSON.stringify(v)) { account[k] = v; baseIds[k] = idsOf(v); changed.push(k); }
+    });
+    if (changed.length) applyRemote(changed);
+  } catch {}
+}
+setInterval(pullShared, 20000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pullShared(); });
+async function teamCall(body) { return api("/api/studio?fn=team", { method: "POST", body: JSON.stringify(body) }); }
+function renderTeam() {
+  const box = $("teamBody"); if (!box || !me) return;
+  const t = teamInfo, lead = myTeamRole === "lead";
+  if (!t) {
+    box.innerHTML = `<p class="setP"><b>Work together in one studio.</b> Invite people to this studio: everyone sees the same clients, projects, takes, storyboards and cast, each take shows who made it, and generations come out of one shared pot of credits.</p>
+      <p class="setP">Editors create, edit and share with clients. Viewers watch and can't create or delete — good for a producer or account manager.</p>
+      <button class="go" type="button" id="teamCreate" style="width:auto;padding:12px 20px">Create a team</button>`;
+    $("teamCreate").onclick = async () => {
+      const name = await uiAsk("Name your studio", { text: "Your teammates see this name. Your current clients and takes become the team's.", value: "Illume Studio", ok: "Create team" }); if (!name) return;
+      try { await teamCall({ action: "create", name }); await loadTeam(); note(`“${name}” is ready — invite your first teammate.`); } catch (e) { uiAlert(e.message, "Couldn't create the team"); }
+    };
+    return;
+  }
+  const row = m => `<div class="teamRow"><span class="av">${esc(initials(personName(m.name)))}</span><span class="nm">${esc(m.name)}${m.name === me.name ? " (you)" : ""}</span>${m.role === "lead" ? `<span class="tag">Lead</span>` : lead ? `<select data-m="${esc(m.name)}"><option value="editor"${m.role === "editor" ? " selected" : ""}>Editor</option><option value="viewer"${m.role === "viewer" ? " selected" : ""}>Viewer</option></select><button class="btn danger" type="button" data-rm="${esc(m.name)}">Remove</button>` : `<span class="tag">${m.role === "viewer" ? "Viewer" : "Editor"}</span>`}</div>`;
+  box.innerHTML = `<div class="setRow"><span><small>${lead ? "Your team" : `Led by ${esc(t.lead)}`}</small><b>${esc(t.name)}</b></span>${lead ? `<button class="btn" type="button" id="teamRename">Rename</button>` : `<span class="tag">${myTeamRole === "viewer" ? "Viewer" : "Editor"}</span>`}</div>
+    <div class="teamList">${t.members.map(row).join("")}</div>
+    ${lead ? `<p class="setP">Invite links work once, for 7 days. The person signs in (or creates an account) and joins straight into this studio.</p>
+      <div class="btnRow"><button class="btn" type="button" data-inv="editor">＋ Invite an editor</button><button class="btn" type="button" data-inv="viewer">＋ Invite a viewer</button></div>
+      <p class="setP" style="margin-top:12px">Only you manage the team, credits and budgets. Editors create, edit and share with clients; viewers watch and can't change anything.</p>`
+    : `<p class="setP">You're working in ${esc(t.lead)}'s studio${myTeamRole === "viewer" ? " as a viewer: you can watch everything, but not create or delete" : ""}. Takes come out of the team's credits. Your own studio is kept and comes back if you leave.</p>
+      <button class="btn danger" type="button" id="teamLeave">Leave the team</button>`}`;
+  if (lead) {
+    $("teamRename").onclick = async () => { const n = await uiAsk("Rename your studio", { value: t.name, ok: "Save" }); if (!n) return; try { await teamCall({ action: "rename", name: n }); loadTeam(); } catch (e) { uiAlert(e.message); } };
+    box.querySelectorAll("[data-inv]").forEach(b => b.onclick = async () => {
+      try { const { link } = await teamCall({ action: "invite", role: b.dataset.inv }); await copyText(link); note(`Invite link copied — send it to your ${b.dataset.inv}. It works once, for 7 days.`); } catch (e) { uiAlert(e.message, "Couldn't make the invite"); }
+    });
+    box.querySelectorAll("select[data-m]").forEach(sel => sel.onchange = async () => { try { await teamCall({ action: "role", member: sel.dataset.m, role: sel.value }); note(`${sel.dataset.m} is now ${sel.value === "viewer" ? "a viewer" : "an editor"}.`); loadTeam(); } catch (e) { uiAlert(e.message); } });
+    box.querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => {
+      if (!(await uiConfirm(`They lose access to the studio straight away. Takes they made stay here.`, { title: `Remove ${b.dataset.rm}?`, ok: "Remove", danger: true }))) return;
+      try { await teamCall({ action: "remove", member: b.dataset.rm }); loadTeam(); } catch (e) { uiAlert(e.message); }
+    });
+  } else {
+    $("teamLeave").onclick = async () => {
+      if (!(await uiConfirm("You go back to your own studio. Everything you made here stays with the team.", { title: `Leave “${t.name}”?`, ok: "Leave", danger: true }))) return;
+      try { await syncNow(); await teamCall({ action: "leave" }); location.reload(); } catch (e) { uiAlert(e.message); }
+    };
+  }
+}
+// An invite link (…/generation?join=CODE) is remembered through sign-in / sign-up.
+(() => {
+  const j = new URLSearchParams(location.search).get("join");
+  if (j && /^[\w-]{10,40}$/.test(j)) { try { localStorage.setItem("illume.join", j); } catch {} history.replaceState(null, "", location.pathname); }
+})();
+async function maybeJoin() {
+  let code = null; try { code = localStorage.getItem("illume.join"); localStorage.removeItem("illume.join"); } catch {}
+  if (!code) return;
+  let info; try { info = await teamCall({ action: "peek", code }); } catch (e) { return uiAlert(e.message, "Team invite"); }
+  if (!(await uiConfirm(`You'll work in ${info.lead}'s studio as ${info.role === "viewer" ? "a viewer (watch and comment)" : "an editor"} — the same clients, projects and takes as the rest of the team, paid from the team's credits. Your own studio is kept and comes back if you ever leave.`, { title: `Join “${info.team}”?`, ok: "Join the team", cancel: "Not now" }))) return;
+  const mine = load(LS.hist, []).filter(h => h.status !== "failed").length;
+  const bring = mine > 0 && await uiConfirm(`Copy your ${clients.length} client${clients.length > 1 ? "s" : ""} and ${mine} take${mine > 1 ? "s" : ""} into the team's studio, so everyone can see them? Otherwise they stay in your own studio.`, { title: "Bring your work?", ok: "Bring them", cancel: "Keep them separate" });
+  try { await syncNow(); await teamCall({ action: "join", code, bring }); location.reload(); } catch (e) { uiAlert(e.message, "Couldn't join"); }
+}
+
+/* ---------- spending: budgets per project, totals per client and month ---------- */
+let estOne = null; // the last price estimate for one take, in credits
+const perUsd = () => (wallet && wallet.perUsd) || 130;
+const fmtSpend = c => (me && me.role === "owner") ? (Number(c || 0) / perUsd()).toLocaleString(undefined, { style: "currency", currency: "usd" }) : fmtN(Math.round(c || 0)) + " credits";
+const projSpend = pid => load("il.spend", []).filter(x => x.proj === pid).reduce((t, x) => t + (x.credits || 0), 0);
+function logSpend(item, credits) {
+  if (!credits) return;
+  const list = load("il.spend", []);
+  list.unshift({ id: "s" + item.id, t: Date.now(), proj: item.proj, client: item.client, by: me && me.name, mode: item.mode, credits: Math.round(credits) });
+  save("il.spend", list.slice(0, 4000)); renderBudget();
+}
+function unSpend(takeId) {
+  const list = load("il.spend", []); if (!list.some(x => x.id === "s" + takeId)) return;
+  save("il.spend", list.filter(x => x.id !== "s" + takeId)); renderBudget();
+}
+function renderBudget() {
+  const p = proj(), el = $("budgetPill"); if (!el || !p) return;
+  el.classList.toggle("hidden", !p.budget); if (!p.budget) return;
+  const spent = projSpend(p.id), pct = spent / p.budget;
+  el.textContent = pct >= 1 ? "Budget used up" : `${Math.round(pct * 100)}% of budget`;
+  el.title = `${p.name}: ${fmtSpend(spent)} spent of ${fmtSpend(p.budget)}${canManage() ? " — tap to change" : ""}`;
+  el.classList.toggle("warn", pct >= 0.8 && pct < 1); el.classList.toggle("over", pct >= 1);
+}
+$("budgetPill").onclick = () => { const p = proj(); if (canManage()) setBudget(p); else note($("budgetPill").title); };
+async function setBudget(p) {
+  if (!canManage()) return uiAlert("Only the team lead sets budgets.");
+  const owner = me.role === "owner";
+  const v = await uiAsk(`Budget for “${p.name}”`, { text: `Spent so far: ${fmtSpend(projSpend(p.id))}. Everyone is warned at 80%, and new takes stop at 100% until it's raised. Type 0 for no budget.`, value: p.budget ? (owner ? (p.budget / perUsd()).toFixed(2) : String(p.budget)) : "", placeholder: owner ? "In US$ — e.g. 50" : "In credits — e.g. 3000", ok: "Save budget" });
+  if (v == null) return;
+  const n = Number(String(v).replace(/[^\d.]/g, ""));
+  if (n > 0) p.budget = Math.round(owner ? n * perUsd() : n); else delete p.budget;
+  saveProjects(); renderBudget(); note(p.budget ? `Budget set: ${fmtSpend(p.budget)} for ${p.name}.` : `${p.name} has no budget now.`);
+}
+async function budgetOk(n) {
+  const p = proj(); if (!p || !p.budget) return true;
+  const spent = projSpend(p.id), add = (estOne || 0) * n;
+  if (spent + add <= p.budget) {
+    if (spent + add >= 0.8 * p.budget && spent < 0.8 * p.budget) note(`Heads up — “${p.name}” has now used 80% of its ${fmtSpend(p.budget)} budget.`, true);
+    return true;
+  }
+  if (canManage()) { if (await uiConfirm(`“${p.name}” has spent ${fmtSpend(spent)} of its ${fmtSpend(p.budget)} budget${add ? `, and this would add about ${fmtSpend(add)}` : ""}.`, { title: "Budget reached", ok: "Raise the budget", cancel: "Not now" })) setBudget(p); return false; }
+  uiAlert(`“${p.name}” has reached its ${fmtSpend(p.budget)} budget. Ask ${teamInfo ? teamInfo.lead : "the team lead"} to raise it.`, "Budget reached");
+  return false;
+}
+let spendMonth = null;
+const monthKey = t => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); };
+const monthName = k => new Date(k + "-01T12:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" });
+function renderSpend() {
+  const box = $("spendBody"); if (!box || !me) return;
+  const all = load("il.spend", []), now = monthKey(Date.now());
+  const months = [...new Set([now, ...all.map(x => monthKey(x.t))])].sort().reverse().slice(0, 12);
+  if (!spendMonth || !months.includes(spendMonth)) spendMonth = now;
+  const rows = all.filter(x => monthKey(x.t) === spendMonth), total = rows.reduce((t, x) => t + (x.credits || 0), 0);
+  const byClient = new Map(), byPerson = new Map();
+  rows.forEach(x => {
+    const pr = projects.find(p => p.id === x.proj), cid = x.client || (pr && pr.client) || "?";
+    const c = byClient.get(cid) || { total: 0, projects: new Map() }; c.total += x.credits || 0;
+    const pk = pr ? pr.id : "?"; c.projects.set(pk, (c.projects.get(pk) || 0) + (x.credits || 0)); byClient.set(cid, c);
+    byPerson.set(x.by || "?", (byPerson.get(x.by || "?") || 0) + (x.credits || 0));
+  });
+  const max = Math.max(1, ...[...byClient.values()].map(c => c.total));
+  box.innerHTML = `<div class="spendTabs">${months.map(m => `<button type="button" data-m="${m}" class="${m === spendMonth ? "on" : ""}">${esc(monthName(m))}</button>`).join("")}</div>
+    <small class="setP">${esc(monthName(spendMonth))}${inTeam() ? " · the whole team" : ""}</small>
+    <div class="spendTotal">${fmtSpend(total)}</div>
+    <small class="setP">${rows.length} take${rows.length === 1 ? "" : "s"} started${me.role === "owner" ? " · at Atlas Cloud's price plus your markup" : ""}</small>
+    ${rows.length ? `<div class="spendTable">${[...byClient.entries()].sort((a, b) => b[1].total - a[1].total).map(([cid, c]) => `<div class="r c"><span>${esc((clients.find(x => x.id === cid) || {}).name || "Deleted client")}</span><span>${fmtSpend(c.total)}</span></div><div class="bar" style="width:${Math.max(3, c.total / max * 100)}%"></div>${[...c.projects.entries()].sort((a, b) => b[1] - a[1]).map(([pid, v]) => { const pr = projects.find(p => p.id === pid); return `<div class="r p"><span>${esc(pr ? pr.name : "Deleted project")}${pr && pr.budget ? ` · budget ${fmtSpend(pr.budget)}` : ""}</span><span>${fmtSpend(v)}</span></div>`; }).join("")}`).join("")}</div>` : `<div class="trashEmptyNote">Nothing spent this month yet.</div>`}
+    ${inTeam() && rows.length ? `<small class="setP">By person</small><div class="spendTable">${[...byPerson.entries()].sort((a, b) => b[1] - a[1]).map(([n, v]) => `<div class="r"><span>${esc(n === me.name ? n + " (you)" : n)}</span><span>${fmtSpend(v)}</span></div>`).join("")}</div>` : ""}
+    <p class="setP">Set a budget on any project from its ⋯ menu — everyone is warned at 80% and new takes stop at 100%.</p>`;
+  box.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { spendMonth = b.dataset.m; renderSpend(); });
+}
+
+/* ---------- client answers: a bell, an email, and what to redo ---------- */
+let inbox = [], inboxToasted = Date.now();
+async function loadInbox() {
+  if (!me) return;
+  try { inbox = (await api("/api/studio?fn=review&inbox=1", { cache: "no-store" })).items || []; } catch { return; }
+  const fresh = inbox.filter(i => i.t > inboxToasted);
+  if (fresh.length) { inboxToasted = Date.now(); note(inboxLine(fresh[0]) + (fresh.length > 1 ? ` (+${fresh.length - 1} more)` : "")); if (fresh.some(i => i.proj === projId)) loadReviewFb(); }
+  renderInbox();
+}
+const inboxSeen = () => Number(getRaw("il.inboxSeen")) || 0;
+const inboxLine = i => `${i.name} ${i.take === "*" ? (i.status === "approved" ? "approved every shot" : "left feedback") : i.status === "approved" ? `approved shot ${i.shot}` : i.status === "changes" ? `asked for changes on shot ${i.shot}` : `commented on shot ${i.shot}`} — ${i.title}`;
+function renderInbox() {
+  const b = $("inboxBtn"); if (!b) return;
+  const n = inbox.filter(i => i.t > inboxSeen()).length;
+  b.classList.toggle("hidden", !inbox.length); b.classList.toggle("new", n > 0);
+  b.textContent = n ? `🔔 ${n} new` : "🔔";
+  b.title = n ? `${n} new answer${n > 1 ? "s" : ""} from clients` : "What your clients said on review links";
+}
+$("inboxBtn").onclick = e => {
+  e.stopPropagation();
+  const old = document.querySelector(".inboxPanel"); if (old) { old.remove(); return; }
+  const seen = inboxSeen(), panel = document.createElement("div"); panel.className = "inboxPanel";
+  const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : new Date(t).toLocaleDateString(); };
+  panel.innerHTML = `<h4>Client answers</h4>` + (inbox.length ? inbox.slice(0, 40).map((i, k) => `<button type="button" data-k="${k}" class="${i.t > seen ? "unseen" : ""}"><b>${i.status === "approved" ? "✓ " : i.status === "changes" ? "✎ " : "💬 "}${esc(inboxLine(i))}</b><small>${esc(i.client || "")}${i.client ? " · " : ""}${ago(i.t)}</small>${i.comment ? `<q>${esc(i.comment)}</q>` : ""}</button>`).join("") : `<div class="empty">No answers yet.</div>`);
+  document.body.appendChild(panel);
+  const r = e.currentTarget.getBoundingClientRect();
+  panel.style.top = (r.bottom + 8) + "px"; panel.style.left = Math.max(12, Math.min(window.innerWidth - panel.offsetWidth - 12, r.right - panel.offsetWidth)) + "px";
+  panel.querySelectorAll("[data-k]").forEach(x => x.onclick = () => {
+    const i = inbox[Number(x.dataset.k)]; panel.remove();
+    const p = projects.find(q => q.id === i.proj); if (!p) return note("That project isn't in the studio any more.", true);
+    if (p.id !== projId) selectProject(p.id);
+    $("tabBoard").click(); loadReviewFb(true);
+  });
+  setTimeout(() => document.addEventListener("click", function off(ev) { if (!panel.contains(ev.target)) { panel.remove(); document.removeEventListener("click", off); } }), 0);
+  setRaw("il.inboxSeen", Date.now()); renderInbox();
+};
+setInterval(() => { if (me && !document.hidden) loadInbox(); }, 60000);
+
+/* ---------- use these settings again: the whole recipe of a take ---------- */
+function useRecipe(it) {
+  const r = it.recipe || {}, pa = it.params || {};
+  const st = { ...r, model: r.model || it.model, prompt: it.userPrompt || it.prompt };
+  if (!it.recipe) { // takes from before recipes were kept: rebuild what we can from the request
+    if (pa.aspect_ratio || pa.ratio) st.aspect = pa.aspect_ratio || pa.ratio;
+    if (pa.resolution) st.resolution = pa.resolution;
+    if (pa.duration != null) st.duration = String(pa.duration);
+    if (Array.isArray(it.ref)) st.refs = it.ref.filter(u => /^https?:/.test(u)).map(u => ({ url: u, name: "Reference" }));
+  }
+  if (pa.seed != null) st.seed = String(pa.seed); // the exact seed this take used
+  if (it.mode !== mode) setMode(it.mode);
+  restoringDraft = true; applyModeState(st); restoringDraft = false;
+  renderCountChips(); renderRefPicked(); renderCastRow(); renderFavs(); refreshPills(); saveDraft();
+  $("prompt").dispatchEvent(new Event("input"));
+  note("Same settings loaded — model, look, cast, sound, length and seed. Change anything, then Generate.");
+}
+
+/* ---------- search every take ---------- */
+let searchQ = "", searchAll = false;
+function takeText(h) {
+  const pr = projects.find(x => x.id === h.proj), c = clients.find(x => x.id === ((pr || {}).client || h.client));
+  const cast = ((h.recipe || {}).cast || []).map(id => ((c && c.cast) || []).find(k => k.id === id)).filter(Boolean).map(k => k.name);
+  const st = ((reviewFb[h.proj] || {})[h.id] || {}).status;
+  return [h.userPrompt, h.prompt, modelLabel(h.model, h.mode), h.by, { image: "image", video: "video", audio: "voice audio" }[h.mode], pr && pr.name, c && c.name, ...cast, st === "approved" ? "approved" : "", st === "changes" ? "changes" : "", h.lookTest ? "look test" : "", h.status === "failed" ? "failed" : ""].join(" ").toLowerCase();
+}
+function shownTakes() {
+  if (!searchQ) return projTakes();
+  const terms = searchQ.toLowerCase().split(/\s+/).filter(Boolean);
+  return (searchAll ? load(LS.hist, []) : projTakes()).filter(h => { const hay = takeText(h); return terms.every(t => hay.includes(t)); });
+}
+$("takeSearch").oninput = () => { searchQ = $("takeSearch").value.trim(); renderHistory(); };
+$("searchAll").onclick = () => { searchAll = !searchAll; $("searchAll").textContent = searchAll ? "All clients" : "This project"; $("searchAll").classList.toggle("on", searchAll); if (searchQ) renderHistory(); $("takeSearch").focus(); };
+
+/* ---------- deliver: the storyboard as one neatly named zip ---------- */
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(buf) { let c = 0xFFFFFFFF; for (let i = 0; i < buf.length; i++) c = CRC[(c ^ buf[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) { // stored (no compression — video and images are already compressed)
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const d = new Date(), time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  files.forEach(f => {
+    const name = enc.encode(f.name), crc = crc32(f.data), size = f.data.length;
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true); h.setUint16(10, time, true); h.setUint16(12, date, true);
+    h.setUint32(14, crc, true); h.setUint32(18, size, true); h.setUint32(22, size, true); h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+    parts.push(h, name, f.data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true); c.setUint16(12, time, true); c.setUint16(14, date, true);
+    c.setUint32(16, crc, true); c.setUint32(20, size, true); c.setUint32(24, size, true); c.setUint16(28, name.length, true); c.setUint32(42, off, true);
+    central.push(c, name);
+    off += 30 + name.length + size;
+  });
+  const cdSize = central.reduce((t, x) => t + x.byteLength, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cdSize, true); end.setUint32(16, off, true);
+  return new Blob([...parts, ...central, end], { type: "application/zip" });
+}
+const slug = s => String(s || "").normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").slice(0, 40) || "Untitled";
+const EXT_OF = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif", "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov", "audio/mpeg": "mp3", "audio/wav": "wav", "audio/mp4": "m4a" };
+function takeVersion(it) { // the 1st, 2nd, 3rd… take of the same prompt in this project
+  const same = projTakes().filter(h => (h.userPrompt || h.prompt) === (it.userPrompt || it.prompt) && h.status !== "failed").sort((a, b) => (a.started || a.at || 0) - (b.started || b.at || 0));
+  return Math.max(1, same.findIndex(h => h.id === it.id) + 1);
+}
+$("deliver").onclick = async () => {
+  const items = boardItems(); if (!items.length) return;
+  const fb = reviewFb[projId] || {}, ok = items.filter(it => (fb[it.id] || {}).status === "approved");
+  let pick = items;
+  if (ok.length && ok.length < items.length) {
+    const a = await uiDialog({ title: "Deliver this project", text: `${ok.length} of ${items.length} shots are approved by the client. Download which?`, ok: `Approved shots (${ok.length})`, alt: `All ${items.length} shots` });
+    if (a == null) return; pick = a === "alt" ? items : ok;
+  } else if (!(await uiConfirm(`${items.length} shot${items.length > 1 ? "s" : ""}${ok.length ? " — all approved —" : ""} in one zip, named and numbered in storyboard order (Client_Project_Shot01_v1…).`, { title: "Deliver this project", ok: "Download zip" }))) return;
+  const p = proj(), c = client(p.client), files = [];
+  $("deliver").disabled = true;
+  try {
+    for (const [k, it] of pick.entries()) {
+      note(`Preparing ${k + 1} of ${pick.length}…`);
+      const url = /^\/api\//.test(it.url) ? it.url : mediaSrc(it.url);
+      const r = await fetch(url); if (!r.ok) throw new Error(`shot ${items.indexOf(it) + 1} couldn't be downloaded (${r.status})`);
+      const blob = await r.blob();
+      const ext = EXT_OF[(blob.type || "").split(";")[0]] || ((it.url.match(/\.(\w{2,4})(?:$|[?&])/) || [])[1]) || (it.mode === "video" ? "mp4" : it.mode === "audio" ? "mp3" : "jpg");
+      files.push({ name: `${slug(c.name)}_${slug(p.name)}_Shot${String(items.indexOf(it) + 1).padStart(2, "0")}_v${takeVersion(it)}.${ext}`, data: new Uint8Array(await blob.arrayBuffer()) });
+    }
+    const zip = makeZip(files), name = `${slug(c.name)}_${slug(p.name)}_${new Date().toISOString().slice(0, 10)}.zip`;
+    if (inApp()) await appSave(zip, name);
+    else { const a = document.createElement("a"); a.href = URL.createObjectURL(zip); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000); }
+    note(`Delivered — ${files.length} shot${files.length > 1 ? "s" : ""} in ${name}.`);
+  } catch (e) { reportClient("deliver", e); note("Couldn't build the zip: " + e.message, true); }
+  finally { $("deliver").disabled = false; }
+};
 
 /* ---------- recently deleted: 14 days to change your mind ---------- */
 const TRASH_DAYS = 14, DAY = 864e5;
@@ -1686,6 +2054,7 @@ function projectMenu(anchor, p) {
   const others = clients.filter(c => c.id !== p.client);
   showMenu(anchor, [
     { text: "Rename project", run: async () => { const n = await uiAsk("Rename project", { value: p.name, ok: "Save" }); if (n) { p.name = n; saveProjects(); refreshTitles(); renderProjects(); } } },
+    ...(canManage() ? [{ text: p.budget ? `Budget: ${fmtSpend(p.budget)}…` : "Set a budget…", run: () => setBudget(p) }] : []),
     ...(others.length ? ["-", { label: "Move to client" }, ...others.map(c => ({ text: "→ " + c.name, run: () => { const from = client(p.client); if (projects.some(x => x.client === c.id && x.name === p.name)) p.name += " (from " + from.name + ")"; p.client = c.id; saveProjects(); openClients.add(c.id); if (p.id === projId) selectProject(p.id); else renderProjects(); } }))] : []),
     "-",
     { text: "Delete project…", danger: true, run: async () => {
@@ -1823,7 +2192,7 @@ function selectProject(id) {
   current = null; setStage(null); $("metaText").textContent = "";
   ["dl","animate","asRef","reuse"].forEach(i => $(i).classList.add("hidden"));
   restoreDraft();
-  renderProjects(); renderHistory(); renderRefGrid(); renderActivity(); renderBoard(); renderViewTabs();
+  renderProjects(); renderHistory(); renderRefGrid(); renderActivity(); renderBoard(); renderViewTabs(); renderBudget();
 }
 $("projName").onchange = () => { const p = proj(); p.name = $("projName").value.trim() || "General"; saveProjects(); refreshTitles(); renderProjects(); };
 $("clientName").onchange = () => { const c = client(); c.name = $("clientName").value.trim() || c.name; saveClients(); refreshTitles(); renderProjects(); };
@@ -1943,6 +2312,7 @@ async function updateEstimate() {
         mode, model, prompt: promptForPricing, image_url: refsForRequest(), params,
       }) });
       if (out.credits != null) {
+        estOne = Number(out.credits) || 0;
         const n = Number(out.credits) * genCount;
         costEl.textContent = "≈ " + n.toLocaleString() + " credits" + (genCount > 1 ? ` (${genCount})` : "");
         costEl.title = wallet && wallet.credits != null ? `You have ${Number(wallet.credits).toLocaleString()} credits` : "Estimated credits";
@@ -1950,6 +2320,7 @@ async function updateEstimate() {
       }
       const price = Number(out.price);
       if (!Number.isFinite(price)) { costEl.textContent = ""; return; }
+      estOne = Math.ceil(price * perUsd());
       const total = price * genCount;
       const txt = total.toLocaleString(undefined, { style:"currency", currency:"usd", minimumFractionDigits:2, maximumFractionDigits:4 });
       costEl.textContent = (out.estimated ? "~" : "") + txt + (genCount > 1 ? ` (${genCount})` : "");
@@ -2270,6 +2641,7 @@ $("go").onclick = async () => {
 
   let params;
   try { params = buildParams(); } catch { return note("Extra parameters must be valid JSON.", true); }
+  if (!(await budgetOk(Math.max(1, Math.min(MAX_COUNT, genCount))))) return;
 
   const pending = refUrls.some(r => r.status === "uploading");
   if (pending) return note("Some reference images are still uploading — give them a second.", true);
@@ -2292,15 +2664,17 @@ $("go").onclick = async () => {
 // Atlas's reason — so nothing can ever vanish without a trace. The newest
 // result always opens on the stage.
 async function startGeneration({ mode, model, prompt, userPrompt, after, ref, params, count = 1 }) {
+  const recipe = captureModeState(); // everything on screen, so "Use these settings" can bring it all back
   $("go").disabled = true; note(count > 1 ? `Sending ${count} to Atlas Cloud…` : "Sent to Atlas Cloud.");
   closePops(); window.scrollTo({ top: 0, behavior: "smooth" }); // new takes appear first in the gallery
   let firstShown = false;
   await Promise.all(Array.from({ length: count }, async (_, i) => {
     const p = { ...params };
     if (p.seed != null) p.seed = Number(p.seed) + i;
-    const item = { mode, model, prompt, userPrompt: userPrompt || prompt, after: i === 0 ? after : null, ref, params: p, proj: projId, client: (proj() || {}).client, started: Date.now() };
+    const item = { mode, model, prompt, userPrompt: userPrompt || prompt, after: i === 0 ? after : null, ref, params: p, proj: projId, client: (proj() || {}).client, started: Date.now(), by: me.name, recipe };
     try {
-      const { id } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: ref, params: p }) });
+      const { id, cost } = await api("/api/generate", { method:"POST", body: JSON.stringify({ mode, model, prompt, image_url: ref, params: p }) });
+      logSpend({ ...item, id }, cost || estOne || 0);
       const job = { ...item, id, status: "running" };
       upsertHistory(job); addPending(id, item);
       if (!firstShown) { firstShown = true; view(job); }
@@ -2489,7 +2863,7 @@ $("retry").onclick = () => {
 };
 function show(item) {
   current = item; viewing = item.id; setStage(item);
-  $("metaText").innerHTML = (playing ? `<span class="playing">▶ Shot ${playing.i + 1} of ${playing.list.length}</span> · ` : "") + `<b>${{image:"Image",video:"Video",audio:"Voice"}[item.mode]} · ${esc(modelLabel(item.model, item.mode))}</b> — ${esc(item.userPrompt || item.prompt)}`;
+  $("metaText").innerHTML = (playing ? `<span class="playing">▶ Shot ${playing.i + 1} of ${playing.list.length}</span> · ` : "") + `<b>${{image:"Image",video:"Video",audio:"Voice"}[item.mode]} · ${esc(modelLabel(item.model, item.mode))}</b>${inTeam() && item.by ? ` · by ${esc(item.by === me.name ? "you" : personName(item.by))}` : ""} — ${esc(item.userPrompt || item.prompt)}`;
   const inB = board(item.proj).includes(item.id);
   $("toBoard").classList.remove("hidden"); $("toBoard").classList.toggle("in", inB); $("toBoard").textContent = inB ? "✓ In storyboard" : "＋ Storyboard";
   // Download goes through our own domain: the download attribute only works
@@ -2512,7 +2886,7 @@ function show(item) {
 $("reuse").onclick = () => {
   const it = current || failedView || load(LS.hist, []).find(h => h.id === viewing);
   closeViewer();
-  if (it) { if (it.mode !== mode) setMode(it.mode); $("prompt").value = it.userPrompt || it.prompt; $("prompt").dispatchEvent(new Event("input")); }
+  if (it) useRecipe(it);
   $("prompt").focus();
 };
 $("asRef").onclick = () => { if (current) { const u = current.url; closeViewer(); addRef(u, "From takes"); } };
@@ -2717,6 +3091,7 @@ $("prompt").addEventListener("input", () => { if (mode === "video") renderCamMov
 /* ---------- takes (the gallery) ---------- */
 // Add an entry, or update the one with the same id (running → done/failed → kept).
 function upsertHistory(item) {
+  if (item.status === "failed") unSpend(item.id); // failed takes are refunded — keep the spending honest
   const h = load(LS.hist, []); const i = h.findIndex(x => x.id === item.id);
   if (i >= 0) h[i] = item; else h.unshift(item);
   save(LS.hist, h.slice(0,1000)); renderProjects(); renderHistory(); renderActivity();
@@ -2724,9 +3099,10 @@ function upsertHistory(item) {
 const addHistory = upsertHistory;
 const clock = t => { const s = Math.max(0, Math.floor((Date.now() - t) / 1000)); return Math.floor(s/60) + ":" + String(s%60).padStart(2, "0"); };
 function renderHistory() {
-  const h = projTakes(); const box = $("hist"); box.innerHTML = "";
+  const h = shownTakes(); const box = $("hist"); box.innerHTML = "";
   const n = h.filter(x => x.status !== "failed").length;
   $("count").textContent = n ? `${n} take${n>1?"s":""}` : "";
+  if (!h.length && searchQ) { renderViewTabs(); box.innerHTML = `<div class="none"><b>Nothing matches “${esc(searchQ)}”.</b>${searchAll ? "Searched every client." : "Searched this project — tap “This project” to search every client."}</div>`; return; }
   if (!h.length) { renderViewTabs(); box.innerHTML = `<div class="none"><b>Roll camera.</b>Write the shot below and press Generate — every take for ${esc((clients.length && client().name) || "this client")} lands here, first in line.</div>`; return; }
   h.forEach(item => {
     const b = document.createElement("button"); b.dataset.id = item.id;
@@ -2747,6 +3123,8 @@ function renderHistory() {
       + (done ? `<span class="addBoard${inB ? " in" : ""}" role="button" title="${inB ? "In the storyboard — tap to remove" : "Add to the storyboard"}">${inB ? "✓" : "＋"}</span>` : "");
     const ab = b.querySelector(".addBoard"); if (ab) ab.onclick = e => { e.stopPropagation(); toggleBoard(item.id); };
     if (item.via === "claude") { const v = document.createElement("span"); v.className = "viaClaude"; v.textContent = "✳ Claude"; v.title = "Made from Claude"; b.appendChild(v); }
+    if (inTeam() && item.by) { const t = document.createElement("span"); t.className = "byTag"; t.textContent = item.by === me.name ? "You" : personName(item.by); t.title = "Made by " + item.by; b.appendChild(t); }
+    if (searchQ && item.proj !== projId) { const pr = projects.find(x => x.id === item.proj), t = document.createElement("span"); t.className = "projTag"; t.textContent = pr ? `${(clients.find(c => c.id === pr.client) || {}).name || ""} · ${pr.name}` : "Other project"; b.appendChild(t); }
     if (item.status !== "running") {
       const del = document.createElement("span"); del.className = "delTake"; del.setAttribute("role", "button"); del.title = "Delete this take"; del.textContent = "🗑";
       del.onclick = e => { e.stopPropagation(); deleteTakes([item.id], true); };
@@ -2820,6 +3198,8 @@ function renderViewTabs() {
   $("boardInfo").textContent = items.length ? `${items.length} shot${items.length > 1 ? "s" : ""} · ≈ ${fmtDur(total)}` : "";
   $("boardInfo").classList.toggle("hidden", viewMode !== "board" || !items.length);
   $("playAll").classList.toggle("hidden", viewMode !== "board" || !items.length);
+  $("deliver").classList.toggle("hidden", viewMode !== "board" || !items.length);
+  $("searchBox").classList.toggle("hidden", viewMode !== "takes");
   $("exportCut").classList.toggle("hidden", viewMode !== "board" || !items.some(x => x.mode !== "audio"));
   $("shareReview").classList.toggle("hidden", viewMode !== "board" || !items.length);
   renderReviewBtn();
@@ -2833,6 +3213,13 @@ function renderBoard() {
   if (!items.length) {
     box.innerHTML = `<div class="boardEmpty"><b>Build your sequence.</b>Tap ＋ on any take (or “＋ Storyboard” when it's open) to add it as a shot. Drag shots to reorder, then ▶ Play all to watch the cut. <br>Tip: <em>⏭ Continue shot</em> on a video drops the next shot right after it.</div>`;
     renderViewTabs(); return;
+  }
+  const need = items.map((it, i) => ({ it, i, fb: (reviewFb[projId] || {})[it.id] })).filter(x => x.fb && x.fb.status === "changes");
+  if (need.length) {
+    const cb = document.createElement("div"); cb.className = "changesBox";
+    cb.innerHTML = `<b>✎ The client asked for changes on ${need.length} shot${need.length > 1 ? "s" : ""}</b>` + need.map(x => { const c = (x.fb.comments || []).slice(-1)[0]; return `<div class="chRow"><span><em>Shot ${x.i + 1}</em>${c ? `${esc(c.name)}: “${esc(c.text)}”` : "No comment left"}</span><button class="btn" type="button" data-id="${esc(x.it.id)}">↺ Redo with same settings</button></div>`; }).join("");
+    cb.querySelectorAll("button[data-id]").forEach(btn => btn.onclick = () => { const x = need.find(n => n.it.id === btn.dataset.id); useRecipe(x.it); const c = (x.fb.comments || []).slice(-1)[0]; note(c ? `Shot ${x.i + 1} — the client said: “${c.text}”. Adjust the prompt, then Generate.` : `Shot ${x.i + 1}'s settings are loaded — adjust, then Generate.`); $("prompt").focus(); });
+    box.appendChild(cb);
   }
   items.forEach((it, i) => {
     const el = document.createElement("div"); el.className = "shot" + (viewing === it.id ? " on" : ""); el.draggable = true; el.dataset.id = it.id;
@@ -2987,9 +3374,9 @@ function refFromLink() { try { return localStorage.getItem("il.ref") || ""; } ca
 })();
 const fmtN = n => Number(n || 0).toLocaleString();
 function renderCredPill() {
-  const pill = $("credPill"), member = wallet && wallet.enabled && !wallet.owner;
+  const pill = $("credPill"), member = wallet && wallet.enabled && !wallet.owner && !wallet.free;
   pill.classList.toggle("hidden", !member);
-  if (member) { pill.textContent = fmtN(wallet.credits) + " credits"; pill.classList.toggle("low", wallet.credits < 300); }
+  if (member) { pill.textContent = fmtN(wallet.credits) + (wallet.team ? " team credits" : " credits"); pill.classList.toggle("low", wallet.credits < 300); }
   $("tabCredits").classList.toggle("hidden", !(wallet && (wallet.enabled || wallet.owner)));
   document.querySelector('#setTabs [data-tab="invite"]').classList.toggle("hidden", !(wallet && wallet.ref && wallet.ref.percent > 0));
 }
@@ -3019,7 +3406,7 @@ document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
 function renderSettings() {
   $("resetRow").classList.toggle("hidden", !(me && me.role === "owner"));
   $("delZone").classList.toggle("hidden", !!(me && me.role === "owner"));
-  renderTrash(); renderInstall();
+  renderTrash(); renderInstall(); renderTeam(); renderSpend();
   if (!me) return;
   if (document.querySelector(`#setTabs [data-tab="${setTab}"]`).classList.contains("hidden")) setTab = "account";
   document.querySelectorAll("#setTabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === setTab));
@@ -3030,13 +3417,14 @@ function renderSettings() {
   const w = wallet || {};
   $("credNow").textContent = w.owner ? "∞" : fmtN(w.credits);
   $("credSub").textContent = w.owner ? "you generate on the studio's own account" : "credits";
-  $("credNote").textContent = w.owner
+  $("credNote").textContent = w.team ? `These are your team's shared credits — every take anyone in the team makes comes out of them. ${w.team.payer} (the team lead) tops them up.`
+    : w.owner
     ? (w.canBuy ? "Members buy credits here and you're paid through Stripe. You never pay credits yourself." : "Add your Stripe secret key in Vercel (STRIPE_SECRET_KEY) to let members buy credits.")
     : (!w.canBuy ? "Buying credits isn't switched on yet — ask the studio owner."
       : (w.packs || []).some(p => p.ok) ? "Every generation shows its cost in credits before you press Generate. Credits never expire and are non-refundable."
       : "Credit packs are temporarily unavailable — please check back soon.");
   const packs = $("packs"); packs.innerHTML = "";
-  if (!w.owner) (w.packs || []).forEach(pk => {
+  if (!w.owner && !w.team) (w.packs || []).forEach(pk => {
     const b = document.createElement("button"); b.className = "pack"; b.type = "button"; b.disabled = !w.canBuy || !pk.ok;
     b.innerHTML = `<b>${fmtN(pk.credits)}</b><small>credits · $${pk.usd}</small>${!pk.ok && w.canBuy ? `<em class="off">Temporarily unavailable</em>` : pk.bonus ? `<em>${esc(pk.bonus)}</em>` : ""}`;
     b.onclick = () => buyPack(pk.id, b);
@@ -3941,8 +4329,11 @@ async function startStudio(user) {
   $("whoami").textContent = "Signed in as " + me.name;
   $("settings").title = "Sign out of " + me.name;
   try {
-    const { data } = await api("/api/data", { cache:"no-store" });
+    const got = await api("/api/data", { cache:"no-store" }), data = got.data;
     Object.assign(account, data || {});
+    Object.keys(account).forEach(k => { if (SHARED_KEY.test(k)) baseIds[k] = idsOf(account[k]); });
+    myTeamRole = got.role || null;
+    document.documentElement.classList.toggle("roleViewer", myTeamRole === "viewer");
   } catch (err) { return showGate("Couldn't load your work: " + err.message); }
   $("gate").classList.add("hidden");
   // Old versions kept an Atlas key / access code in the browser — no longer used.
@@ -3967,6 +4358,7 @@ async function startStudio(user) {
   loadDrive();
   if (me.role === "owner") refreshBalance();
   renderActivity();
+  loadTeam().then(maybeJoin); loadInbox(); renderBudget();
 }
 (async () => {
   let info = {};

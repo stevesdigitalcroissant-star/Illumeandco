@@ -46,8 +46,10 @@ const dataPath = user => `data/${db.fileKey(user.name)}.json`;
 // Claude can never race with — and overwrite — a save from an open Studio tab.
 const mcpPath = user => `mcpdata/${db.fileKey(user.name)}.json`;
 async function readData(user) {
-  const [r, m] = await Promise.all([db.readJson(dataPath(user)), db.readJson(mcpPath(user)).catch(() => null)]);
+  const { space } = await require("./_team").ctx(user); // in a team, Claude sees the team's clients and projects
+  const [r, m, sp] = await Promise.all([db.readJson(dataPath(user)), db.readJson(mcpPath(user)).catch(() => null), space !== user.name ? db.readJson(dataPath({ name: space })).catch(() => null) : null]);
   const d = (r && r.value) || {};
+  if (sp) Object.entries(sp.value || {}).forEach(([k, v]) => { if (/^il\.(clients|projects|hist|presets)$/.test(k)) d[k] = v; });
   d["il.mcp"] = (m && m.value) || { takes: {}, ops: [] };
   return d;
 }

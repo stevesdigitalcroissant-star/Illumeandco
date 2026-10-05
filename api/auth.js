@@ -128,9 +128,15 @@ module.exports = async (req, res) => {
       const user = await db.getUser(me.name);
       if (!user || !(await db.passwordMatches(pw, user))) return res.status(403).json({ error: "That password isn't right." });
       const k = db.fileKey(me.name);
+      // teams: a lead must hand over first; a member leaves, and their takes stay with the team
+      const T = require("./_team"), tc = await T.ctx(me);
+      if (tc.teamRole === "lead") { const t = await T.readTeam(me.name); if (t && (t.members || []).length) return res.status(400).json({ error: "You lead a team — remove its members first (Settings → Team)." }); }
+      const inTeam = tc.space !== me.name;
+      if (inTeam) { const t = await T.readTeam(tc.space); if (t) { t.members = (t.members || []).filter(x => x.name !== me.name); t.past = [...new Set([...(t.past || []), me.name])]; await db.writeJson(`teams/${db.fileKey(tc.space)}.json`, t); } }
       // reviews you shared
       if (blob) { let cursor; do { const r = await blob.list({ prefix: "review/", cursor, limit: 1000 }); for (const b of r.blobs) { const x = await db.readJson(b.pathname).catch(() => null); if (x && x.value && x.value.owner === me.name) await blob.del(b.pathname).catch(() => {}); } cursor = r.hasMore ? r.cursor : null; } while (cursor); }
-      await removeAll(`media/${k}/`);
+      if (!inTeam) await removeAll(`media/${k}/`);
+      await blob.del(`teams/${k}.json`).catch(() => {});
       for (const f of [`data/${k}.json`, `mcpdata/${k}.json`, `mcp/${k}.json`, `drive/${k}.json`, `wallet/${k}.json`, `locks/${k}`, `refs/${C.refCode(me.name)}.json`, `users/${k}.json`]) await blob.del(f).catch(() => {});
       db.endSession(req, res);
       console.log("account deleted:", me.name);

@@ -7,6 +7,7 @@
 // payment still pending is re-checked every time they open the studio.
 const db = require("./_db");
 const C = require("./_credits");
+const T = require("./_team");
 
 const KEY = () => String(process.env.STRIPE_SECRET_KEY || "").trim();
 const origin = req => `https://${req.headers["x-forwarded-host"] || req.headers.host}`;
@@ -53,11 +54,13 @@ module.exports = async (req, res) => {
   if (!user) return;
   const owner = user.role === "owner";
   try {
+    const { payer, teamRole } = await T.ctx(user);
+    const inTeam = payer.name !== user.name; // a member of someone's team: their credits are the team's
     if (req.method === "GET") {
       const code = await C.ensureRefCode(user.name);
-      let w = await C.getWallet(user.name);
+      let w = await C.getWallet(inTeam ? payer.name : user.name);
       // Re-check payments that never came back from Stripe (tab closed, etc.).
-      if (KEY() && (w.pending || []).length) {
+      if (!inTeam && KEY() && (w.pending || []).length) {
         for (const sid of w.pending.slice(-5)) { try { await settle(user, sid); } catch (e) { console.log("settle pending failed:", e.message); } }
         w = await C.getWallet(user.name);
       }
@@ -65,7 +68,8 @@ module.exports = async (req, res) => {
       // Packs pause while the Atlas balance couldn't cover them (see C.coverage).
       let cov = null; try { if (KEY()) cov = await C.coverage(); } catch (e) { console.log("coverage failed:", e.message); }
       return res.status(200).json({
-        enabled: C.enabled(), canBuy: !!KEY(), owner, credits: w.credits,
+        enabled: C.enabled(), canBuy: !!KEY() && !inTeam, owner, free: inTeam && payer.role === "owner", credits: w.credits,
+        team: inTeam ? { payer: payer.name, role: teamRole } : null, perUsd: Math.floor(100 * (1 + C.MARKUP())),
         packs: C.PACKS.map(p => ({ id: p.id, usd: p.usd, credits: p.credits, bonus: p.bonus || "", ok: !!cov && cov.room >= p.credits })),
         ...(owner && cov ? { cover: { atlasUsd: cov.atlasUsd, covers: cov.covers, held: cov.held, room: cov.room, perUsd: cov.perUsd } } : {}),
         ref: { code, link: `${origin(req)}/generation?ref=${code}`, percent: C.REF_PCT(), earned: w.refEarned || 0, friends: referrals },
@@ -76,6 +80,7 @@ module.exports = async (req, res) => {
     const { action } = req.body || {};
 
     if (action === "buy") {
+      if (inTeam) return res.status(403).json({ error: `Credits are the team's — ask ${payer.name} (the team lead) to top up.` });
       if (!KEY()) return res.status(503).json({ error: "Buying credits isn't switched on yet." });
       const pack = C.PACKS.find(p => p.id === (req.body || {}).pack);
       if (!pack) return res.status(400).json({ error: "Pick a credit pack." });

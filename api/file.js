@@ -5,10 +5,12 @@
 //   POST /api/file { url, id }  → { path, size, type }   (copy, then serve from us forever)
 //   GET  /api/file?p=<path>[&download=1&name=x.jpg]       (stream it back; Range for video)
 //   DELETE /api/file?p=<path>                              (delete it)
-// Files live under media/<user>/…, and only that signed-in user can read them.
+// Files live under media/<user>/…; that person — and their team, in a shared
+// studio — can read them.
 const { Readable } = require("stream");
 const db = require("./_db");
 const { keepUrl } = require("./_keep");
+const T = require("./_team");
 
 let blob = null;
 try { blob = require("@vercel/blob"); } catch {}
@@ -27,12 +29,13 @@ module.exports = async (req, res) => {
 
   const p = String(req.query.p || "");
   if (req.method === "DELETE") {   // delete a take's permanent copy (only your own)
-    if (!p.startsWith(mine) || p.includes("..")) return res.status(404).json({ error: "Not found." });
+    const c = await T.ctx(user);
+    if (c.teamRole === "viewer" || !(p.startsWith(mine) ? !p.includes("..") : await T.canReadMedia(user, p))) return res.status(404).json({ error: "Not found." });
     try { await blob.del(p); return res.status(200).json({ ok: true }); }
     catch (e) { console.log("file delete failed:", e.message); return res.status(502).json({ error: e.message }); }
   }
   if (req.method !== "GET" && req.method !== "HEAD") return res.status(405).end();
-  if (!p.startsWith(mine) || p.includes("..")) return res.status(404).end(); // only your own files
+  if (p.includes("..") || !(p.startsWith(mine) || await T.canReadMedia(user, p))) return res.status(404).end(); // your own files, or your team's
   try {
     const range = req.headers.range;
     const r = await blob.get(p, { access: "private", headers: range ? { Range: range } : {} });

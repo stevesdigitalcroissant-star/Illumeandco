@@ -1,9 +1,11 @@
 const { checkAccess, apiKey, atlas } = require("./_atlas");
 const C = require("./_credits");
+const T = require("./_team");
 // A failed take returns its credits to the member who paid for it — once.
 async function refundHold(user, id, why) {
-  if (!C.pays(user)) return;
-  await C.withWallet(user.name, w => { const n = w.holds && w.holds[id]; if (!n) return; delete w.holds[id]; w.credits += n; C.entry(w, "refund", n, why); }).catch(e => console.log("refund failed:", e.message));
+  const { payer } = await T.ctx(user); // in a team, the shared pot paid
+  if (!C.pays(payer)) return;
+  await C.withWallet(payer.name, w => { const n = w.holds && w.holds[id]; if (!n) return; delete w.holds[id]; w.credits += n; C.entry(w, "refund", n, why); }).catch(e => console.log("refund failed:", e.message));
 }
 
 module.exports = async (req, res) => {
