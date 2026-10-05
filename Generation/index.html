@@ -651,11 +651,59 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
 .castCard .del{align-self:flex-end;background:none;border:0;color:var(--faint);cursor:pointer;font:inherit;font-size:12.5px}
 .castCard .del:hover{color:var(--danger)}
 @media (max-width:640px){.castCard{grid-template-columns:1fr}.castCard .ph{width:auto}}
-.lookPop{width:min(460px,calc(100vw - 24px))}
-.lookGroup{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
-.lookGroup h5{margin:0;padding:0 4px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
-.lookGroup .chips{display:flex;flex-wrap:wrap;gap:6px}
-.lookGroup .chip{padding:6px 11px;font-size:12.5px}
+/* Look sheet: picture tiles + a live monitor */
+.lookPop{width:min(900px,calc(100vw - 24px));max-height:min(78vh,640px);flex-direction:row;gap:16px;padding:16px;overflow:hidden}
+.lookSide{width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:12px}
+.lookMain{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;min-height:0}
+.lookMonitor{position:relative;aspect-ratio:4/5;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 0 0 1px var(--line-2),0 24px 50px -24px #000}
+.lookMonitor::after{content:"PREVIEW";position:absolute;left:10px;top:10px;z-index:9;font-size:9.5px;font-weight:700;letter-spacing:.18em;color:rgba(255,255,255,.75);background:rgba(0,0,0,.45);padding:3px 7px;border-radius:6px}
+.lookMonitor .rec{position:absolute;right:10px;top:10px;z-index:9;display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;letter-spacing:.14em;color:rgba(255,255,255,.75)}
+.lookMonitor .rec i{width:7px;height:7px;border-radius:50%;background:#F05A4E;box-shadow:0 0 8px #F05A4E;animation:recBlink 1.4s infinite}
+@keyframes recBlink{50%{opacity:.25}}
+.lookSum{display:flex;flex-wrap:wrap;gap:6px;min-height:28px}
+.lookSum span{font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--gold-2);cursor:pointer}
+.lookSum span:hover{text-decoration:line-through}
+.lookSum em{font-style:normal;font-size:12.5px;color:var(--faint);padding:4px 2px}
+.lookBtns{display:flex;gap:8px;margin-top:auto}
+.lookBtns .btn{flex:1;justify-content:center;font-size:12.5px}
+.lookTabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.lookTabs button{flex:1;white-space:nowrap;font:inherit;font-size:13px;font-weight:600;border:0;border-radius:10px;padding:8px 12px;background:none;color:var(--muted);cursor:pointer;position:relative}
+.lookTabs button.on{background:var(--raised);color:var(--text);box-shadow:var(--sh-sm)}
+.lookTabs button.set::after{content:"";position:absolute;right:7px;top:7px;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.lookGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;overflow-y:auto;padding:2px 4px 6px 2px;min-height:0}
+.lookTile{display:flex;flex-direction:column;gap:7px;background:none;border:0;padding:0;cursor:pointer;color:var(--text);font:inherit;text-align:left}
+.lookTile .vis{position:relative;aspect-ratio:4/3;border-radius:13px;overflow:hidden;background:#000;box-shadow:0 0 0 1px var(--line);transition:box-shadow var(--ease),transform var(--ease)}
+.lookTile:hover .vis{transform:translateY(-2px);box-shadow:0 0 0 1px var(--gold-line),0 16px 30px -18px #000}
+.lookTile.on .vis{box-shadow:0 0 0 2px var(--gold),0 16px 34px -16px rgba(232,181,75,.45)}
+.lookTile.on .vis::after{content:"✓";position:absolute;right:8px;top:8px;z-index:9;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:var(--gold-ink);font-size:12px;font-weight:700}
+.lookTile b{font-size:13px;font-weight:600;padding:0 2px}
+.lookTile small{font-size:11.5px;color:var(--faint);padding:0 2px;margin-top:-5px;line-height:1.35}
+.lookTile.on b{color:var(--gold-2)}
+/* the picture layers every tile and the monitor are built from */
+.lv{position:absolute;inset:0;overflow:hidden}
+.lv .ph{position:absolute;inset:0;background-size:cover;background-position:var(--pos,50% 50%);transform:scale(var(--z,1));transform-origin:var(--pos,50% 50%);transition:transform 500ms cubic-bezier(.2,.8,.2,1),filter 400ms}
+.lv .ph.blur{filter:blur(var(--bl,0px))}
+.lv .ph.sharp{-webkit-mask-image:radial-gradient(ellipse 30% 38% at var(--fx,50%) var(--fy,50%),#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 30% 38% at var(--fx,50%) var(--fy,50%),#000 55%,transparent 100%)}
+.lv .tint{position:absolute;inset:0;pointer-events:none}
+.lv .grain{position:absolute;inset:-50%;pointer-events:none;opacity:var(--gr,0);mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");animation:grain 600ms steps(3) infinite}
+@keyframes grain{0%{transform:translate(0,0)}33%{transform:translate(-4%,3%)}66%{transform:translate(3%,-5%)}}
+.lv .vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,var(--vg,0)) 100%)}
+.lv .bars::before,.lv .bars::after{content:"";position:absolute;left:0;right:0;height:var(--lb,0%);background:#000;z-index:5}
+.lv .bars::before{top:0}.lv .bars::after{bottom:0}
+.lv .fgate{position:absolute;inset:0;pointer-events:none;z-index:6;box-shadow:inset 0 0 0 var(--gw,0px) #000;border-radius:var(--gr2,0)}
+.lv .flare{position:absolute;left:-10%;right:-10%;top:46%;height:3px;z-index:6;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(90,170,255,.0) 10%,rgba(120,190,255,.9) 50%,rgba(90,170,255,0) 90%,transparent);filter:blur(1px);box-shadow:0 0 18px 4px rgba(90,160,255,.45)}
+.lv .phone{position:absolute;top:8%;bottom:8%;left:50%;width:34%;transform:translateX(-50%);border-radius:12px;overflow:hidden;box-shadow:0 0 0 3px #111,0 0 0 4px rgba(255,255,255,.25)}
+.lv .phone .ph{transform:none}
+.lv .bigNum{position:absolute;left:10px;bottom:8px;z-index:7;font-family:var(--display);font-weight:300;font-size:30px;line-height:1;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+.lv .bigNum small{font-family:var(--ui);font-size:11px;font-weight:600;letter-spacing:.08em;margin-left:2px;opacity:.85}
+.lv .persp{transform:perspective(300px) rotateX(-20deg) scale(1.45)!important;transform-origin:50% 100%!important}
+@media (max-width:760px){
+  .lookPop{flex-direction:column;max-height:82vh;overflow-y:auto;padding:12px}
+  .lookSide{width:auto;display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:start}
+  .lookMonitor{grid-row:span 2}
+  .lookBtns{grid-column:2;margin-top:0}
+  .lookGrid{grid-template-columns:repeat(2,1fr);overflow:visible}
+}
 .pi-lens{width:14px;height:14px;border-radius:50%;border:1.6px solid currentColor;box-shadow:inset 0 0 0 2.5px var(--raised),inset 0 0 0 4.5px currentColor;display:inline-block}
 #lookWrap.set .pillBtn{color:var(--gold-2);border-color:var(--gold-line)}
 #shareReview.shared{border-color:var(--gold-line);color:var(--gold-2)}
@@ -950,10 +998,16 @@ html[data-theme="light"] .toast{background:rgba(255,253,249,.97)}
   <div class="chips" id="presets"></div>
   <div class="ghostRow"><button class="btn" id="savePreset" type="button">☆ Save current prompt</button><button class="btn" id="clearPrompt" type="button">✕ Clear prompt</button></div>
 </div>
-<div class="pop lookPop hidden" id="pop-look">
-  <div class="popTitle">Look <span class="hint">tap to choose · tap again to clear</span></div>
-  <div id="lookGroups"></div>
-  <div class="ghostRow"><button class="btn" id="lookSave" type="button">◆ Save as client look</button><button class="btn" id="lookReset" type="button">Reset</button></div>
+<div class="pop lookPop hidden" id="pop-look" role="dialog" aria-label="Look">
+  <div class="lookSide">
+    <div class="lookMonitor" id="lookMonitor" aria-hidden="true"></div>
+    <div class="lookSum" id="lookSum"></div>
+    <div class="lookBtns"><button class="btn" id="lookSave" type="button">◆ Save as client look</button><button class="btn" id="lookReset" type="button">Reset</button></div>
+  </div>
+  <div class="lookMain">
+    <nav class="lookTabs" id="lookTabs" role="tablist"></nav>
+    <div class="lookGrid" id="lookGrid"></div>
+  </div>
 </div>
 <div class="pop hidden" id="pop-kit"><div class="popTitle" id="kitPopTitle">Brand photos</div><div class="refgrid" id="kitPicks"></div></div>
 <div class="pop hidden" id="pop-list"></div>
@@ -2986,18 +3040,99 @@ function lookPhrase() {
   const st = lookState(), parts = LOOK.map(g => { const o = g.opts.find(x => x[0] === st[g.key]); return o && o[1]; }).filter(Boolean);
   return parts.length ? "Look: " + parts.join(", ") + "." : "";
 }
+// Every option is shown as a picture: one of Illume's own frames, treated the
+// way that camera / lens / grade would render it (CSS filters, overlays, grain,
+// crops). The monitor on the left stacks all the choices together.
+const LIMG = n => `/images/work/${n}-480.webp`;
+const FRAME = { scene: LIMG("chef-plating-a-dish"), face: LIMG("salon-portrait"), product: LIMG("fragrance-bottle"), flat: LIMG("panini-and-iced-coffee-flatlay"), macro: LIMG("editorial-macro-texture"), drinks: LIMG("matcha-iced-drinks") };
+// filter = CSS filter on the photo; tint = an overlay [background, blend mode];
+// z/pos = zoom and where to zoom; gr = grain; vg = vignette; lb = letterbox bars;
+// gw/gr2 = film-gate border + rounded corners; blur/focus for depth of field.
+const GRADE_VIS = {
+  "Natural": { filter: "none" },
+  "Teal & orange": { filter: "saturate(1.25) contrast(1.12)", tint: ["linear-gradient(160deg,rgba(0,110,120,.55),rgba(255,140,40,.45))", "soft-light"] },
+  "Golden hour": { filter: "sepia(.3) saturate(1.35) brightness(1.06)", tint: ["radial-gradient(circle at 70% 25%,rgba(255,170,60,.6),rgba(255,120,30,.15) 60%)", "soft-light"] },
+  "Cool & moody": { filter: "saturate(.6) contrast(1.15) brightness(.82)", tint: ["linear-gradient(rgba(20,50,100,.45),rgba(10,30,60,.45))", "soft-light"] },
+  "Vibrant ad": { filter: "saturate(1.55) contrast(1.15) brightness(1.08)" },
+  "Kodak Portra": { filter: "sepia(.12) saturate(.88) contrast(.9) brightness(1.08)", tint: ["linear-gradient(rgba(255,190,170,.35),rgba(255,230,200,.2))", "soft-light"], gr: .25 },
+  "Fuji film": { filter: "saturate(1.08) contrast(1.06) hue-rotate(-6deg)", tint: ["linear-gradient(rgba(30,90,60,.35),rgba(200,230,210,.1))", "soft-light"], gr: .2 },
+  "Bleach bypass": { filter: "saturate(.4) contrast(1.45) brightness(.95)" },
+  "Pastel": { filter: "saturate(.7) contrast(.82) brightness(1.15)", tint: ["linear-gradient(135deg,rgba(255,200,230,.4),rgba(200,210,255,.35))", "screen"] },
+  "Noir": { filter: "grayscale(1) contrast(1.7) brightness(.78)", vg: .85 },
+  "Black & white": { filter: "grayscale(1) contrast(1.15)" },
+};
+const LOOK_VIS = {
+  camera: { img: "scene", hint: {
+    "Cinema digital": "Clean, rich, widescreen", "RED": "Crisp, high detail", "35mm film": "Warm, natural grain", "16mm film": "Grainy, nostalgic", "Super 8": "Home-movie memories", "iPhone / UGC": "Authentic, social-first", "Drone": "From above" },
+    opt: {
+      "Cinema digital": { filter: "contrast(1.08) saturate(1.05)", lb: 11, vg: .35 },
+      "RED": { filter: "contrast(1.22) saturate(1.18) brightness(1.03)" },
+      "35mm film": { filter: "sepia(.15) contrast(.95) saturate(1.05) brightness(1.04)", gr: .35, vg: .3 },
+      "16mm film": { filter: "sepia(.25) contrast(.9) saturate(.95)", gr: .6, vg: .6, gw: 4, gr2: "10px" },
+      "Super 8": { filter: "sepia(.45) contrast(.85) saturate(1.1) brightness(1.08) blur(.4px)", gr: .85, vg: .75, gw: 7, gr2: "18px" },
+      "iPhone / UGC": { filter: "saturate(1.15) contrast(1.05)", phone: true },
+      "Drone": { img: "flat", z: .9, filter: "saturate(1.05)" },
+    } },
+  lens: { img: "scene", hint: { "14mm": "Ultra-wide, dramatic", "24mm": "Wide", "35mm": "Natural, documentary", "50mm": "What the eye sees", "85mm": "Portrait, flattering", "135mm": "Tight, compressed", "Macro": "Extreme detail", "Anamorphic": "Cinematic flares, oval bokeh" },
+    opt: {
+      "14mm": { z: 1, vg: .55, num: "14" }, "24mm": { z: 1.12, num: "24" }, "35mm": { z: 1.3, pos: "45% 60%", num: "35" }, "50mm": { z: 1.6, pos: "45% 66%", num: "50" },
+      "85mm": { z: 2.1, pos: "40% 70%", num: "85" }, "135mm": { z: 2.9, pos: "38% 72%", num: "135" },
+      "Macro": { img: "macro", z: 1.6, pos: "50% 55%", num: "100", numSmall: "mm macro" },
+      "Anamorphic": { lb: 13, flare: true, filter: "contrast(1.08) saturate(1.05)" },
+    } },
+  depth: { img: "product", hint: { "Shallow": "f/1.4 · soft, creamy background", "Medium": "f/4 · gentle falloff", "Deep": "f/11 · everything sharp" },
+    opt: { "Shallow": { bl: 7, focus: ["52%", "56%"] }, "Medium": { bl: 2.5, focus: ["52%", "56%"] }, "Deep": { bl: 0 } } },
+  framing: { img: "face", hint: { "Extreme close-up": "Eyes, details", "Close-up": "Face and emotion", "Medium": "Subject with breathing room", "Wide": "The whole scene", "Top-down": "Flat lay, overhead", "Low angle": "Heroic, larger than life" },
+    opt: {
+      "Extreme close-up": { z: 3.4, pos: "44% 30%" }, "Close-up": { z: 1.7, pos: "52% 36%" }, "Medium": { z: 1.05, pos: "50% 40%" },
+      "Wide": { img: "scene", z: 1 }, "Top-down": { img: "flat", z: 1.05 }, "Low angle": { img: "drinks", persp: true },
+    } },
+  grade: { img: "face", hint: { "Natural": "True to life", "Teal & orange": "Blockbuster contrast", "Golden hour": "Warm, sun-kissed", "Cool & moody": "Blue, low-key", "Vibrant ad": "Punchy, clean whites", "Kodak Portra": "Soft film skin tones", "Fuji film": "Green shadows, crisp", "Bleach bypass": "Gritty, desaturated", "Pastel": "Airy and light", "Noir": "Hard shadows", "Black & white": "Timeless" },
+    opt: GRADE_VIS },
+};
+// one picture, with any mix of treatments
+function lookLayers(v) {
+  const img = FRAME[v.img] || FRAME.scene, vars = [];
+  if (v.z) vars.push(`--z:${v.z}`); if (v.pos) vars.push(`--pos:${v.pos}`);
+  if (v.gr) vars.push(`--gr:${v.gr}`); if (v.vg) vars.push(`--vg:${v.vg}`); if (v.lb) vars.push(`--lb:${v.lb}%`);
+  if (v.gw) vars.push(`--gw:${v.gw}px`); if (v.gr2) vars.push(`--gr2:${v.gr2}`); if (v.bl) vars.push(`--bl:${v.bl}px`);
+  if (v.focus) vars.push(`--fx:${v.focus[0]}`, `--fy:${v.focus[1]}`);
+  const f = v.filter && v.filter !== "none" ? `filter:${v.filter};` : "";
+  const ph = (cls, nof) => `<div class="ph${cls}${v.persp ? " persp" : ""}" style="background-image:url('${img}');${nof ? "" : f}"></div>`;
+  let pic = v.bl ? `<div class="lv" style="${f}">${ph(" blur", true)}${ph(" sharp", true)}</div>` : ph("");
+  if (v.phone) pic = `<div class="ph" style="background-image:url('${img}');filter:blur(14px) brightness(.45);transform:scale(1.2)"></div><div class="phone">${ph("")}</div>`;
+  return `<div class="lv" style="${vars.join(";")}">${pic}`
+    + (v.tint ? `<div class="tint" style="background:${v.tint[0]};mix-blend-mode:${v.tint[1]}"></div>` : "")
+    + `${v.gr ? `<div class="grain"></div>` : ""}<div class="vig"></div>${v.lb ? `<div class="bars" style="position:absolute;inset:0"></div>` : ""}${v.gw ? `<div class="fgate"></div>` : ""}${v.flare ? `<div class="flare"></div>` : ""}`
+    + (v.num ? `<div class="bigNum">${v.num}<small>${v.numSmall || "mm"}</small></div>` : "") + `</div>`;
+}
+// the monitor: every chosen treatment stacked on one frame
+function monitorVis(st) {
+  const pick = k => (st[k] && LOOK_VIS[k].opt[st[k]]) || {};
+  const cam = pick("camera"), lens = pick("lens"), dep = pick("depth"), fr = pick("framing"), gr = pick("grade");
+  const v = { img: fr.img || (lens.img === "macro" ? "macro" : cam.img === "flat" ? "flat" : "face") };
+  v.z = (fr.z || 1) * (lens.z && !fr.z ? Math.min(lens.z, 2.2) : 1); v.pos = fr.pos || (v.img === "face" ? "55% 36%" : lens.pos) || "50% 40%";
+  v.filter = [cam.filter, gr.filter].filter(x => x && x !== "none").join(" ") || "none";
+  v.tint = gr.tint; v.gr = Math.max(cam.gr || 0, gr.gr || 0); v.vg = Math.max(cam.vg || 0, gr.vg || 0, lens.vg || 0);
+  v.lb = cam.lb || lens.lb; v.gw = cam.gw; v.gr2 = cam.gr2; v.flare = lens.flare; v.bl = dep.bl; v.focus = dep.focus && ["50%", "42%"]; v.persp = fr.persp;
+  return v;
+}
+let lookTab = "camera";
 function renderLook() {
-  const st = lookState(), box = $("lookGroups"); box.innerHTML = "";
-  LOOK.forEach(g => {
-    const el = document.createElement("div"); el.className = "lookGroup"; el.innerHTML = `<h5>${g.title}</h5><div class="chips"></div>`;
-    g.opts.forEach(([label, phrase]) => {
-      const b = document.createElement("button"); b.type = "button"; b.className = "chip" + (st[g.key] === label ? " on" : ""); b.textContent = label; b.title = phrase;
-      b.onclick = e => { e.stopPropagation(); const cur = lookState(); cur[g.key] = cur[g.key] === label ? null : label; setLook(cur); renderLook(); };
-      el.lastChild.appendChild(b);
-    });
-    box.appendChild(el);
-  });
-  $("lookSave").textContent = `◆ Save as ${client().name}'s look`;
+  const st = lookState();
+  $("lookTabs").innerHTML = LOOK.map(g => `<button type="button" role="tab" data-k="${g.key}" class="${g.key === lookTab ? "on" : ""}${st[g.key] ? " set" : ""}">${g.title}</button>`).join("");
+  $("lookTabs").querySelectorAll("button").forEach(b => b.onclick = e => { e.stopPropagation(); lookTab = b.dataset.k; renderLook(); });
+  const g = LOOK.find(x => x.key === lookTab), vis = LOOK_VIS[lookTab];
+  $("lookGrid").innerHTML = g.opts.map(([label]) => {
+    const v = { img: vis.img, ...(vis.opt[label] || {}) };
+    return `<button type="button" class="lookTile${st[g.key] === label ? " on" : ""}" data-l="${esc(label)}"><span class="vis">${lookLayers(v)}</span><b>${esc(label)}</b><small>${esc(vis.hint[label] || "")}</small></button>`;
+  }).join("");
+  $("lookGrid").querySelectorAll(".lookTile").forEach(b => b.onclick = e => { e.stopPropagation(); const cur = lookState(); cur[g.key] = cur[g.key] === b.dataset.l ? null : b.dataset.l; setLook(cur); renderLook(); });
+  $("lookMonitor").innerHTML = lookLayers(monitorVis(st)) + `<span class="rec"><i></i>LOOK</span>`;
+  const chosen = LOOK.filter(x => st[x.key]);
+  $("lookSum").innerHTML = chosen.length ? chosen.map(x => `<span data-k="${x.key}" title="Remove">${esc(st[x.key])}</span>`).join("") : `<em>Pick a camera, lens, focus, framing and grade — or leave it to the model.</em>`;
+  $("lookSum").querySelectorAll("span").forEach(sp => sp.onclick = e => { e.stopPropagation(); const cur = lookState(); cur[sp.dataset.k] = null; setLook(cur); renderLook(); });
+  $("lookSave").textContent = "◆ Save for client"; $("lookSave").title = `Make this ${client().name}'s default look — new projects start with it`;
 }
 $("lookReset").onclick = e => { e.stopPropagation(); setLook({}); renderLook(); };
 $("lookSave").onclick = e => { e.stopPropagation(); const st = lookState(); client().look = Object.keys(st).length ? st : null; saveClients(); note(Object.keys(st).length ? `Saved — new projects for ${client().name} start with this look.` : `${client().name} no longer has a saved look.`); };
