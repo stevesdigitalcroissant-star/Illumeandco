@@ -1,0 +1,7 @@
+{
+  "rewrites": [{ "source": "/admin", "destination": "/admin.html" }],
+  "headers": [
+    { "source": "/(.*)", "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }, { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }] },
+    { "source": "/admin(.html)?", "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }, { "key": "Cache-Control", "value": "no-cache" }] }
+  ]
+}

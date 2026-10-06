@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Montabo Soleil</title>
+  <meta name="description" content="Cuisine guyanaise et caribéenne faite maison à Paris. Commandez pour le week-end et retirez au marché, commandez un plateau pour vos événements ou réservez la cheffe à domicile.">
+  <meta name="theme-color" content="#fff8ec">
+  <meta property="og:title" content="Montabo Soleil — saveurs de Guyane à Paris">
+  <meta property="og:description" content="Plats, douceurs, jus et épices faits maison. Click & collect le week-end, traiteur et cheffe à domicile.">
+  <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="#/" class="brand" aria-label="Montabo Soleil — accueil"><img src="assets/mark.svg" alt="" width="40" height="40"><span>Montabo<b> Soleil</b></span></a>
+    <a href="#/panier" class="cart-btn" aria-label="Panier"><svg viewBox="0 0 24 24"><path d="M5 7h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 7V6a3 3 0 0 1 6 0v1"/></svg><span id="cartCount" hidden>0</span></a>
+  </header>
+  <nav class="tabs" aria-label="Sections">
+    <a href="#/" data-route="">Accueil</a>
+    <a href="#/carte" data-route="carte">La carte</a>
+    <a href="#/traiteur" data-route="traiteur">Événements</a>
+    <a href="#/cheffe" data-route="cheffe">Cheffe à domicile</a>
+  </nav>
+  <main id="view"></main>
+  <div id="cartBar" class="cart-bar" hidden></div>
+  <div class="sheet-wrap" id="sheetWrap" hidden><div class="sheet-backdrop" data-close></div><section class="sheet" id="sheet" role="dialog" aria-modal="true"></section></div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="data/config.js"></script>
+  <script src="data/menu.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

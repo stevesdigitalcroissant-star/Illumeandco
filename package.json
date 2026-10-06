@@ -1,0 +1,8 @@
+{
+  "name": "montabo-soleil",
+  "private": true,
+  "description": "Click-and-collect shop, catering and private-chef bookings for Montabo Soleil.",
+  "dependencies": {
+    "@vercel/blob": "^2.8.0"
+  }
+}
