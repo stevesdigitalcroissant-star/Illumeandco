@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { createContext, useContext, useState, useTransition } from "react";
 import { CalendarX, Clock, Hourglass, MessageSquare, MousePointerClick, Send, UserRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fmtRelative } from "@/lib/format";
@@ -17,18 +17,54 @@ const ICONS: Record<OpportunityType, React.ComponentType<{ className?: string }>
   lapsed_customer: UserRound,
 };
 
+type Feedback = { ok: boolean; text: string } | null;
+const FeedbackCtx = createContext<(f: Feedback) => void>(() => {});
+
+/**
+ * A successful follow-up resolves the opportunity, so its row disappears on
+ * refresh. Results are therefore also shown in a banner above the list.
+ */
+export function OpportunityFeedback({ children }: { children: React.ReactNode }) {
+  const [feedback, setFeedback] = useState<Feedback>(null);
+  return (
+    <FeedbackCtx.Provider value={setFeedback}>
+      {feedback ? (
+        <div
+          role="status"
+          className={cn(
+            "mb-4 flex items-start justify-between gap-3 rounded-md border px-3.5 py-2.5 text-[13px]",
+            feedback.ok ? "border-success/20 bg-success-soft text-success" : "border-danger/20 bg-danger-soft text-danger",
+          )}
+        >
+          <span>{feedback.text}</span>
+          <button type="button" onClick={() => setFeedback(null)} aria-label="Dismiss message" className="opacity-70 hover:opacity-100">
+            <X className="size-4" />
+          </button>
+        </div>
+      ) : null}
+      {children}
+    </FeedbackCtx.Provider>
+  );
+}
+
 export function OpportunityItem({ opportunity: o }: { opportunity: Opportunity }) {
   const [pending, start] = useTransition();
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   const Icon = ICONS[o.type];
+  const report = useContext(FeedbackCtx);
+  const who = o.customerName ?? "the customer";
 
   const followUp = () =>
     start(async () => {
       setResult(null);
       const res = await followUpOpportunityAction(o.key);
-      if (!res.ok) setResult({ ok: false, text: res.error });
-      else if (res.data?.sent) setResult({ ok: true, text: `Follow-up sent. ${res.data.detail}` });
-      else setResult({ ok: false, text: `Not sent — ${res.data?.detail ?? "unknown reason"}` });
+      const r: Feedback = !res.ok
+        ? { ok: false, text: `Couldn't follow up with ${who}: ${res.error}` }
+        : res.data?.sent
+          ? { ok: true, text: `Follow-up sent to ${who}. ${res.data.detail}` }
+          : { ok: false, text: `Follow-up to ${who} was not sent — ${res.data?.detail ?? "unknown reason"}` };
+      setResult(r);
+      report(r);
     });
   const dismiss = () =>
     start(async () => {

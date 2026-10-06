@@ -1,12 +1,16 @@
 "use client";
-import { useActionState, useEffect, useRef } from "react";
+import { createContext, startTransition, useActionState, useContext, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import type { ActionResult } from "@/lib/action";
 import { cn } from "@/lib/utils";
 import { Button, type ButtonProps } from "./button";
 
+/** Pending state for ActionForm (which submits via onSubmit, so useFormStatus can't see it). */
+const PendingContext = createContext(false);
+
 export function SubmitButton({ children, pendingText, ...props }: ButtonProps & { pendingText?: string }) {
-  const { pending } = useFormStatus();
+  const formStatus = useFormStatus();
+  const pending = useContext(PendingContext) || formStatus.pending;
   return (
     <Button type="submit" disabled={pending || props.disabled} {...props}>
       {pending ? (pendingText ?? "Saving…") : children}
@@ -34,7 +38,7 @@ export function ActionForm<T>({
   resetOnSuccess?: boolean;
   onSuccess?: () => void;
 }) {
-  const [state, formAction] = useActionState<ActionResult<T> | null, FormData>(action, null);
+  const [state, formAction, pending] = useActionState<ActionResult<T> | null, FormData>(action, null);
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state?.ok) {
@@ -44,9 +48,21 @@ export function ActionForm<T>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
   return (
-    <form ref={ref} action={formAction} className={cn("space-y-4", className)}>
-      {children}
-      <FormMessage state={state as ActionResult<unknown> | null} />
+    // Submitting through onSubmit (not the form `action` prop) avoids React's automatic
+    // form reset, so a validation error keeps what the user typed. We reset on success only.
+    <form
+      ref={ref}
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        startTransition(() => formAction(fd));
+      }}
+      className={cn("space-y-4", className)}
+    >
+      <PendingContext.Provider value={pending}>
+        {children}
+        <FormMessage state={state as ActionResult<unknown> | null} />
+      </PendingContext.Provider>
     </form>
   );
 }

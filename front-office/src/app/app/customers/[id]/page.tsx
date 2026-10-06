@@ -210,6 +210,35 @@ export default async function CustomerPage({ params, searchParams }: { params: P
               )}
             </Card>
           ) : null}
+
+          <Card>
+            <CardHeader title="Activity" />
+            {activity.length ? (
+              <ol className="relative px-5 py-3">
+                {activity.map((a, i) => (
+                  <li key={a.id} className="relative flex gap-3 pb-4 last:pb-1">
+                    {i < activity.length - 1 ? <span className="absolute left-[11px] top-6 bottom-0 w-px bg-border" /> : null}
+                    <span
+                      className={cn(
+                        "relative z-10 mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border bg-background",
+                        a.actorType === "ai" ? "text-primary" : "text-muted-foreground",
+                      )}
+                    >
+                      {a.actorType === "ai" ? <Bot className="size-3" /> : a.entityType === "appointment" ? <CalendarDays className="size-3" /> : a.actorType === "user" ? <UserRound className="size-3" /> : <History className="size-3" />}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[13px] leading-snug">{a.summary}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground" title={fmtDateTime(a.createdAt, tz)}>
+                        {a.actorLabel} · {fmtRelative(a.createdAt)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <EmptyState icon={<History />} title="No activity yet" className="py-8" />
+            )}
+          </Card>
         </div>
 
         <div className="space-y-6">
@@ -241,34 +270,6 @@ export default async function CustomerPage({ params, searchParams }: { params: P
             )}
           </Card>
 
-          <Card>
-            <CardHeader title="Activity" />
-            {activity.length ? (
-              <ol className="relative px-5 py-3">
-                {activity.map((a, i) => (
-                  <li key={a.id} className="relative flex gap-3 pb-4 last:pb-1">
-                    {i < activity.length - 1 ? <span className="absolute left-[11px] top-6 bottom-0 w-px bg-border" /> : null}
-                    <span
-                      className={cn(
-                        "relative z-10 mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border bg-background",
-                        a.actorType === "ai" ? "text-primary" : "text-muted-foreground",
-                      )}
-                    >
-                      {a.actorType === "ai" ? <Bot className="size-3" /> : a.entityType === "appointment" ? <CalendarDays className="size-3" /> : a.actorType === "user" ? <UserRound className="size-3" /> : <History className="size-3" />}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-[13px] leading-snug">{a.summary}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground" title={fmtDateTime(a.createdAt, tz)}>
-                        {a.actorLabel} · {fmtRelative(a.createdAt)}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <EmptyState icon={<History />} title="No activity yet" className="py-8" />
-            )}
-          </Card>
         </div>
       </div>
     </>

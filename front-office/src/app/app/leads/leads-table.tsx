@@ -47,7 +47,7 @@ export function LeadsTable({ rows, timezone }: { rows: LeadRow[]; timezone: stri
           <th>Last contact</th>
           <th>Follow-up</th>
           <th>Appointment</th>
-          <th className="text-right">Actions</th>
+          <th className="text-right"><span className="sr-only">Actions</span></th>
         </tr>
       </thead>
       <tbody>
@@ -98,12 +98,22 @@ function LeadRowView({ row, timezone }: { row: LeadRow; timezone: string }) {
           </p>
         ) : null}
       </td>
-      <td className="whitespace-nowrap">
+      <td className="min-w-36">
         {row.service ?? <span className="text-muted-foreground">General enquiry</span>}
-        <span className="block text-xs text-muted-foreground">via {sourceLabel(row.source)}</span>
+        <span className="block text-xs leading-relaxed text-muted-foreground">
+          via {sourceLabel(row.source)}
+          {row.conversationId ? (
+            <>
+              <br />
+              <Link href={`/app/inbox?c=${row.conversationId}`} className="inline-flex items-center gap-0.5 hover:text-foreground hover:underline">
+                <MessageSquare className="size-3" /> Conversation
+              </Link>
+            </>
+          ) : null}
+        </span>
       </td>
       <td>
-        <div className="relative w-40">
+        <div className="relative w-44">
           <span className={cn("pointer-events-none absolute left-2.5 top-1/2 size-1.5 -translate-y-1/2 rounded-full", STATUS_DOT[row.status] ?? "bg-muted-foreground")} />
           <NativeSelect
             aria-label={`Status for ${name}`}
@@ -137,13 +147,6 @@ function LeadRowView({ row, timezone }: { row: LeadRow; timezone: string }) {
       <td>
         <div className="flex items-center justify-end gap-1">
           <NotesDialog leadId={row.id} name={name} notes={row.notes} />
-          {row.conversationId ? (
-            <Button asChild variant="ghost" size="icon" className="size-8" title="Open conversation">
-              <Link href={`/app/inbox?c=${row.conversationId}`} aria-label="Open conversation">
-                <MessageSquare />
-              </Link>
-            </Button>
-          ) : null}
           <Button variant="outline" size="sm" onClick={followUp} disabled={pending}>
             <Send /> {pending ? "Working…" : "Follow up"}
           </Button>

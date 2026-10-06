@@ -27,6 +27,7 @@ export type CalAppt = {
   startMin: number;
   endMin: number;
   timeLabel: string;
+  startLabel: string;
   dateLabel: string;
   startsAt: string;
   started: boolean;
@@ -212,7 +213,7 @@ export function CalendarView({
                     <li key={a.id} className="border-t">
                       <button type="button" onClick={() => setSelectedId(a.id)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface">
                         <span className={cn("h-9 w-1 shrink-0 rounded-full", a.status === "completed" ? "bg-success" : a.status === "no_show" ? "bg-danger" : "bg-primary")} />
-                        <span className="w-20 shrink-0 text-[13px] font-medium tabular">{a.timeLabel.split(" – ")[0]}</span>
+                        <span className="w-20 shrink-0 text-[13px] font-medium tabular">{a.startLabel}</span>
                         <span className="min-w-0 flex-1">
                           <span className="flex items-center gap-1 truncate text-sm">
                             {a.customerName}

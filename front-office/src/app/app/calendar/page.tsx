@@ -48,6 +48,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
       startMin: sMin,
       endMin: Math.max(eMin, sMin + 15),
       timeLabel: `${s.toFormat("h:mm")} – ${e.toFormat("h:mm a")}`,
+      startLabel: s.toFormat("h:mm a"),
       dateLabel: s.toFormat("cccc d LLLL"),
       startsAt: a.startsAt.toISOString(),
       started: a.startsAt.getTime() <= now.toMillis(),

@@ -6,7 +6,7 @@ import { requirePermission } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import { getAiSettings } from "@/server/services/business";
 import { listOpportunities, type OpportunityType } from "@/server/services/opportunities";
-import { OpportunityItem } from "./opportunity-item";
+import { OpportunityFeedback, OpportunityItem } from "./opportunity-item";
 import { TYPE_META } from "./types";
 
 export const metadata = { title: "Missed opportunities" };
@@ -48,31 +48,33 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
         ))}
       </div>
 
-      {groups.length ? (
-        <div className="space-y-5">
-          {groups.map((g) => (
-            <Card key={g.type}>
-              <div className="flex items-center justify-between border-b px-5 py-3">
-                <h3 className="text-sm font-semibold">{TYPE_META[g.type].label}</h3>
-                <span className="text-xs text-muted-foreground tabular">{g.items.length}</span>
-              </div>
-              <ul>
-                {g.items.map((o) => (
-                  <OpportunityItem key={o.key} opportunity={o} />
-                ))}
-              </ul>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <EmptyState
-            icon={<CircleCheck />}
-            title={type ? `Nothing in “${TYPE_META[type].label}”` : "No missed opportunities"}
-            description="Every interested customer has booked, been followed up, or been dismissed. New ones appear here automatically."
-          />
-        </Card>
-      )}
+      <OpportunityFeedback>
+        {groups.length ? (
+          <div className="space-y-5">
+            {groups.map((g) => (
+              <Card key={g.type}>
+                <div className="flex items-center justify-between border-b px-5 py-3">
+                  <h3 className="text-sm font-semibold">{TYPE_META[g.type].label}</h3>
+                  <span className="text-xs text-muted-foreground tabular">{g.items.length}</span>
+                </div>
+                <ul>
+                  {g.items.map((o) => (
+                    <OpportunityItem key={o.key} opportunity={o} />
+                  ))}
+                </ul>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <EmptyState
+              icon={<CircleCheck />}
+              title={type ? `Nothing in “${TYPE_META[type].label}”` : "No missed opportunities"}
+              description="Every interested customer has booked, been followed up, or been dismissed. New ones appear here automatically."
+            />
+          </Card>
+        )}
+      </OpportunityFeedback>
     </>
   );
 }
