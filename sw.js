@@ -1,5 +1,5 @@
 // Offline support: serve the app shell from cache, refresh it in the background.
-const CACHE = "calorie-coach-v1";
+const CACHE = "calorie-coach-v2";
 const SHELL = ["./", "index.html", "styles.css", "app.js", "data/foods.js", "data/recipes.js", "manifest.webmanifest", "icon.svg"];
 
 self.addEventListener("install", (e) => {

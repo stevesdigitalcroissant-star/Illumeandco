@@ -68,11 +68,88 @@
 
   // ---------- storage ----------
   const KEY = "calorie-coach.v1";
-  const blank = () => ({ profile: null, logs: {}, plans: {}, recents: [], custom: [] });
+  const blank = () => ({ profile: null, logs: {}, plans: {}, recents: [], custom: [], lastQty: {}, celebrated: {}, dismissed: {} });
   let S;
   try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "null") || {}); } catch { S = blank(); }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { toast("Couldn't save — storage is full or blocked"); } };
   const dayLog = (k) => (S.logs[k] ||= { items: [], water: 0 });
+  const hasLog = (k) => (S.logs[k]?.items?.length || 0) > 0;
+
+  // ---------- streaks, emoji & celebrations ----------
+  const CAT_EMOJI = {
+    Fruit: "🍎", Vegetables: "🥦", Protein: "🍗", "Dairy & Eggs": "🥚", "Grains & Bread": "🍞", "Legumes & Nuts": "🥜",
+    Drinks: "🥤", "Snacks & Sweets": "🍪", "Fast Food": "🍔", "Prepared Meals": "🍲", "Condiments & Sauces": "🧂", "Fats & Oils": "🫒",
+    Recipes: "🍽️", "My foods": "⭐",
+  };
+  const emojiOf = (id) => !id ? "🍴" : id.startsWith("r:") ? "🍽️" : id.startsWith("c:") ? "⭐" : CAT_EMOJI[FOOD_BY_ID.get(id)?.cat] || "🍴";
+
+  function streakInfo() {
+    let k = todayKey();
+    if (!hasLog(k)) k = addDays(k, -1);
+    let n = 0;
+    while (hasLog(k)) { n++; k = addDays(k, -1); }
+    return { n, start: addDays(k, 1) };
+  }
+  function bestStreak() {
+    const keys = Object.keys(S.logs).filter(hasLog).sort();
+    let best = 0, run = 0, prev = null;
+    for (const k of keys) { run = prev && addDays(prev, 1) === k ? run + 1 : 1; best = Math.max(best, run); prev = k; }
+    return best;
+  }
+
+  const MILESTONES = [3, 7, 14, 30, 60, 100];
+  // Returns a celebration message the first time something worth cheering happens, else null.
+  function celebration(k, added) {
+    const C = (S.celebrated ||= {});
+    let msg = null;
+    if (!C.first) {
+      C.first = 1;
+      const total = Object.values(S.logs).reduce((n, l) => n + (l.items?.length || 0), 0);
+      if (total <= added) msg = "🎉 Your very first log! The hardest step is done.";
+    }
+    const st = streakInfo();
+    if (!msg && MILESTONES.includes(st.n) && !C[`streak${st.n}:${st.start}`]) { C[`streak${st.n}:${st.start}`] = 1; msg = `🔥 ${st.n}-day streak! You're on a roll.`; }
+    const target = targets(S.profile).kcal, kc = dayTotals(k).kcal;
+    if (!msg && kc >= target * 0.9 && kc <= target * 1.05 && !C["target:" + k]) { C["target:" + k] = 1; msg = "🎯 Right in your target zone today. Lovely."; }
+    save();
+    return msg;
+  }
+
+  function confetti() {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const c = document.createElement("canvas"), x = c.getContext("2d");
+    if (!x) return;
+    const W = innerWidth, H = innerHeight, dpr = Math.min(2, devicePixelRatio || 1);
+    c.className = "confetti"; c.width = W * dpr; c.height = H * dpr;
+    document.body.appendChild(c);
+    x.scale(dpr, dpr);
+    const cs = getComputedStyle(document.documentElement);
+    const cols = ["--kcal", "--protein", "--carbs", "--fat", "--accent"].map((v) => cs.getPropertyValue(v).trim() || "#e0703a");
+    const ps = Array.from({ length: 90 }, () => ({
+      x: W / 2 + (Math.random() - 0.5) * 60, y: H * 0.38, vx: (Math.random() - 0.5) * 13, vy: -Math.random() * 13 - 4,
+      r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.4, w: 6 + Math.random() * 5, h: 4 + Math.random() * 4, c: cols[(Math.random() * cols.length) | 0],
+    }));
+    const t0 = performance.now(), LIFE = 1900;
+    const frame = (now) => {
+      const t = now - t0;
+      x.clearRect(0, 0, W, H);
+      x.globalAlpha = clamp(1 - t / LIFE, 0, 1);
+      for (const p of ps) {
+        p.vy += 0.35; p.vx *= 0.985; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); x.restore();
+      }
+      if (t < LIFE) requestAnimationFrame(frame); else c.remove();
+    };
+    requestAnimationFrame(frame);
+  }
+
+  // After anything is logged: cheer if it's a milestone, otherwise a normal toast. Both can carry Undo.
+  function afterLog(k, msg, ids) {
+    const undo = ids?.length && { label: "Undo", fn: () => { const l = dayLog(k); l.items = l.items.filter((i) => !ids.includes(i.id)); save(); render(); toast("Undone"); } };
+    const cheer = celebration(k, ids?.length || 1);
+    if (cheer) confetti();
+    toast(cheer || msg, undo);
+  }
 
   // ---------- nutrition engine ----------
   const risk = (p, id) => ({ none: 0, family: 1, me: 2 }[p?.conditions?.[id] || "none"]);
@@ -202,8 +279,24 @@
   const ui = { tab: "today", date: todayKey(), meal: guessMeal(), query: "", cat: "All", mealsMode: "plan", browseMeal: "all", browseLevel: "mine", browseQ: "", ob: 0, editStep: null };
   function guessMeal() { const h = new Date().getHours(); return h < 11 ? "breakfast" : h < 15 ? "lunch" : h < 17 ? "snack" : h < 21 ? "dinner" : "snack"; }
 
-  let toastTimer;
-  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200); }
+  let toastTimer, toastAction = null;
+  function toast(msg, action) {
+    const t = $("#toast");
+    toastAction = action || null;
+    t.innerHTML = `<span class="msg">${esc(msg)}</span>${action ? `<button data-act="toast-act">${esc(action.label)}</button>` : ""}`;
+    t.classList.toggle("has-act", !!action);
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.classList.remove("show"); toastAction = null; }, action ? 5000 : 2400);
+  }
+  const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+
+  const CHEER = {
+    empty: ["Every day's a fresh page. Log the first thing you eat.", "No pressure — just log what you remember.", "One tap is all it takes to get going.", "Start small: what was the last thing you ate?"],
+    going: ["Logging is the hard part — you're doing it.", "Small steps add up. Nice one.", "You showed up today. That counts.", "Progress, not perfection.", "Every bite you log teaches you something.", "You're getting the hang of this.", "Look at you, keeping track. Proud of you."],
+    zone: ["Right in the zone today. Lovely.", "Nicely balanced day so far.", "You're right where you wanted to be."],
+    over: ["Bigger day? That's okay — one day doesn't define you.", "Still logging on a big day takes honesty. Respect.", "Every day is different. Tomorrow's a fresh start.", "Noticing is what matters, and you're noticing."],
+  };
 
   const ICON = {
     left: '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>',
@@ -365,11 +458,28 @@
       const color = kind === "min" ? (ratio >= 1 ? "var(--good)" : "var(--accent)") : ratio > 1 ? "var(--bad)" : ratio > 0.85 ? "var(--warn)" : "var(--good)";
       return `<div><div class="lbl"><span>${name}</span><b class="num">${fmt(tot[key])}/${fmt(t[key])}${unit}</b></div><div class="bar"><i style="width:${clamp(ratio * 100, 0, 100)}%;background:${color}"></i></div></div>`;
     };
-    const greet = p.name ? `${new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening"}, ${esc(p.name)}` : "Your day";
+    const hour = new Date().getHours();
+    const greet = p.name ? `${hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"}, ${esc(p.name)}` : "Your day";
+    const streak = streakInfo().n;
+    const ratio = tot.kcal / t.kcal;
+    const pool = !log.items.length ? CHEER.empty : ratio > 1.05 ? CHEER.over : ratio >= 0.9 ? CHEER.zone : CHEER.going;
+    const cheer = pool[hash(k + pool[0]) % pool.length];
+    const yItems = S.logs[addDays(k, -1)]?.items || [];
+    const quickMeal = guessMeal();
+    const quick = isToday ? S.recents.map(lookupFood).filter(Boolean).slice(0, 8) : [];
+    const nudge = isToday && !log.items.length && hour >= 11 && !S.dismissed?.["nudge:" + k];
+    const installTip = !isStandalone() && !S.dismissed?.install;
 
     return `
-      <header class="head"><div><div class="eyebrow">${isToday ? greet : d.toLocaleDateString(undefined, { month: "long", day: "numeric" })}</div><h1>${label}</h1></div>
+      <header class="head"><div><div class="eyebrow">${isToday ? greet : d.toLocaleDateString(undefined, { month: "long", day: "numeric" })}</div>
+        <div class="row" style="gap:10px"><h1>${label}</h1>${streak ? `<span class="streak" title="Days in a row with something logged">🔥 ${streak}-day streak</span>` : ""}</div></div>
         <div class="row"><button class="icon-btn" data-act="day" data-v="-1" aria-label="Previous day">${ICON.left}</button><button class="icon-btn" data-act="day" data-v="1" aria-label="Next day" ${isToday ? "disabled style='opacity:.35'" : ""}>${ICON.right}</button></div></header>
+
+      ${nudge ? `<section class="card nudge stack">
+        <div class="row between" style="align-items:flex-start"><div><h3>👋 Quick check-in</h3><p class="small muted" style="margin-top:2px">What did you have for breakfast? Even a rough guess helps.</p></div>
+          <button class="icon-btn sm" data-act="dismiss" data-v="nudge:${k}" aria-label="Not now">${ICON.close}</button></div>
+        <div class="row wrap"><button class="btn small primary" data-act="add-to" data-v="breakfast">${ICON.plus} Log breakfast</button><button class="btn small" data-act="add-to" data-v="lunch">Log lunch</button><button class="btn small ghost" data-act="dismiss" data-v="nudge:${k}">I skipped it</button></div>
+      </section>` : ""}
 
       <section class="card">
         <div class="summary">
@@ -381,7 +491,16 @@
             ${macro("Protein", "p", "var(--protein)")}${macro("Carbs", "c", "var(--carbs)")}${macro("Fat", "f", "var(--fat)")}
           </div>
         </div>
+        <p class="cheer">${esc(cheer)}</p>
       </section>
+
+      ${quick.length ? `<section class="stack" style="gap:8px">
+        <div class="row between"><h3>Log again</h3><span class="tiny muted">one tap → ${MEAL_LABEL[quickMeal]}</span></div>
+        <div class="chips scroll">${quick.map((f) => {
+          const lq = S.lastQty?.[f.id] || { qty: 1 };
+          return `<button class="chip qchip" data-act="quick" data-id="${esc(f.id)}"><span class="e">${emojiOf(f.id)}</span><span class="nm">${esc(f.name)}</span><span class="k">${fmt(f.kcal * lq.qty)}</span></button>`;
+        }).join("")}</div>
+      </section>` : ""}
 
       <section class="card">
         <div class="card-title"><h3>Watch list</h3><span class="tiny muted">Fiber is a goal · the rest are limits</span></div>
@@ -392,32 +511,42 @@
         ${MEALS.map((m) => {
           const items = log.items.filter((i) => i.meal === m.id);
           const mt = sum(items);
+          const yMeal = yItems.filter((i) => i.meal === m.id);
           return `<div class="meal-block"><div class="meal-head"><h3>${m.label} ${items.length ? `<span class="muted small num" style="font-weight:500">· ${fmt(mt.kcal)} kcal</span>` : ""}</h3>
             <button class="btn small ghost" data-act="add-to" data-v="${m.id}">${ICON.plus} Add</button></div>
-            ${items.length ? items.map((i) => `<button class="item" data-act="edit-item" data-id="${i.id}"><div class="grow"><b>${esc(i.name)}</b><span class="tiny muted">${esc(i.label)} · P ${fmt(i.p)} · C ${fmt(i.c)} · F ${fmt(i.f)}</span></div><span class="kc">${fmt(i.kcal)}</span></button>`).join("") : `<p class="empty">Nothing logged yet</p>`}</div>`;
+            ${items.length ? items.map((i) => `<button class="item" data-act="edit-item" data-id="${i.id}"><span class="em">${emojiOf(i.foodId)}</span><div class="grow"><b>${esc(i.name)}</b><span class="tiny muted">${esc(i.label)} · P ${fmt(i.p)} · C ${fmt(i.c)} · F ${fmt(i.f)}</span></div><span class="kc">${fmt(i.kcal)}</span></button>`).join("")
+              : yMeal.length ? `<button class="btn small same" data-act="same-yday" data-v="${m.id}">↻ Same as yesterday <span class="num muted">(${fmt(sum(yMeal).kcal)} kcal)</span></button>`
+              : `<p class="empty">Nothing logged yet</p>`}</div>`;
         }).join("")}
       </section>
 
       <section class="card row between">
         <div class="row"><span style="color:var(--protein)">${ICON.drop.replace("<svg", '<svg width="22" height="22"')}</span><div><h3>Water</h3><span class="small muted num">${log.water || 0} of 8 glasses</span></div></div>
         <div class="row"><button class="icon-btn" data-act="water" data-v="-1" aria-label="Less water">${ICON.minus}</button><button class="icon-btn" data-act="water" data-v="1" aria-label="More water">${ICON.plus}</button></div>
-      </section>`;
+      </section>
+
+      ${installTip ? `<section class="card tipcard row" style="align-items:flex-start">
+        <span class="em big">📲</span>
+        <div class="grow"><h3>Add to your home screen</h3><p class="small muted" style="margin-top:2px">On iPhone, open this page in Safari, tap <b>Share</b> (the square with an arrow), then <b>Add to Home Screen</b>. It opens like an app and works offline.</p></div>
+        <button class="icon-btn sm" data-act="dismiss" data-v="install" aria-label="Dismiss tip">${ICON.close}</button>
+      </section>` : ""}`;
   }
 
   // ---------- Add / search ----------
-  const CATS = ["All", "Recipes", ...new Set(FOODS.map((f) => f.cat))];
+  const CATS = ["All", "My foods", "Recipes", ...new Set(FOODS.map((f) => f.cat))];
 
   function searchFoods(q, cat) {
     const toks = q.toLowerCase().split(/\s+/).filter(Boolean);
     const recipesAsFoods = RECIPES.map((r) => ({ ...r, id: "r:" + r.id, cat: "Recipes", serving: "1 serving", recipe: true }));
     const custom = S.custom.map((c) => ({ ...c, cat: "My foods" }));
-    let pool = cat === "All" ? [...custom, ...FOODS, ...recipesAsFoods] : cat === "Recipes" ? recipesAsFoods : FOODS.filter((f) => f.cat === cat);
+    let pool = cat === "All" ? [...custom, ...FOODS, ...recipesAsFoods] : cat === "My foods" ? custom : cat === "Recipes" ? recipesAsFoods : FOODS.filter((f) => f.cat === cat);
     if (!toks.length) return pool.slice(0, cat === "All" ? 0 : 200);
     return pool
       .map((f) => {
         const n = f.name.toLowerCase();
         if (!toks.every((t) => n.includes(t) || f.cat.toLowerCase().includes(t))) return null;
-        return { f, s: (n.startsWith(toks[0]) ? 0 : 1) + (f.recipe ? 0.5 : 0) + n.length / 100 };
+        // Your own foods always rank first — they're the ones you actually eat.
+        return { f, s: (n.startsWith(toks[0]) ? 0 : 1) + (f.recipe ? 0.5 : 0) + (f.cat === "My foods" ? -3 : 0) + n.length / 100 };
       })
       .filter(Boolean)
       .sort((a, b) => a.s - b.s)
@@ -431,7 +560,7 @@
   }
 
   function resultRow(f) {
-    return `<button class="result" data-act="pick-food" data-id="${esc(f.id)}"><div class="grow"><b style="font-weight:500">${esc(f.name)}</b><div class="tiny muted">${esc(f.serving)} · ${fmt(f.kcal)} kcal · P ${fmtG(f.p)} · C ${fmtG(f.c)} · F ${fmtG(f.f)}</div></div><span class="plus">${ICON.plus}</span></button>`;
+    return `<button class="result" data-act="pick-food" data-id="${esc(f.id)}"><span class="em">${emojiOf(f.id)}</span><div class="grow"><b style="font-weight:500">${esc(f.name)}</b><div class="tiny muted">${esc(f.serving)} · ${fmt(f.kcal)} kcal · P ${fmtG(f.p)} · C ${fmtG(f.c)} · F ${fmtG(f.f)}</div></div><span class="plus">${ICON.plus}</span></button>`;
   }
 
   function renderAdd() {
@@ -450,7 +579,9 @@
       <section class="card" id="results" style="padding:4px 14px">
         ${showRecents
           ? recents.length ? `<div class="card-title" style="margin:10px 0 0"><h3>Recent</h3></div>${recents.map(resultRow).join("")}` : `<p class="empty" style="padding:14px 0">Search for something you ate, or pick a category.</p>`
-          : results.length ? results.map(resultRow).join("") : `<p class="empty" style="padding:14px 0">No match for “${esc(ui.query)}”. Add it yourself below.</p>`}
+          : results.length ? results.map(resultRow).join("")
+          : ui.cat === "My foods" && !ui.query ? `<p class="empty" style="padding:14px 0">⭐ Foods you add yourself live here. Add one below and it's saved for next time.</p>`
+          : `<div class="stack" style="padding:14px 0"><p class="empty">No match for “${esc(ui.query)}”. Add it once and it's yours forever.</p><button class="btn small primary" style="align-self:flex-start" data-act="custom">${ICON.plus} Add “${esc(ui.query)}”</button></div>`}
       </section>
       <button class="btn block" data-act="custom">${ICON.plus} Add your own food</button>`;
   }
@@ -504,7 +635,9 @@
     const warn = nutrientWarnings(n);
     const grams = f.g ? r0(f.g * st.qty) : null;
     const html = `
-      <div class="row between"><div class="grow"><h2>${esc(f.name)}</h2><p class="small muted">${esc(f.serving)}${f.recipe ? ` · ${LEVEL_LABEL[f.level]} · ${f.mins} min` : ""}</p></div><button class="icon-btn" data-close aria-label="Close">${ICON.close}</button></div>
+      <div class="row between"><div class="grow"><h2>${esc(f.name)}</h2><p class="small muted">${esc(f.serving)}${f.recipe ? ` · ${LEVEL_LABEL[f.level]} · ${f.mins} min` : ""}${String(f.id).startsWith("c:") ? " · ⭐ My food" : ""}</p>
+        ${String(f.id).startsWith("c:") && !st.existing ? `<button class="link" data-act="edit-food" data-id="${esc(f.id)}">Edit food</button>` : ""}
+        ${f.orphan ? `<button class="link" data-act="save-as-mine">⭐ Save as my food</button>` : ""}</div><button class="icon-btn" data-close aria-label="Close">${ICON.close}</button></div>
       <div class="row between">
         <div class="stepper"><button class="icon-btn" data-act="qty" data-v="-0.25" aria-label="Less">${ICON.minus}</button>
           <input class="input num" id="qty" type="number" inputmode="decimal" step="0.25" min="0.25" value="${st.mode === "g" ? grams : r1(st.qty * 100) / 100}">
@@ -521,50 +654,113 @@
     } else openSheet(html);
   }
 
+  const labelFor = (f, qty, mode) => (f.g && mode === "g" ? `${r0(f.g * qty)} g` : `${r1(qty * 100) / 100} × ${f.serving}`);
+  const makeItem = (f, qty, meal, mode) => ({ id: uid(), foodId: f.id, name: f.name, meal, qty, label: labelFor(f, qty, mode), t: Date.now(), ...scale(f, qty) });
+  function remember(f, qty, mode) {
+    if (f.orphan) return;
+    S.recents = [f.id, ...S.recents.filter((x) => x !== f.id)].slice(0, 30);
+    (S.lastQty ||= {})[f.id] = { qty, mode: f.g ? mode : "serv" };
+  }
+
   function saveItem() {
     const st = sheetState, f = st.food;
     if (!(st.qty > 0)) return toast("Enter an amount");
-    const n = scale(f, st.qty);
-    const label = f.g && st.mode === "g" ? `${r0(f.g * st.qty)} g` : `${r1(st.qty * 100) / 100} × ${f.serving}`;
-    const log = dayLog(ui.date);
-    if (st.existing) Object.assign(st.existing, n, { qty: st.qty, meal: st.meal, label });
-    else log.items.push({ id: uid(), foodId: f.id, name: f.name, meal: st.meal, qty: st.qty, label, t: Date.now(), ...n });
-    S.recents = [f.id, ...S.recents.filter((x) => x !== f.id)].slice(0, 30);
+    let added = null;
+    if (st.existing) Object.assign(st.existing, scale(f, st.qty), { qty: st.qty, meal: st.meal, label: labelFor(f, st.qty, st.mode) });
+    else dayLog(ui.date).items.push((added = makeItem(f, st.qty, st.meal, st.mode)));
+    remember(f, st.qty, st.mode);
     save();
     closeSheet();
-    toast(st.existing ? "Updated" : `Added to ${MEAL_LABEL[st.meal]}`);
     render();
+    if (added) afterLog(ui.date, `Added to ${MEAL_LABEL[st.meal]}`, [added.id]);
+    else toast("Updated");
   }
 
-  function customSheet() {
-    sheetState = { custom: true };
+  function quickLog(id) {
+    const f = lookupFood(id);
+    if (!f) return;
+    const lq = S.lastQty?.[f.id] || { qty: 1, mode: "serv" };
+    const meal = ui.date === todayKey() ? guessMeal() : ui.meal;
+    const it = makeItem(f, lq.qty, meal, lq.mode);
+    dayLog(ui.date).items.push(it);
+    remember(f, lq.qty, lq.mode);
+    save();
+    render();
+    afterLog(ui.date, `${f.name} → ${MEAL_LABEL[meal]}`, [it.id]);
+  }
+
+  function sameAsYesterday(meal) {
+    const prev = (S.logs[addDays(ui.date, -1)]?.items || []).filter((i) => i.meal === meal);
+    if (!prev.length) return;
+    const now = Date.now();
+    const copies = prev.map((i, n) => ({ ...i, id: uid(), t: now + n }));
+    dayLog(ui.date).items.push(...copies);
+    save();
+    render();
+    afterLog(ui.date, `${MEAL_LABEL[meal]} copied from yesterday`, copies.map((c) => c.id));
+  }
+
+  // opts: { food: values to prefill, editId: custom food being edited, linkItem: logged item to attach the new food to }
+  function customSheet(opts = {}) {
+    const v = opts.food || {};
+    sheetState = { custom: true, editId: opts.editId || null, linkItem: opts.linkItem || null };
+    const val = (x) => (x === undefined || x === null || x === "" ? "" : esc(typeof x === "number" ? r1(x) : x));
+    const num = (k, label) => `<label class="field">${label}<input class="input" id="c_${k}" type="number" inputmode="decimal" value="${val(v[k])}"></label>`;
+    const title = opts.editId ? "Edit my food" : opts.linkItem ? "Save as my food" : "Add your own food";
+    const cta = opts.editId ? "Save changes" : opts.linkItem ? "Save to My foods" : `Save & add to ${MEAL_LABEL[ui.meal]}`;
     openSheet(`
-      <div class="row between"><h2>Add your own food</h2><button class="icon-btn" data-close aria-label="Close">${ICON.close}</button></div>
-      <p class="small muted">Copy the numbers from the label. It's saved so you can find it again.</p>
-      <label class="field">Name<input class="input" id="cName" placeholder="e.g. Mom's oxtail stew"></label>
-      <label class="field">Serving<input class="input" id="cServ" placeholder="e.g. 1 bowl"></label>
+      <div class="row between"><h2>${title}</h2><button class="icon-btn" data-close aria-label="Close">${ICON.close}</button></div>
+      <p class="small muted">${opts.editId ? "New logs and search will use these numbers. Meals you already logged stay as they were." : "Copy the numbers from the label. It's saved to ⭐ My foods so you can log it again in one tap."}</p>
+      <label class="field">Name<input class="input" id="cName" placeholder="e.g. Mom's oxtail stew" value="${val(v.name)}"></label>
       <div class="grid-2">
-        <label class="field">Calories<input class="input" id="c_kcal" type="number" inputmode="decimal"></label>
-        <label class="field">Protein (g)<input class="input" id="c_p" type="number" inputmode="decimal"></label>
-        <label class="field">Carbs (g)<input class="input" id="c_c" type="number" inputmode="decimal"></label>
-        <label class="field">Fat (g)<input class="input" id="c_f" type="number" inputmode="decimal"></label>
-        <label class="field">Fiber (g)<input class="input" id="c_fib" type="number" inputmode="decimal"></label>
-        <label class="field">Sugar (g)<input class="input" id="c_sug" type="number" inputmode="decimal"></label>
-        <label class="field">Sodium (mg)<input class="input" id="c_na" type="number" inputmode="decimal"></label>
-        <label class="field">Sat. fat (g)<input class="input" id="c_satf" type="number" inputmode="decimal"></label>
+        <label class="field">Serving<input class="input" id="cServ" placeholder="e.g. 1 bowl" value="${val(v.serving)}"></label>
+        <label class="field">Serving in grams<input class="input" id="cG" type="number" inputmode="decimal" placeholder="optional" value="${val(v.g)}"></label>
       </div>
-      <button class="btn primary block" data-act="save-custom">Save & add to ${MEAL_LABEL[ui.meal]}</button>`);
+      <div class="grid-2">
+        ${num("kcal", "Calories")}${num("p", "Protein (g)")}${num("c", "Carbs (g)")}${num("f", "Fat (g)")}
+        ${num("fib", "Fiber (g)")}${num("sug", "Sugar (g)")}${num("na", "Sodium (mg)")}${num("satf", "Sat. fat (g)")}
+      </div>
+      <div class="row">${opts.editId ? `<button class="btn danger" data-act="del-food">Delete</button>` : ""}<button class="btn primary grow" data-act="save-custom">${cta}</button></div>`);
   }
 
   function saveCustom() {
+    const st = sheetState;
     const name = $("#cName").value.trim();
     const kcal = Number($("#c_kcal").value);
     if (!name || !(kcal >= 0) || $("#c_kcal").value === "") return toast("Add a name and calories");
-    const f = { id: "c:" + uid(), name, serving: $("#cServ").value.trim() || "1 serving" };
-    NUTS.forEach((k) => (f[k] = Number($("#c_" + k).value) || 0));
+    const g = Number($("#cG").value);
+    const vals = { name, serving: $("#cServ").value.trim() || "1 serving" };
+    NUTS.forEach((k) => (vals[k] = Number($("#c_" + k).value) || 0));
+    if (st.editId) {
+      const f = S.custom.find((c) => c.id === st.editId);
+      if (!f) return closeSheet();
+      Object.assign(f, vals);
+      if (g > 0) f.g = g; else delete f.g;
+      if (!f.g && S.lastQty?.[f.id]) S.lastQty[f.id] = { qty: 1, mode: "serv" };
+      save(); render();
+      toast("Saved — new logs use these numbers");
+      return foodSheet(f);
+    }
+    const f = { id: "c:" + uid(), ...vals };
+    if (g > 0) f.g = g;
     S.custom.unshift(f);
+    if (st.linkItem) {
+      const it = dayLog(ui.date).items.find((i) => i.id === st.linkItem);
+      if (it) it.foodId = f.id;
+      S.recents = [f.id, ...S.recents.filter((x) => x !== f.id)].slice(0, 30);
+      save(); closeSheet(); render();
+      return toast("⭐ Saved to My foods");
+    }
     sheetState = { food: f, qty: 1, meal: ui.meal, mode: "serv" };
     saveItem();
+  }
+
+  function deleteCustom(id) {
+    const idx = S.custom.findIndex((c) => c.id === id);
+    if (idx < 0) return;
+    const [gone] = S.custom.splice(idx, 1);
+    save(); closeSheet(); render();
+    toast(`Deleted “${gone.name}”`, { label: "Undo", fn: () => { S.custom.splice(idx, 0, gone); save(); render(); toast("Restored"); } });
   }
 
   function scanSheet() {
@@ -699,6 +895,26 @@
         ${tips.map(([k, h, b]) => `<div class="tip"><span class="dot ${k === "good" ? "" : k}"></span><div><b>${h}</b><p class="small muted" style="margin-top:2px">${b}</p></div></div>`).join("")}</section>`;
   }
 
+  // ---------- Badges ----------
+  function badges() {
+    const t = targets(S.profile);
+    const logs = Object.values(S.logs);
+    const days = logs.filter((l) => l.items?.length).map((l) => sum(l.items));
+    const items = logs.flatMap((l) => l.items || []);
+    const kinds = new Set(items.map((i) => i.foodId || i.name)).size;
+    const best = bestStreak();
+    return [
+      ["🌱", "First log", items.length > 0, "Log anything at all"],
+      ["🔥", "3-day streak", best >= 3, `Log 3 days in a row${best && best < 3 ? ` · best ${best}` : ""}`],
+      ["⚡", "7-day streak", best >= 7, `Log 7 days in a row${best && best < 7 ? ` · best ${best}` : ""}`],
+      ["🥦", "Fiber hero", days.some((n) => n.fib >= t.fib), `Reach ${t.fib} g fiber in a day`],
+      ["💪", "Protein pro", days.some((n) => n.p >= t.p), `Reach ${t.p} g protein in a day`],
+      ["💧", "Water champ", logs.some((l) => (l.water || 0) >= 8), "Drink 8 glasses in a day"],
+      ["👩‍🍳", "Chef mode", items.some((i) => String(i.foodId).startsWith("r:")), "Log one of the recipes"],
+      ["🧭", "Explorer", kinds >= 10, `10 different foods · ${Math.min(kinds, 10)}/10`],
+    ];
+  }
+
   // ---------- Profile ----------
   function renderProfile() {
     const p = S.profile, t = targets(p), us = p.units === "us";
@@ -713,6 +929,10 @@
         <div class="nut-grid"><div class="nut"><b style="color:var(--protein)">${t.p} g</b><span>Protein</span></div><div class="nut"><b style="color:var(--carbs)">${t.c} g</b><span>Carbs</span></div><div class="nut"><b style="color:var(--fat)">${t.f} g</b><span>Fat</span></div><div class="nut"><b>${t.fib} g</b><span>Fiber</span></div></div>
         <div class="grid-3 small" style="text-align:center"><div><b class="num">${t.sug} g</b><div class="tiny muted">sugar max</div></div><div><b class="num">${fmt(t.na)} mg</b><div class="tiny muted">sodium max</div></div><div><b class="num">${t.satf} g</b><div class="tiny muted">sat. fat max</div></div></div>
         <details><summary class="small" style="cursor:pointer;color:var(--accent);font-weight:600">How we worked this out</summary><div class="stack" style="margin-top:10px">${targetReasons(p, t).map((x) => `<p class="small">${x}</p>`).join("")}</div></details></section>
+      ${(() => { const b = badges(), got = b.filter((x) => x[2]).length; return `<section class="card">
+        <div class="card-title"><h3>Badges</h3><span class="tiny muted">${got} of ${b.length} earned</span></div>
+        <div class="badges">${b.map(([e, name, on, hint]) => `<div class="badge ${on ? "on" : ""}"><span class="be">${e}</span><div class="grow"><b>${name}</b><span>${on ? "Earned ✓" : hint}</span></div></div>`).join("")}</div>
+      </section>`; })()}
       <section class="card" style="padding:4px 16px">
         ${row("Body", `${p.age} yrs · ${h} · ${w}`, "body")}
         ${row("Activity & goal", `${ACTIVITY[p.activity].label} · ${{ lose: "Lose weight", maintain: "Maintain", gain: "Gain" }[p.goal]}`, "goal")}
@@ -759,13 +979,20 @@
       // today
       case "day": { const nk = addDays(ui.date, Number(v)); if (nk > todayKey()) return; ui.date = nk; return render(); }
       case "add-to": ui.meal = v; ui.tab = "add"; window.scrollTo(0, 0); return render();
-      case "edit-item": { const it = dayLog(ui.date).items.find((i) => i.id === el.dataset.id); if (!it) return; const f = lookupFood(it.foodId) || { ...it, ...scale(it, 1 / (it.qty || 1)), serving: "serving" }; return foodSheet(f, it); }
+      case "edit-item": { const it = dayLog(ui.date).items.find((i) => i.id === el.dataset.id); if (!it) return; const f = lookupFood(it.foodId) || { ...it, ...scale(it, 1 / (it.qty || 1)), serving: "serving", orphan: true }; return foodSheet(f, it); }
       case "water": { const l = dayLog(ui.date); l.water = clamp((l.water || 0) + Number(v), 0, 20); save(); return render(); }
+      case "quick": return quickLog(el.dataset.id);
+      case "same-yday": return sameAsYesterday(v);
+      case "dismiss": (S.dismissed ||= {})[v] = 1; save(); return render();
+      case "toast-act": { const a = toastAction; $("#toast").classList.remove("show"); toastAction = null; if (a) a.fn(); return; }
       // add
       case "meal": ui.meal = v; return render();
       case "cat": ui.cat = v; return render();
       case "pick-food": { const f = lookupFood(el.dataset.id); if (f) foodSheet(f); return; }
-      case "custom": return customSheet();
+      case "custom": return customSheet({ food: { name: ui.query.trim() } });
+      case "edit-food": { const f = S.custom.find((c) => c.id === el.dataset.id); if (f) customSheet({ food: f, editId: f.id }); return; }
+      case "del-food": return deleteCustom(sheetState?.editId);
+      case "save-as-mine": { const st = sheetState; const n = st.food; return customSheet({ food: { ...n, name: st.existing.name, serving: "1 serving", g: undefined }, linkItem: st.existing.id }); }
       case "save-custom": return saveCustom();
       case "scan": return scanSheet();
       // sheet
@@ -794,9 +1021,11 @@
       case "log-recipe": {
         const r = RECIPE_BY_ID.get(el.dataset.id); if (!r) return;
         const m = Number(el.dataset.m) || 1, meal = el.dataset.slot || (r.meal.includes(guessMeal()) ? guessMeal() : r.meal[0]);
-        dayLog(ui.date).items.push({ id: uid(), foodId: "r:" + r.id, name: r.name, meal, qty: m, label: `${m} × serving`, t: Date.now(), ...scale(r, m) });
+        const it = { id: uid(), foodId: "r:" + r.id, name: r.name, meal, qty: m, label: `${m} × serving`, t: Date.now(), ...scale(r, m) };
+        dayLog(ui.date).items.push(it);
         S.recents = ["r:" + r.id, ...S.recents.filter((x) => x !== "r:" + r.id)].slice(0, 30);
-        save(); closeSheet(); toast(`Logged to ${MEAL_LABEL[meal]}`); return render();
+        (S.lastQty ||= {})["r:" + r.id] = { qty: m, mode: "serv" };
+        save(); closeSheet(); render(); return afterLog(ui.date, `Logged to ${MEAL_LABEL[meal]}`, [it.id]);
       }
       case "bmeal": ui.browseMeal = v; return render();
       case "blevel": ui.browseLevel = v; return render();

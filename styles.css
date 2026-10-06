@@ -276,10 +276,45 @@ ul.ing { margin: 0; padding-left: 18px; display: flex; flex-direction: column; g
 
 .toast {
   position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 14px); transform: translateX(-50%) translateY(20px);
+  display: flex; align-items: center; gap: 12px;
   background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 500;
-  opacity: 0; pointer-events: none; transition: .25s; z-index: 60; white-space: nowrap; max-width: calc(100vw - 32px); overflow: hidden; text-overflow: ellipsis;
+  opacity: 0; pointer-events: none; transition: .25s; z-index: 60; white-space: nowrap; max-width: calc(100vw - 32px);
 }
+.toast .msg { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.toast button { flex: none; border: 0; background: none; padding: 2px 0 2px 12px; border-left: 1px solid color-mix(in srgb, var(--bg) 30%, transparent); color: var(--accent-soft); font-weight: 700; font-size: 14px; }
 .toast.show { opacity: 1; transform: translateX(-50%); }
+.toast.show.has-act { pointer-events: auto; padding-right: 18px; }
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 70; }
+
+/* Fun bits: streak, cheer, quick re-log, emoji, nudges, badges */
+.streak {
+  display: inline-flex; align-items: center; gap: 4px; flex: none; white-space: nowrap;
+  font-size: 12.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--kcal) 15%, transparent); color: var(--kcal);
+}
+.cheer { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); text-align: center; font-size: 13.5px; color: var(--muted); }
+.qchip { display: inline-flex; align-items: center; gap: 6px; max-width: 220px; padding: 8px 12px; }
+.qchip .e { font-size: 15px; line-height: 1; }
+.qchip .nm { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.qchip .k { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.qchip:active { transform: scale(.96); background: var(--accent-soft); }
+.em { width: 32px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 10px; background: var(--surface-2); font-size: 17px; line-height: 1; }
+.em.big { width: 40px; height: 40px; font-size: 21px; border-radius: 12px; }
+.btn.same { background: var(--accent-soft); border-color: transparent; color: var(--accent); margin: 4px 0; }
+.btn.same .muted { color: inherit; opacity: .75; font-weight: 500; }
+.link { border: 0; background: none; padding: 4px 0 0; color: var(--accent); font-weight: 600; font-size: 13px; }
+.card.nudge { background: linear-gradient(135deg, var(--accent-soft), var(--surface) 70%); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.icon-btn.sm { width: 30px; height: 30px; }
+.icon-btn.sm svg { width: 15px; height: 15px; }
+.badges { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.badge { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 14px; background: var(--surface-2); }
+.badge .be { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--surface); font-size: 20px; line-height: 1; filter: grayscale(1); opacity: .45; }
+.badge b { display: block; font-size: 13px; font-weight: 600; color: var(--muted); }
+.badge span:not(.be) { display: block; font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+.badge.on { background: var(--accent-soft); }
+.badge.on .be { filter: none; opacity: 1; }
+.badge.on b { color: var(--text); }
+.badge.on span:not(.be) { color: var(--accent); font-weight: 600; }
 
 /* Onboarding */
 .progress { display: flex; gap: 6px; }
