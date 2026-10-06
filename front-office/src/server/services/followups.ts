@@ -12,7 +12,8 @@ import { and, desc, eq, gt, inArray, lte, sql } from "drizzle-orm";
 import { appointments, conversations, customers, followUps, leads, services } from "@/db/schema";
 import { audit } from "../audit";
 import { dbOf, invalid, notFound, type Ctx } from "../context";
-import { getAiSettings } from "./business";
+import { DateTime } from "luxon";
+import { getAiSettings, getBusiness } from "./business";
 import { deliverToCustomer } from "./messaging";
 
 export type FollowUp = typeof followUps.$inferSelect;
@@ -135,7 +136,7 @@ export async function scheduleFollowUp(
     await dbOf(ctx).update(leads).set({ nextFollowUpAt: scheduledFor }).where(eq(leads.id, input.leadId));
   await audit(ctx, {
     action: "follow_up.scheduled",
-    summary: `Follow-up #${f!.attempt} scheduled for ${customer.name ?? "customer"} at ${scheduledFor.toISOString()}${input.reason ? ` — ${input.reason}` : ""}`,
+    summary: `Follow-up #${f!.attempt} scheduled for ${customer.name ?? "a website visitor"} on ${DateTime.fromJSDate(scheduledFor).setZone((await getBusiness(ctx)).timezone).toFormat("ccc d LLL, h:mm a")}${input.reason ? ` — ${input.reason}` : ""}`,
     entityType: "follow_up",
     entityId: f!.id,
   });

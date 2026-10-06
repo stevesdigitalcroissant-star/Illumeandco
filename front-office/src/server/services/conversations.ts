@@ -156,11 +156,11 @@ export async function requestHandoff(ctx: Ctx, conversationId: string, reason: s
     .where(eq(conversations.id, conv.id))
     .returning();
   const customer = await dbOf(ctx).query.customers.findFirst({ where: eq(customers.id, conv.customerId) });
-  const who = customer?.name ?? customer?.email ?? customer?.phone ?? "A customer";
+  const who = customer?.name ?? customer?.email ?? customer?.phone ?? "a website visitor";
   await dbOf(ctx).insert(notifications).values({
     businessId: ctx.businessId,
     kind: "handoff",
-    title: `Human required — ${who}`,
+    title: `Human required — ${who.charAt(0).toUpperCase()}${who.slice(1)}`,
     body: reason,
     link: `/app/inbox?c=${conv.id}`,
   });

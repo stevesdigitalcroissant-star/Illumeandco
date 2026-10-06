@@ -107,10 +107,10 @@ export async function getAvailableSlots(ctx: Ctx, q: SlotQuery): Promise<{ slots
     return { slots: [], reason: q.staffId ? "That staff member does not perform this service." : "No staff are set up to perform this service yet." };
 
   const staffIds = staffList.map((s) => s.id);
-  const [hours, staffAvail, blackouts, existing] = await Promise.all([
-    db.select().from(businessHours).where(eq(businessHours.businessId, ctx.businessId)),
-    db.select().from(availability).where(and(eq(availability.businessId, ctx.businessId), inArray(availability.staffId, staffIds))),
-    db
+  // Sequential on purpose: inside a booking transaction these share one connection.
+  const hours = await db.select().from(businessHours).where(eq(businessHours.businessId, ctx.businessId));
+  const staffAvail = await db.select().from(availability).where(and(eq(availability.businessId, ctx.businessId), inArray(availability.staffId, staffIds)));
+  const blackouts = await db
       .select()
       .from(blackoutDates)
       .where(
@@ -120,8 +120,8 @@ export async function getAvailableSlots(ctx: Ctx, q: SlotQuery): Promise<{ slots
           gte(blackoutDates.endDate, from.toISODate()!),
           or(isNull(blackoutDates.staffId), inArray(blackoutDates.staffId, staffIds)),
         ),
-      ),
-    db
+      );
+  const existing = await db
       .select({ staffId: appointments.staffId, startsAt: appointments.startsAt, blockedUntil: appointments.blockedUntil })
       .from(appointments)
       .where(
@@ -133,8 +133,7 @@ export async function getAvailableSlots(ctx: Ctx, q: SlotQuery): Promise<{ slots
           gte(appointments.blockedUntil, from.toJSDate()),
           q.excludeAppointmentId ? ne(appointments.id, q.excludeAppointmentId) : undefined,
         ),
-      ),
-  ]);
+      );
 
   if (!hours.length) return { slots: [], reason: "Opening hours have not been set up yet." };
 
