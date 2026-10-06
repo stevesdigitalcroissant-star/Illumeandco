@@ -7,9 +7,7 @@ import { dbOf, notFound, type Ctx } from "../context";
 import { getBusiness } from "./business";
 import { appendMessage, createConversation } from "./conversations";
 
-export function renderTemplate(template: string, vars: Record<string, string | null | undefined>) {
-  return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k: string) => vars[k] ?? "").replace(/\s+([,.!?])/g, "$1").replace(/ {2,}/g, " ").trim();
-}
+export { renderTemplate } from "@/lib/templates";
 
 export type ProactiveDelivery = DeliveryResult & { channel: ChannelKind | null; conversationId: string | null; messageId: string | null };
 

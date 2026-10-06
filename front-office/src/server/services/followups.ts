@@ -13,6 +13,7 @@ import { appointments, conversations, customers, followUps, leads, services } fr
 import { audit } from "../audit";
 import { dbOf, invalid, notFound, type Ctx } from "../context";
 import { DateTime } from "luxon";
+import { FOLLOW_UP_TEMPLATES } from "@/lib/templates";
 import { getAiSettings, getBusiness } from "./business";
 import { deliverToCustomer } from "./messaging";
 
@@ -198,15 +199,6 @@ export async function autoScheduleFollowUp(ctx: Ctx, customerId: string, convers
   });
 }
 
-const STYLE_TEMPLATES: Record<string, (name: string, service: string | null, attempt: number) => string> = {
-  gentle: (n, s, a) =>
-    a > 1
-      ? `Hi ${n}, just one last check-in — if you'd still like ${s ? `a ${s}` : "an appointment"}, I'm happy to find a time that suits you. Reply STOP to opt out.`
-      : `Hi ${n}, just checking in. Would you like me to find you ${s ? `a ${s}` : "an appointment"} time this week?`,
-  direct: (n, s) => `Hi ${n}, shall I book ${s ? `your ${s}` : "an appointment"}? Reply with a day that works and I'll check availability.`,
-  value: (n, s) =>
-    `Hi ${n}, following up on your question${s ? ` about ${s}` : ""}. We still have good availability this week — want me to look for a time?`,
-};
 
 export async function composeFollowUpMessage(ctx: Ctx, f: FollowUp) {
   if (f.message) return f.message;
@@ -222,7 +214,7 @@ export async function composeFollowUpMessage(ctx: Ctx, f: FollowUp) {
     service = row?.serviceName ?? row?.interest ?? null;
   }
   const name = customer?.name?.split(" ")[0] ?? "there";
-  const tpl = STYLE_TEMPLATES[settings.followUp.style] ?? STYLE_TEMPLATES.gentle!;
+  const tpl = FOLLOW_UP_TEMPLATES[settings.followUp.style] ?? FOLLOW_UP_TEMPLATES.gentle;
   return tpl(name, service?.toLowerCase() ?? null, f.attempt);
 }
 
