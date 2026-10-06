@@ -28,6 +28,7 @@ import { buildDynamicContext, buildStablePrompt } from "./prompt";
 import { createAnthropicProvider } from "./providers/anthropic";
 import { createRulesProvider } from "./providers/rules";
 import type { HistoryTurn, ModelProvider } from "./providers/types";
+import { GuardedReplyStream, TOOL_STATUS, type ReplyStreamSink } from "./reply-stream";
 import { findUnsupportedClaim, preCheck, UNSUPPORTED_CLAIM_REPLY } from "./safety";
 import { TOOLS } from "./tools/definitions";
 import { allowedTools, executeTool, toolSpecs, type AgentState, type ToolContext } from "./tools/registry";
@@ -55,7 +56,7 @@ const ERROR_REPLY = "Sorry, I'm having trouble right now. I've asked a member of
 export async function runAgentTurn(
   businessId: string,
   conversationId: string,
-  opts: { now?: Date; provider?: ModelProvider } = {},
+  opts: { now?: Date; provider?: ModelProvider; onEvent?: ReplyStreamSink } = {},
 ): Promise<AgentTurnResult> {
   const now = opts.now ?? new Date();
   const agentRow = await getAgent({ businessId, actor: { type: "system", name: "AI" } });
@@ -88,7 +89,13 @@ export async function runAgentTurn(
     events: [],
     handedOff: false,
   };
-  const execute = (name: string, input: unknown) => executeTool(TOOLS, tc, name, input);
+  const execute = (name: string, input: unknown) => {
+    const label = TOOL_STATUS[name];
+    if (label) opts.onEvent?.({ type: "status", label });
+    return executeTool(TOOLS, tc, name, input);
+  };
+  // Live text is gated sentence by sentence by the claim guard; see reply-stream.ts.
+  const live = opts.onEvent ? new GuardedReplyStream(opts.onEvent, tc.events) : null;
 
   let reply: string;
   let providerId = "safety";
@@ -144,6 +151,7 @@ export async function runAgentTurn(
           tools: toolSpecs(allowedTools(TOOLS, settings)),
           execute,
           toolContext: tc,
+          ...(live ? { stream: { onText: (d: string) => live.push(d), onStepReset: () => live.reset() } } : {}),
         });
         if (out.stopReason === "refusal" || (!out.text && !tc.handedOff)) {
           if (!tc.handedOff) await execute("escalate_to_human", { reason: out.stopReason === "refusal" ? "AI declined to answer" : "AI could not produce a reply" });
@@ -173,6 +181,9 @@ export async function runAgentTurn(
       }
     }
   }
+
+  // The authoritative, fully guarded reply always closes the stream.
+  opts.onEvent?.({ type: "final", text: reply });
 
   await appendMessage(ctx, {
     conversationId,

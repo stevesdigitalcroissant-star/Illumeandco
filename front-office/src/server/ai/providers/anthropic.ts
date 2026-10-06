@@ -40,7 +40,7 @@ export function createAnthropicProvider(client?: Pick<Anthropic, "beta">): Model
       const usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 };
 
       for (let step = 0; step < maxSteps; step++) {
-        const response = await getClient().beta.messages.create({
+        const params = {
           model: model(),
           max_tokens: 16000,
           system,
@@ -48,7 +48,22 @@ export function createAnthropicProvider(client?: Pick<Anthropic, "beta">): Model
           messages,
           output_config: { effort: (process.env.AI_EFFORT as "low" | "medium" | "high") || "medium" },
           ...(useFallbacks ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
-        });
+        };
+        // Note: eager_input_streaming is deliberately not set on tools. Our tool inputs are tiny,
+        // and for booking actions we keep the API's server-side validation of tool input.
+        let response: Anthropic.Beta.BetaMessage;
+        if (input.stream) {
+          const sink = input.stream;
+          const s = getClient().beta.messages.stream(params);
+          s.on("streamEvent", (event) => {
+            // After a mid-stream server-side fallback the declined partial stays on the stream: discard it.
+            if (event.type === "content_block_start" && event.content_block.type === "fallback") sink.onStepReset();
+            else if (event.type === "content_block_delta" && event.delta.type === "text_delta") sink.onText(event.delta.text);
+          });
+          response = await s.finalMessage();
+        } else {
+          response = await getClient().beta.messages.create(params);
+        }
         usage.inputTokens += response.usage.input_tokens;
         usage.outputTokens += response.usage.output_tokens;
         usage.cacheReadTokens += response.usage.cache_read_input_tokens ?? 0;
@@ -60,7 +75,10 @@ export function createAnthropicProvider(client?: Pick<Anthropic, "beta">): Model
         const toolUses = response.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use");
 
         if (response.stop_reason !== "tool_use" || !toolUses.length) {
+          // Only text after the last fallback boundary is the reply (a declined partial is discarded).
+          const lastFallback = response.content.map((b) => b.type).lastIndexOf("fallback");
           const text = response.content
+            .slice(lastFallback + 1)
             .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text")
             .map((b) => b.text)
             .join("\n")
@@ -68,6 +86,8 @@ export function createAnthropicProvider(client?: Pick<Anthropic, "beta">): Model
           return { text, stopReason: response.stop_reason ?? "end_turn", model: response.model, usage };
         }
 
+        // Text written before tool calls ("Let me check…") is not the reply.
+        input.stream?.onStepReset();
         // Run tools sequentially (bookings have side effects) and return all results in one message.
         const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
         for (const use of toolUses) {

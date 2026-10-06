@@ -12,6 +12,7 @@ import { appendMessage, createConversation, findConversationByIdentity } from ".
 import { createAnonymousCustomer, createCustomer, touchCustomer } from "../services/customers";
 import { onCustomerMessage, runAgentTurn, type AgentTurnResult } from "./agent";
 import type { ModelProvider } from "./providers/types";
+import type { ReplyStreamSink } from "./reply-stream";
 
 export const identityHash = (channel: string, identity: string) => sha256(`${channel}:${identity}`);
 
@@ -23,7 +24,10 @@ export type InboundResult = {
   turn: AgentTurnResult | null;
 };
 
-export async function handleInbound(msg: InboundMessage, opts: { now?: Date; provider?: ModelProvider } = {}): Promise<InboundResult> {
+export async function handleInbound(
+  msg: InboundMessage,
+  opts: { now?: Date; provider?: ModelProvider; onEvent?: ReplyStreamSink } = {},
+): Promise<InboundResult> {
   const text = msg.text.trim().slice(0, 2000);
   const ctx: Ctx = { businessId: msg.businessId, actor: { type: "customer", customerId: null, name: msg.contact?.name ?? "Customer" } };
   const hash = identityHash(msg.channel, msg.identity);

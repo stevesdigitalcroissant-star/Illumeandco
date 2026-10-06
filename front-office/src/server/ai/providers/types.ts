@@ -13,6 +13,12 @@ export type ProviderInput = {
   /** Live view of the turn (state, events, handoff flag). */
   toolContext: ToolContext;
   maxSteps?: number;
+  /**
+   * Optional live output. Providers that can stream call onText with text as
+   * it is generated, and onStepReset when text already sent is not part of the
+   * reply (interim text before tool calls, or a partial declined mid-stream).
+   */
+  stream?: { onText(delta: string): void; onStepReset(): void };
 };
 
 export type ProviderOutput = {

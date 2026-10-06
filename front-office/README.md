@@ -91,6 +91,8 @@ Inbound SMS/WhatsApp: point the Twilio number's messaging webhook at `https://<A
 
 It adds a launcher and an iframe (`/widget/<key>`) styled with the business's title, accent colour, logo, greeting and position.
 
+Replies stream to the widget (`POST /api/widget/<key>/messages` with `"stream": true` returns NDJSON events: `status`, `delta`, `reset`, `final`, `done`). Streamed text is released one sentence at a time and only after the claim guard passes, so an unverified "I've booked you" is never shown; the `final` event always carries the authoritative, guarded reply. Without `stream` the endpoint returns plain JSON.
+
 ### Pricing
 
 Plans live in the `plans` table (`DEFAULT_PLANS` in `services/billing.ts` seeds Starter $49, Growth $149, Pro $399 once). Edit rows to change prices, features or entitlements without a deploy; the landing page and billing page read from the table.

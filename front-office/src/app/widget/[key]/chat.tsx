@@ -3,6 +3,31 @@ import { ArrowUp, UserRound, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Msg = { id: string; role: "customer" | "ai" | "human"; content: string; createdAt: string };
+type StreamEvent =
+  | { type: "status"; label: string }
+  | { type: "delta"; text: string }
+  | { type: "reset" }
+  | { type: "final"; text: string }
+  | { type: "done"; messages: Msg[]; conversation: { humanOwned: boolean } | null }
+  | { type: "error"; error: string };
+
+/** Read newline-delimited JSON events from a streamed response. */
+async function readEvents(res: Response, onEvent: (e: StreamEvent) => void) {
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    buffer += decoder.decode(value, { stream: !done });
+    let nl: number;
+    while ((nl = buffer.indexOf("\n")) >= 0) {
+      const line = buffer.slice(0, nl).trim();
+      buffer = buffer.slice(nl + 1);
+      if (line) onEvent(JSON.parse(line) as StreamEvent);
+    }
+    if (done) break;
+  }
+}
 type Config = { title: string; accentColor: string; logoUrl: string | null; greeting: string; agentName: string; aiActive: boolean };
 
 const storageKey = (k: string) => `afo_visitor_${k}`;
@@ -31,6 +56,8 @@ export function ChatWidget({ publicKey, businessName, config, embedded }: { publ
   const [humanOwned, setHumanOwned] = useState(false);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  // The AI reply as it streams in (already gated by the server's claim guard), plus a progress label.
+  const [draft, setDraft] = useState<{ text: string; status: string | null }>({ text: "", status: null });
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const api = `/api/widget/${publicKey}`;
@@ -66,7 +93,7 @@ export function ChatWidget({ publicKey, businessName, config, embedded }: { publ
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, sending]);
+  }, [messages, sending, draft.text]);
 
   async function ensureToken() {
     if (tokenRef.current) return tokenRef.current;
@@ -88,16 +115,34 @@ export function ChatWidget({ publicKey, businessName, config, embedded }: { publ
     setMessages((m) => [...m, optimistic]);
     try {
       const t = await ensureToken();
-      const res = await fetch(`${api}/messages`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: t, text: clean }) });
-      const data = (await res.json()) as { error?: string; messages?: Msg[]; conversation?: { humanOwned: boolean } };
-      if (!res.ok) throw new Error(data.error ?? "Message not sent.");
-      setMessages(data.messages ?? []);
-      setHumanOwned(!!data.conversation?.humanOwned);
+      const res = await fetch(`${api}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: t, text: clean, stream: true }),
+      });
+      if (!res.ok || !res.headers.get("content-type")?.includes("application/x-ndjson") || !res.body) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? "Message not sent.");
+      }
+      let finished = false;
+      await readEvents(res, (ev) => {
+        if (ev.type === "status") setDraft((d) => ({ ...d, status: ev.label }));
+        else if (ev.type === "delta") setDraft((d) => ({ text: d.text + ev.text, status: null }));
+        else if (ev.type === "reset") setDraft({ text: "", status: null });
+        else if (ev.type === "final") setDraft({ text: ev.text, status: null });
+        else if (ev.type === "done") {
+          finished = true;
+          setMessages(ev.messages);
+          setHumanOwned(!!ev.conversation?.humanOwned);
+        } else if (ev.type === "error") throw new Error(ev.error);
+      });
+      if (!finished) throw new Error("Connection lost. Please try again.");
     } catch (e) {
       setMessages((m) => m.filter((x) => x.id !== optimistic.id));
       setInput(clean);
       setError((e as Error).message);
     } finally {
+      setDraft({ text: "", status: null });
       setSending(false);
     }
   }
@@ -132,11 +177,15 @@ export function ChatWidget({ publicKey, businessName, config, embedded }: { publ
             {m.content}
           </Bubble>
         ))}
-        {sending ? (
-          <div className="flex gap-1 px-1 py-2" aria-label="Typing">
-            {[0, 1, 2].map((i) => (
-              <span key={i} className="size-1.5 animate-bounce rounded-full bg-zinc-400" style={{ animationDelay: `${i * 120}ms` }} />
-            ))}
+        {sending && draft.text ? <Bubble role="ai" accent={accent}>{draft.text}</Bubble> : null}
+        {sending && !draft.text ? (
+          <div className="flex items-center gap-2 px-1 py-2" aria-label={draft.status ?? "Typing"}>
+            <span className="flex gap-1">
+              {[0, 1, 2].map((i) => (
+                <span key={i} className="size-1.5 animate-bounce rounded-full bg-zinc-400" style={{ animationDelay: `${i * 120}ms` }} />
+              ))}
+            </span>
+            {draft.status ? <span className="text-[12px] text-zinc-500">{draft.status}</span> : null}
           </div>
         ) : null}
         {!messages.length && !sending ? (
