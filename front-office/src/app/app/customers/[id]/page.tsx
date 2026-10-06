@@ -16,7 +16,7 @@ import { getCustomer } from "@/server/services/customers";
 import { AppointmentActions } from "../../appointments/appointment-actions";
 import { bookingOptions } from "../../appointments/data";
 import { NewAppointmentDialog } from "../../appointments/new-appointment-dialog";
-import { SOURCE_LABELS } from "../labels";
+import { sourceLabel } from "../labels";
 import { CustomerDetailsForm } from "./details-form";
 
 export const metadata = { title: "Customer" };
@@ -66,7 +66,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
               Customer since {fmtDateTime(customer.createdAt, tz, "d LLL yyyy")}
-              {customer.source ? ` · via ${SOURCE_LABELS[customer.source] ?? customer.source}` : ""}
+              {customer.source ? ` · via ${sourceLabel(customer.source)}` : ""}
               {customer.lastSeenAt ? ` · last seen ${fmtRelative(customer.lastSeenAt)}` : ""}
             </p>
           </div>
@@ -197,7 +197,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm">{serviceName ?? l.serviceInterest ?? "General enquiry"}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {SOURCE_LABELS[l.source] ?? l.source} · created {fmtRelative(l.createdAt)}
+                          {sourceLabel(l.source)} · created {fmtRelative(l.createdAt)}
                           {l.notes ? ` · ${l.notes}` : ""}
                         </p>
                       </div>

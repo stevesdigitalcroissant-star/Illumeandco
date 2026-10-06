@@ -242,10 +242,10 @@ export function CalendarView({
           <Bot className="size-3 text-primary" /> Booked by AI
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-3 rounded-sm bg-muted" /> Outside opening hours
+          <span className="h-3 w-3.5 border bg-muted" /> Outside opening hours
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-3 rounded-sm border" style={HATCH} /> Closed / blackout
+          <span className="h-3 w-3.5 border" style={HATCH} /> Closed / blackout
         </span>
       </div>
 
@@ -339,7 +339,7 @@ function Row({ icon, label, children }: { icon: React.ReactNode; label: string; 
 function Legend({ className, children }: { className: string; children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <span className={cn("size-3 rounded-sm border-l-[3px]", className)} /> {children}
+      <span className={cn("h-3 w-3.5 border-l-[3px]", className)} /> {children}
     </span>
   );
 }

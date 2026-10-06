@@ -9,7 +9,7 @@ import { Avatar, Table } from "@/components/ui/misc";
 import { LEAD_LABELS } from "@/components/status";
 import { fmtDateTime, fmtRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { SOURCE_LABELS } from "../customers/labels";
+import { sourceLabel } from "../customers/labels";
 import { followUpLeadAction, updateLeadNotesAction, updateLeadStatusAction } from "./actions";
 
 export type LeadRow = {
@@ -44,9 +44,8 @@ export function LeadsTable({ rows, timezone }: { rows: LeadRow[]; timezone: stri
           <th>Lead</th>
           <th>Interested in</th>
           <th>Status</th>
-          <th>Source</th>
           <th>Last contact</th>
-          <th>Next follow-up</th>
+          <th>Follow-up</th>
           <th>Appointment</th>
           <th className="text-right">Actions</th>
         </tr>
@@ -82,7 +81,7 @@ function LeadRowView({ row, timezone }: { row: LeadRow; timezone: string }) {
 
   return (
     <tr className={cn(pending && "opacity-70")}>
-      <td className="min-w-52">
+      <td className="min-w-48">
         <Link href={`/app/customers/${row.customer.id}`} className="group flex items-center gap-3">
           <Avatar name={row.customer.name} />
           <div className="min-w-0">
@@ -99,9 +98,12 @@ function LeadRowView({ row, timezone }: { row: LeadRow; timezone: string }) {
           </p>
         ) : null}
       </td>
-      <td className="whitespace-nowrap">{row.service ?? <span className="text-muted-foreground">—</span>}</td>
+      <td className="whitespace-nowrap">
+        {row.service ?? <span className="text-muted-foreground">General enquiry</span>}
+        <span className="block text-xs text-muted-foreground">via {sourceLabel(row.source)}</span>
+      </td>
       <td>
-        <div className="relative w-44">
+        <div className="relative w-40">
           <span className={cn("pointer-events-none absolute left-2.5 top-1/2 size-1.5 -translate-y-1/2 rounded-full", STATUS_DOT[row.status] ?? "bg-muted-foreground")} />
           <NativeSelect
             aria-label={`Status for ${name}`}
@@ -118,16 +120,15 @@ function LeadRowView({ row, timezone }: { row: LeadRow; timezone: string }) {
           </NativeSelect>
         </div>
       </td>
-      <td className="whitespace-nowrap text-muted-foreground">{SOURCE_LABELS[row.source] ?? row.source}</td>
       <td className="whitespace-nowrap text-muted-foreground" title={fmtDateTime(row.lastContactAt, timezone)}>
         {fmtRelative(row.lastContactAt)}
       </td>
-      <td className="whitespace-nowrap text-muted-foreground">{row.nextFollowUpAt ? fmtDateTime(row.nextFollowUpAt, timezone) : "—"}</td>
+      <td className="whitespace-nowrap text-muted-foreground">{row.nextFollowUpAt ? fmtDateTime(row.nextFollowUpAt, timezone, "d LLL, h:mm a") : "—"}</td>
       <td className="whitespace-nowrap">
         {row.appointment ? (
           <Link href="/app/appointments" className="inline-flex items-center gap-1.5 text-[13px] hover:underline">
             <CalendarCheck className="size-3.5 text-success" />
-            {fmtDateTime(row.appointment.startsAt, timezone)}
+            {fmtDateTime(row.appointment.startsAt, timezone, "d LLL, h:mm a")}
           </Link>
         ) : (
           <span className="text-muted-foreground">—</span>

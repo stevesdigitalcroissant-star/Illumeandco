@@ -8,7 +8,7 @@ import { Avatar, EmptyState, PageHeader, Table } from "@/components/ui/misc";
 import { fmtDateTime, fmtRelative } from "@/lib/format";
 import { requireBusiness } from "@/lib/session";
 import { listCustomers } from "@/server/services/customers";
-import { SOURCE_LABELS } from "./labels";
+import { sourceLabel } from "./labels";
 import { NewCustomerDialog } from "./new-customer-dialog";
 
 export const metadata = { title: "Customers" };
@@ -62,7 +62,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
                   </td>
                   <td className="whitespace-nowrap tabular text-muted-foreground">{c.phone ?? "—"}</td>
                   <td className="whitespace-nowrap text-muted-foreground">{c.email ?? "—"}</td>
-                  <td className="whitespace-nowrap text-muted-foreground">{c.source ? (SOURCE_LABELS[c.source] ?? c.source) : "—"}</td>
+                  <td className="whitespace-nowrap text-muted-foreground">{sourceLabel(c.source)}</td>
                   <td>
                     <div className="flex flex-wrap gap-1">
                       {c.tags.length ? c.tags.slice(0, 4).map((t) => <Badge key={t}>{t}</Badge>) : <span className="text-muted-foreground">—</span>}

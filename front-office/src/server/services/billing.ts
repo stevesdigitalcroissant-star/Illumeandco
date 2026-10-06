@@ -36,7 +36,7 @@ export const DEFAULT_PLANS: (typeof plans.$inferInsert)[] = [
     name: "Pro",
     description: "For multi-location businesses and phone-heavy front desks.",
     priceMonthlyCents: 39900,
-    features: ["Everything in Growth", "Voice receptionist", "Advanced automation", "Multiple locations", "Priority support"],
+    features: ["Everything in Growth", "Voice receptionist (coming soon)", "Advanced automation", "Multiple locations", "Priority support"],
     entitlements: { maxStaff: null, maxLocations: null, followUps: true, advancedAnalytics: true, channels: ["web_chat", "email", "sms", "whatsapp", "instagram", "voice"], voice: true },
     sortOrder: 3,
   },
