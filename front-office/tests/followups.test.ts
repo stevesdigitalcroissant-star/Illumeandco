@@ -27,7 +27,7 @@ describe("AI follow-ups", () => {
     expect(f).toBeTruthy();
     expect(f!.reason).toMatch(/consultation/i);
 
-    const report = await runTick({ now: new Date(Date.now() + 25 * HOURS), businessId: c.business.id });
+    const report = await runTick({ now: new Date(Date.now() + 40 * HOURS), businessId: c.business.id });
     expect(report.followUps).toBe(1);
     const sent = (await allFor(r.customerId)).find((x) => x.id === f!.id)!;
     expect(sent.status).toBe("sent");
@@ -39,7 +39,7 @@ describe("AI follow-ups", () => {
 
   it("respects the maximum number of follow-ups", async () => {
     const { c, r } = await inquiry();
-    await runTick({ now: new Date(Date.now() + 25 * HOURS), businessId: c.business.id });
+    await runTick({ now: new Date(Date.now() + 40 * HOURS), businessId: c.business.id });
     await runTick({ now: new Date(Date.now() + 50 * HOURS), businessId: c.business.id });
     await runTick({ now: new Date(Date.now() + 100 * HOURS), businessId: c.business.id });
     const all = await allFor(r.customerId);
@@ -98,9 +98,21 @@ describe("AI follow-ups", () => {
     const { c, r } = await inquiry();
     const [f] = await pending(r.customerId);
     await updateLead(c.ctx, f!.leadId!, { status: "lost", lostReason: "Went elsewhere" });
-    await runTick({ now: new Date(Date.now() + 25 * HOURS), businessId: c.business.id });
+    await runTick({ now: new Date(Date.now() + 40 * HOURS), businessId: c.business.id });
     const after = (await allFor(r.customerId)).find((x) => x.id === f!.id)!;
     expect(after.status).toBe("cancelled");
     expect(after.statusReason).toBe("Lead marked lost");
+  });
+});
+
+describe("follow-up timing", () => {
+  it("never schedules proactive messages at night (business timezone)", async () => {
+    const { civilHours } = await import("@/server/services/followups");
+    const { DateTime } = await import("luxon");
+    const at = (iso: string) => DateTime.fromISO(iso, { zone: "Asia/Dubai" }).toJSDate();
+    const local = (d: Date) => DateTime.fromJSDate(d).setZone("Asia/Dubai").toFormat("yyyy-MM-dd HH:mm");
+    expect(local(civilHours(at("2026-10-08T00:50"), "Asia/Dubai"))).toBe("2026-10-08 10:00");
+    expect(local(civilHours(at("2026-10-08T21:30"), "Asia/Dubai"))).toBe("2026-10-09 10:00");
+    expect(local(civilHours(at("2026-10-08T14:15"), "Asia/Dubai"))).toBe("2026-10-08 14:15");
   });
 });

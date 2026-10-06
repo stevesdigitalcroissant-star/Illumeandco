@@ -23,13 +23,16 @@ export async function cancelPendingFollowUps(ctx: Ctx, customerId: string, reaso
     .update(followUps)
     .set({ status: "cancelled", statusReason: reason })
     .where(and(eq(followUps.businessId, ctx.businessId), eq(followUps.customerId, customerId), eq(followUps.status, "scheduled")))
-    .returning({ id: followUps.id });
+    .returning({ id: followUps.id, createdBy: followUps.createdBy });
   if (cancelled.length) {
     await dbOf(ctx)
       .update(leads)
       .set({ nextFollowUpAt: null })
       .where(and(eq(leads.businessId, ctx.businessId), eq(leads.customerId, customerId)));
-    await audit(ctx, {
+    // A reply mid-conversation routinely resets the AI's own pending nudge; that churn isn't worth an audit entry.
+    const routine = reason === "Customer replied" && cancelled.every((c) => c.createdBy === "ai");
+    if (!routine)
+      await audit(ctx, {
       action: "follow_up.cancelled",
       summary: `${cancelled.length} pending follow-up${cancelled.length > 1 ? "s" : ""} stopped — ${reason}`,
       entityType: "customer",
@@ -90,6 +93,8 @@ export async function scheduleFollowUp(
     message?: string | null;
     reason?: string;
     attempt?: number;
+    /** Skip the audit entry (used when the AI re-arms its own nudge after a reply). */
+    quiet?: boolean;
   },
 ) {
   const settings = await getAiSettings(ctx);
@@ -109,7 +114,8 @@ export async function scheduleFollowUp(
 
   const delay = input.delayHours ?? settings.followUp.delayHours;
   if (delay < 0 || delay > 24 * 60) throw invalid("Follow-up delay must be between 0 and 1440 hours.");
-  const scheduledFor = input.scheduledFor ?? new Date(createdAt.getTime() + delay * 3600_000);
+  const business = await getBusiness(ctx);
+  const scheduledFor = input.scheduledFor ?? civilHours(new Date(createdAt.getTime() + delay * 3600_000), business.timezone);
 
   // Replace any pending follow-up so a customer never has two queued.
   await dbOf(ctx)
@@ -134,13 +140,22 @@ export async function scheduleFollowUp(
     .returning();
   if (input.leadId)
     await dbOf(ctx).update(leads).set({ nextFollowUpAt: scheduledFor }).where(eq(leads.id, input.leadId));
-  await audit(ctx, {
-    action: "follow_up.scheduled",
-    summary: `Follow-up #${f!.attempt} scheduled for ${customer.name ?? "a website visitor"} on ${DateTime.fromJSDate(scheduledFor).setZone((await getBusiness(ctx)).timezone).toFormat("ccc d LLL, h:mm a")}${input.reason ? ` — ${input.reason}` : ""}`,
-    entityType: "follow_up",
-    entityId: f!.id,
-  });
+  if (!input.quiet)
+    await audit(ctx, {
+      action: "follow_up.scheduled",
+      summary: `Follow-up #${f!.attempt} scheduled for ${customer.name ?? "a website visitor"} on ${DateTime.fromJSDate(scheduledFor).setZone(business.timezone).toFormat("ccc d LLL, h:mm a")}${input.reason ? ` — ${input.reason}` : ""}`,
+      entityType: "follow_up",
+      entityId: f!.id,
+    });
   return f!;
+}
+
+/** Proactive messages go out between 09:00 and 20:00 in the business's timezone. */
+export function civilHours(at: Date, timezone: string) {
+  const local = DateTime.fromJSDate(at).setZone(timezone);
+  if (local.hour < 9) return local.set({ hour: 10, minute: 0, second: 0, millisecond: 0 }).toJSDate();
+  if (local.hour >= 20) return local.plus({ days: 1 }).set({ hour: 10, minute: 0, second: 0, millisecond: 0 }).toJSDate();
+  return at;
 }
 
 /** Called after an AI turn: if the customer showed interest but has not booked, queue a follow-up. */
@@ -168,12 +183,18 @@ export async function autoScheduleFollowUp(ctx: Ctx, customerId: string, convers
   if (sent >= settings.followUp.maxAttempts) return null;
   const stop = await checkStopConditions(ctx, { customerId, leadId: lead.id, conversationId, createdAt: new Date() });
   if (stop) return null;
+  const [rearm] = await db
+    .select({ id: followUps.id })
+    .from(followUps)
+    .where(and(eq(followUps.businessId, ctx.businessId), eq(followUps.leadId, lead.id), eq(followUps.statusReason, "Customer replied")))
+    .limit(1);
   return scheduleFollowUp(ctx, {
     customerId,
     leadId: lead.id,
     conversationId,
     attempt: sent + 1,
     reason: `Asked about ${lead.serviceInterest ?? "a service"} but did not book`,
+    quiet: Boolean(rearm),
   });
 }
 

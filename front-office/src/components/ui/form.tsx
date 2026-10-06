@@ -21,20 +21,20 @@ export function FormMessage({ state }: { state: ActionResult<unknown> | null }) 
 }
 
 /** A form bound to a server action returning ActionResult, with inline status. */
-export function ActionForm({
+export function ActionForm<T>({
   action,
   children,
   className,
   resetOnSuccess,
   onSuccess,
 }: {
-  action: (prev: ActionResult<unknown> | null, fd: FormData) => Promise<ActionResult<unknown>>;
+  action: (prev: ActionResult<T> | null, fd: FormData) => Promise<ActionResult<T>>;
   children: React.ReactNode;
   className?: string;
   resetOnSuccess?: boolean;
   onSuccess?: () => void;
 }) {
-  const [state, formAction] = useActionState(action, null);
+  const [state, formAction] = useActionState<ActionResult<T> | null, FormData>(action, null);
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state?.ok) {
@@ -46,7 +46,7 @@ export function ActionForm({
   return (
     <form ref={ref} action={formAction} className={cn("space-y-4", className)}>
       {children}
-      <FormMessage state={state} />
+      <FormMessage state={state as ActionResult<unknown> | null} />
     </form>
   );
 }
