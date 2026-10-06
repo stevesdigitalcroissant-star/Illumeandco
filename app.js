@@ -666,8 +666,8 @@
       const m = new Map();
       logged.forEach((d) => d.items.forEach((i) => m.set(i.name, (m.get(i.name) || 0) + (i[key] || 0))));
       return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).filter((x) => x[1] > 0).map((x) => x[0]);
-    const srcs = (key) => topSources(key).join("; ");
     };
+    const srcs = (key) => topSources(key).join("; ");
     const tips = [];
     if (logged.length < 3) tips.push(["warn", "Keep logging", `You've logged ${logged.length} of the last 7 days. After 3 days we can spot real patterns in how you eat.`]);
     if (logged.length) {
