@@ -159,47 +159,6 @@ export function civilHours(at: Date, timezone: string) {
   return at;
 }
 
-/** Called after an AI turn: if the customer showed interest but has not booked, queue a follow-up. */
-export async function autoScheduleFollowUp(ctx: Ctx, customerId: string, conversationId: string) {
-  const settings = await getAiSettings(ctx);
-  if (!settings.followUp.enabled) return null;
-  const db = dbOf(ctx);
-  const [lead] = await db
-    .select()
-    .from(leads)
-    .where(and(eq(leads.businessId, ctx.businessId), eq(leads.customerId, customerId), inArray(leads.status, ["new", "contacted", "qualified"])))
-    .orderBy(desc(leads.createdAt))
-    .limit(1);
-  if (!lead || (!lead.serviceId && !lead.serviceInterest)) return null;
-  const [pending] = await db
-    .select({ id: followUps.id })
-    .from(followUps)
-    .where(and(eq(followUps.businessId, ctx.businessId), eq(followUps.customerId, customerId), eq(followUps.status, "scheduled")))
-    .limit(1);
-  if (pending) return null;
-  const [{ sent }] = (await db
-    .select({ sent: sql<number>`count(*)::int` })
-    .from(followUps)
-    .where(and(eq(followUps.businessId, ctx.businessId), eq(followUps.leadId, lead.id), eq(followUps.status, "sent")))) as [{ sent: number }];
-  if (sent >= settings.followUp.maxAttempts) return null;
-  const stop = await checkStopConditions(ctx, { customerId, leadId: lead.id, conversationId, createdAt: new Date() });
-  if (stop) return null;
-  const [rearm] = await db
-    .select({ id: followUps.id })
-    .from(followUps)
-    .where(and(eq(followUps.businessId, ctx.businessId), eq(followUps.leadId, lead.id), eq(followUps.statusReason, "Customer replied")))
-    .limit(1);
-  return scheduleFollowUp(ctx, {
-    customerId,
-    leadId: lead.id,
-    conversationId,
-    attempt: sent + 1,
-    reason: `Asked about ${lead.serviceInterest ?? "a service"} but did not book`,
-    quiet: Boolean(rearm),
-  });
-}
-
-
 export async function composeFollowUpMessage(ctx: Ctx, f: FollowUp) {
   if (f.message) return f.message;
   const settings = await getAiSettings(ctx);

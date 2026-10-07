@@ -26,6 +26,7 @@ import type { ChannelKind } from "../channels/types";
 import { assertCan, dbOf, forbidden, invalid, isRestrictedStaff, notFound, type Ctx } from "../context";
 import { getBusiness } from "./business";
 import { cancelPendingFollowUps } from "./followups";
+import { onConversationReleased, onHandoff, onTakeOver, safely } from "../opportunities/engine";
 
 export type ConversationStatus = (typeof conversations.$inferSelect)["status"];
 type MessageRole = (typeof messages.$inferSelect)["role"];
@@ -167,6 +168,7 @@ export async function requestHandoff(ctx: Ctx, conversationId: string, reason: s
   await addEvent(ctx, conv.id, `Handed off to a human: ${reason}`, { kind: "handoff" });
   // A human is now responsible — automated follow-ups must stop.
   await cancelPendingFollowUps(ctx, conv.customerId, "Human took over the conversation");
+  await safely(ctx, "handoff", (c) => onHandoff(c, conv.id, reason));
   await audit(ctx, {
     action: "conversation.handoff_requested",
     summary: `Conversation with ${who} handed to a human — ${reason}`,
@@ -187,6 +189,8 @@ export async function takeOver(ctx: Ctx, conversationId: string) {
     .where(eq(conversations.id, conv.id))
     .returning();
   await addEvent(ctx, conv.id, `${ctx.actor.name} took over the conversation. The AI is paused.`, { kind: "takeover" });
+  const takenBy = ctx.actor.name;
+  await safely(ctx, "take over", (c) => onTakeOver(c, conv.id, takenBy));
   await cancelPendingFollowUps(ctx, conv.customerId, "Human took over the conversation");
   await audit(ctx, {
     action: "conversation.taken_over",
@@ -207,6 +211,7 @@ export async function returnToAi(ctx: Ctx, conversationId: string) {
     .where(eq(conversations.id, conv.id))
     .returning();
   await addEvent(ctx, conv.id, `${ctx.actor.name} returned the conversation to the AI.`, { kind: "return_to_ai" });
+  await safely(ctx, "returned to AI", (c) => onConversationReleased(c, conv.id, "returned_to_ai"));
   await audit(ctx, {
     action: "conversation.returned_to_ai",
     summary: `${ctx.actor.name} returned the conversation to the AI receptionist`,
@@ -224,6 +229,7 @@ export async function resolveConversation(ctx: Ctx, conversationId: string) {
     .set({ status: "resolved", handoffRequestedAt: null })
     .where(eq(conversations.id, conv.id))
     .returning();
+  await safely(ctx, "resolved", (c) => onConversationReleased(c, conv.id, "resolved"));
   await audit(ctx, { action: "conversation.resolved", summary: "Conversation marked resolved", entityType: "conversation", entityId: conv.id });
   return c!;
 }

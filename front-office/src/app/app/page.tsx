@@ -52,7 +52,13 @@ export default async function OverviewPage() {
         <Stat label="New leads" value={m.newLeadsToday} href="/app/leads" />
         <Stat label="Appointments booked" value={m.bookedToday} sub={m.bookedToday ? `${m.aiBookedToday} by the AI` : undefined} href="/app/appointments" />
         <Stat label="Upcoming appointments" value={m.upcoming} sub={`${m.upcomingToday} later today`} href="/app/calendar" />
-        <Stat label="Missed opportunities" value={m.missedOpportunities} href="/app/opportunities" tone={m.missedOpportunities ? "danger" : "default"} />
+        <Stat
+          label="Opportunities need you"
+          value={m.opportunitiesNeedingYou}
+          sub={m.recovered30d ? `${m.recovered30d} recovered · 30 days` : `${m.openOpportunities} open in total`}
+          href="/app/opportunities"
+          tone={m.opportunitiesNeedingYou ? "danger" : "default"}
+        />
         <Stat label="AI conversations" value={m.aiConversationsToday} sub="Today" />
         <Stat label="Human handoffs" value={m.handoffsToday} sub={m.waitingForHuman ? `${m.waitingForHuman} waiting now` : "None waiting"} href="/app/inbox?status=needs_human" tone={m.waitingForHuman ? "danger" : "default"} />
         <Stat label="Conversion rate" value={pct(m.conversionRate30d)} sub={`${m.converted30d} of ${m.leads30d} leads booked · 30 days`} />
@@ -87,21 +93,24 @@ export default async function OverviewPage() {
 
           {roleCan(role, "leads.manage") ? (
             <Card>
-              <CardHeader title="Missed opportunities" description="Customers who showed interest but didn't book." action={<Link href="/app/opportunities" className="text-[13px] text-muted-foreground hover:text-foreground">View all</Link>} />
+              <CardHeader title="Opportunities that need you" description="What only a person can do next — the AI is following up on the rest." action={<Link href="/app/opportunities" className="text-[13px] text-muted-foreground hover:text-foreground">View all</Link>} />
               {m.topOpportunities.length ? (
                 <ul>
                   {m.topOpportunities.map((o) => (
-                    <li key={o.key} className="flex items-center gap-3 border-t px-5 py-3 first:border-t-0">
+                    <li key={o.id} className="flex items-center gap-3 border-t px-5 py-3 first:border-t-0">
                       <TriangleAlert className="size-4 shrink-0 text-warning" />
-                      <p className="min-w-0 flex-1 truncate text-sm">{o.title}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm">{o.title}</p>
+                        {o.next ? <p className="truncate text-xs text-muted-foreground">{o.next}</p> : null}
+                      </div>
                       <Link href="/app/opportunities" className="inline-flex items-center gap-1 text-[13px] font-medium text-primary">
-                        Follow up <ArrowRight className="size-3.5" />
+                        Act <ArrowRight className="size-3.5" />
                       </Link>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <EmptyState title="No missed opportunities" description="Every interested customer has booked or been followed up." />
+                <EmptyState title="Nothing needs you right now" description="The AI is following up on open leads. Anything that needs a person appears here." />
               )}
             </Card>
           ) : null}

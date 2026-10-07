@@ -65,7 +65,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           sub={`${formatMoney(t.aiRevenueCompletedCents, cur)} from completed visits`}
         />
         <Stat label="Follow-ups" value={`${t.followUpsSent} → ${t.followUpsConverted}`} sub="Sent → booked within 7 days" href="/app/automations?queue=sent" />
-        <Stat label="Missed opportunities" value={t.missedOpportunities} sub="Interested customers not yet booked (now)" href="/app/opportunities" tone={t.missedOpportunities ? "danger" : "default"} />
+        <Stat label="Open opportunities" value={t.missedOpportunities} sub="Leads, cancellations and no-shows still in play (now)" href="/app/opportunities" tone={t.missedOpportunities ? "danger" : "default"} />
       </section>
       <p className="mt-2 text-xs text-muted-foreground">
         Revenue uses the price at booking time for AI-booked appointments that weren&apos;t cancelled; it is not payment data. {t.cancellations} cancellation{t.cancellations === 1 ? "" : "s"} and {t.noShows} no-show{t.noShows === 1 ? "" : "s"} in this period.

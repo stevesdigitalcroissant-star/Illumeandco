@@ -12,6 +12,7 @@ import { getAgent } from "../services/business";
 import { dueFollowUps, processFollowUp } from "../services/followups";
 import { dueReminders, processReminder } from "../services/reminders";
 import { dueReviewRequests, processReviewRequest } from "../services/reviews";
+import { sweepAll, sweepBusiness } from "../opportunities/engine";
 
 const LOCK_KEY = 7_342_001;
 
@@ -53,6 +54,14 @@ export async function runTick(opts: { now?: Date; businessId?: string } = {}): P
         } catch (e) {
           report.errors.push(`review ${r.id}: ${(e as Error).message}`);
         }
+      }
+      // Advance and reconcile opportunities (idempotent).
+      try {
+        if (opts.businessId)
+          await sweepBusiness({ businessId: opts.businessId, actor: { type: "system", name: "Opportunity Engine" } }, now);
+        else await sweepAll(now);
+      } catch (e) {
+        report.errors.push(`opportunities: ${(e as Error).message}`);
       }
     } finally {
       await client.query("select pg_advisory_unlock($1)", [LOCK_KEY]);

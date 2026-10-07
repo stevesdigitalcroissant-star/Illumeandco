@@ -756,6 +756,114 @@ export const opportunityDismissals = pgTable(
   (t) => [uniqueIndex("opportunity_dismissals_key_idx").on(t.businessId, t.key)],
 );
 
+// ─── Opportunity Engine ──────────────────────────────────────────────
+/** Where a customer journey is. Derived from evidence; never set by the model alone. */
+export const opportunityStage = pgEnum("opportunity_stage", [
+  "new_lead",
+  "interested",
+  "high_intent",
+  "booking_in_progress",
+  "needs_follow_up",
+  "waiting",
+  "booked",
+  "cancelled",
+  "no_show",
+  "reactivation",
+  "needs_human",
+  "completed",
+  "lost",
+]);
+export const opportunityKind = pgEnum("opportunity_kind", ["lead", "cancellation", "no_show", "reactivation", "needs_human", "missed_call"]);
+export const opportunityStatus = pgEnum("opportunity_status", ["open", "won", "lost", "dismissed"]);
+export const opportunityBlocker = pgEnum("opportunity_blocker", [
+  "none",
+  "price",
+  "availability",
+  "undecided",
+  "consulting_someone",
+  "unresponsive",
+  "opted_out",
+  "needs_staff",
+]);
+export const opportunityAction = pgEnum("opportunity_action", ["follow_up", "offer_rebooking", "reactivate", "human_review", "none"]);
+
+/** One piece of evidence behind an opportunity's classification. */
+export type OpportunityEvidence = { at: string; kind: string; detail: string; messageId?: string };
+
+/**
+ * A customer opportunity: what is happening, what they want, what is
+ * blocking conversion, what should happen next (and whether the AI may do
+ * it), and the outcome. At most one OPEN opportunity exists per key, so
+ * re-evaluating is idempotent and safe under concurrency.
+ */
+export const opportunities = pgTable(
+  "opportunities",
+  {
+    id: id(),
+    businessId: businessRef(),
+    /** Stable identity, e.g. `lead:<customerId>`, `cancellation:<appointmentId>`. */
+    key: text("key").notNull(),
+    kind: opportunityKind("kind").notNull(),
+    stage: opportunityStage("stage").notNull(),
+    status: opportunityStatus("status").notNull().default("open"),
+    customerId: uuid("customer_id").notNull(),
+    conversationId: uuid("conversation_id"),
+    leadId: uuid("lead_id"),
+    /** The appointment this opportunity is about (cancelled / no-show visit). */
+    sourceAppointmentId: uuid("source_appointment_id"),
+    serviceId: uuid("service_id"),
+    title: text("title").notNull(),
+    /** What the customer wants, in their terms (from facts, not guesses). */
+    wants: text("wants"),
+    blocker: opportunityBlocker("blocker").notNull().default("none"),
+    blockerDetail: text("blocker_detail"),
+    /** 0–100, computed from evidence. */
+    intentScore: smallint("intent_score").notNull().default(0),
+    nextAction: opportunityAction("next_action").notNull().default("none"),
+    nextActionLabel: text("next_action_label"),
+    nextActionAt: timestamp("next_action_at", { withTimezone: true }),
+    /** "ai" when automation may do it, "human" when staff must. */
+    nextActionBy: text("next_action_by").notNull().default("human"),
+    followUpId: uuid("follow_up_id"),
+    evidence: jsonb("evidence").$type<OpportunityEvidence[]>().notNull().default([]),
+    /** Service price when known — always presented as an estimate. */
+    estimatedValueCents: integer("estimated_value_cents"),
+    wonAppointmentId: uuid("won_appointment_id"),
+    /** True only when an AI/staff recovery action preceded the booking. */
+    recovered: boolean("recovered").notNull().default(false),
+    recoveredValueCents: integer("recovered_value_cents"),
+    closedReason: text("closed_reason"),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    lastActivityAt: timestamp("last_activity_at", { withTimezone: true }),
+    evaluatedAt: timestamp("evaluated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    uniqueIndex("opportunities_open_key_idx").on(t.businessId, t.key).where(sql`${t.status} = 'open'`),
+    index("opportunities_business_status_idx").on(t.businessId, t.status, t.stage),
+    index("opportunities_next_action_idx").on(t.businessId, t.nextActionAt),
+    index("opportunities_customer_idx").on(t.businessId, t.customerId),
+    foreignKey({
+      columns: [t.businessId, t.customerId],
+      foreignColumns: [customers.businessId, customers.id],
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [t.businessId, t.conversationId],
+      foreignColumns: [conversations.businessId, conversations.id],
+    }),
+    foreignKey({
+      columns: [t.businessId, t.sourceAppointmentId],
+      foreignColumns: [appointments.businessId, appointments.id],
+    }),
+    foreignKey({
+      columns: [t.businessId, t.wonAppointmentId],
+      foreignColumns: [appointments.businessId, appointments.id],
+    }),
+    foreignKey({ columns: [t.businessId, t.serviceId], foreignColumns: [services.businessId, services.id] }),
+  ],
+);
+
 /** In-dashboard notifications for the team (handoffs, private negative reviews…). */
 export const notifications = pgTable(
   "notifications",

@@ -25,6 +25,7 @@ import { createCustomer } from "../src/server/services/customers";
 import { addSource } from "../src/server/services/knowledge";
 import { seedPlans } from "../src/server/services/billing";
 import { createRulesProvider } from "../src/server/ai/providers/rules";
+import { sweepBusiness } from "../src/server/opportunities/engine";
 
 const DEMO_EMAIL = "demo@frontoffice.dev";
 const DEMO_PASSWORD = "demo-front-office";
@@ -163,8 +164,8 @@ async function main() {
   await db.update(leads).set({ createdAt: old, lastContactAt: old }).where(eq(leads.customerId, daniel.customerId));
   await db.update(messages).set({ createdAt: old }).where(eq(messages.conversationId, daniel.conversationId));
   await db.update(conversations).set({ lastMessageAt: old, lastCustomerMessageAt: old, createdAt: old }).where(eq(conversations.id, daniel.conversationId));
-  const { followUps } = await import("../src/db/schema");
-  await db.update(followUps).set({ status: "cancelled", statusReason: "Demo: left unscheduled to show a missed opportunity" }).where(and(eq(followUps.businessId, business.id), inArray(followUps.customerId, [daniel.customerId])));
+  // Let the Opportunity Engine classify everything above (leads, cancellation, lapsed customer, handoffs).
+  await sweepBusiness({ businessId: business.id, actor: { type: "system", name: "Opportunity Engine" } });
 
   console.log("✓ Demo business created: Dubai Smile Clinic");
   console.log(`  Sign in at /login with ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);

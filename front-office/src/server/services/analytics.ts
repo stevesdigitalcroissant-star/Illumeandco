@@ -7,7 +7,8 @@ import { sql } from "drizzle-orm";
 import { DateTime } from "luxon";
 import { assertCan, dbOf, type Ctx } from "../context";
 import { getBusiness } from "./business";
-import { listOpportunities } from "./opportunities";
+import { boardSummary, listBoard } from "../opportunities/board";
+import { roleCan } from "../context";
 
 type Row = Record<string, unknown>;
 const n = (v: unknown) => Number(v ?? 0);
@@ -37,7 +38,11 @@ export async function overviewMetrics(ctx: Ctx, now = new Date()) {
   `)
   ).rows;
 
-  const opportunities = ctx.actor.type === "user" && ctx.actor.role === "staff" ? [] : await listOpportunities(ctx, now);
+  const canSeePipeline = ctx.actor.type !== "user" || roleCan(ctx.actor.role, "leads.manage");
+  const pipeline = canSeePipeline ? await boardSummary(ctx, now) : null;
+  const needsYou = canSeePipeline
+    ? (await listBoard(ctx, { limit: 50 })).filter((r) => r.opportunity.kind === "needs_human" || (r.opportunity.nextActionBy === "human" && r.opportunity.nextAction !== "none"))
+    : [];
   return {
     conversationsToday: n(r?.conversations_today),
     aiConversationsToday: n(r?.ai_conversations_today),
@@ -48,11 +53,18 @@ export async function overviewMetrics(ctx: Ctx, now = new Date()) {
     upcomingToday: n(r?.upcoming_today),
     handoffsToday: n(r?.handoffs_today),
     waitingForHuman: n(r?.waiting_for_human),
-    missedOpportunities: opportunities.length,
+    openOpportunities: pipeline?.open ?? 0,
+    opportunitiesNeedingYou: pipeline?.needsYou ?? 0,
+    recovered30d: pipeline?.recovered ?? 0,
+    recoveredValue30dCents: pipeline?.recoveredValueCents ?? 0,
     leads30d: n(r?.leads_30d),
     converted30d: n(r?.converted_30d),
     conversionRate30d: n(r?.leads_30d) ? n(r?.converted_30d) / n(r?.leads_30d) : null,
-    topOpportunities: opportunities.slice(0, 4),
+    topOpportunities: needsYou.slice(0, 4).map((r) => ({
+      id: r.opportunity.id,
+      title: `${r.customer.name ?? r.customer.email ?? r.customer.phone ?? "Website visitor"} — ${r.opportunity.title}`,
+      next: r.opportunity.nextActionLabel,
+    })),
   };
 }
 
@@ -129,7 +141,7 @@ export async function analytics(ctx: Ctx, days = 30, now = new Date()) {
     where a.business_id = ${b} and a.created_at >= ${fromDate} and a.status <> 'cancelled'
     group by s.name order by bookings desc limit 6`);
 
-  const opportunities = await listOpportunities(ctx, now);
+  const pipeline = await boardSummary(ctx, now, days);
   const conversations = n(t?.conversations);
   const aiConversations = n(t?.ai_conversations);
   return {
@@ -159,7 +171,7 @@ export async function analytics(ctx: Ctx, days = 30, now = new Date()) {
       followUpsConverted: n(t?.follow_ups_converted),
       cancellations: n(t?.cancellations),
       noShows: n(t?.no_shows),
-      missedOpportunities: opportunities.length,
+      missedOpportunities: pipeline.open,
     },
     sources: sources.rows.map((r) => ({ source: String(r.source), leads: n(r.leads), converted: n(r.converted) })),
     topServices: topServices.rows.map((r) => ({ name: String(r.name), bookings: n(r.bookings), revenueCents: n(r.revenue) })),

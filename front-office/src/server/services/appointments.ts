@@ -19,6 +19,7 @@ import { addEvent } from "./conversations";
 import { cancelPendingFollowUps } from "./followups";
 import { cancelReminders, scheduleReminders } from "./reminders";
 import { scheduleReviewRequest } from "./reviews";
+import { onAppointmentBooked, onAppointmentLost, safely } from "../opportunities/engine";
 
 export type Appointment = typeof appointments.$inferSelect;
 type Source = Appointment["source"];
@@ -133,6 +134,8 @@ export async function bookAppointment(ctx: Ctx, input: BookInput) {
     await cancelPendingFollowUps(ctx, customer.id, "Appointment booked");
     // The booking conversation itself confirms to the customer; send a separate confirmation otherwise.
     await scheduleReminders(ctx, appt, { includeConfirmation: !input.conversationId, now: input.now });
+    // The lead converted (and any cancellation/no-show for this customer is won back).
+    await safely(ctx, "booked", (c) => onAppointmentBooked(c, appt));
 
     const label = formatSlotLabel(startsAt, business.timezone);
     if (input.conversationId)
@@ -237,6 +240,7 @@ export async function cancelAppointment(ctx: Ctx, appointmentId: string, reason?
       .where(eq(appointments.id, appt.id))
       .returning();
     await cancelReminders(ctx, appt.id, "Appointment cancelled");
+    await safely(ctx, "cancelled", (c) => onAppointmentLost(c, updated!, "cancellation"));
     if (appt.leadId)
       await db.update(leads).set({ status: "qualified", appointmentId: null }).where(and(eq(leads.id, appt.leadId), eq(leads.status, "appointment_booked")));
     const business = await getBusiness(ctx);
@@ -275,6 +279,7 @@ export async function setAppointmentOutcome(ctx: Ctx, appointmentId: string, out
       await scheduleReviewRequest(ctx, appt.id);
     }
     if (outcome !== "confirmed") await cancelReminders(ctx, appt.id, `Appointment ${outcome.replace("_", " ")}`);
+    if (outcome === "no_show") await safely(ctx, "no-show", (c) => onAppointmentLost(c, updated!, "no_show"));
     const service = await db.query.services.findFirst({ where: eq(services.id, appt.serviceId) });
     const customer = await db.query.customers.findFirst({ where: eq(customers.id, appt.customerId) });
     if (outcome !== "confirmed")

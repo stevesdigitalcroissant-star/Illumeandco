@@ -20,7 +20,8 @@ import { upcomingForCustomer } from "../services/appointments";
 import { getAgent, getAiSettings, getBusiness } from "../services/business";
 import { appendMessage, getConversation } from "../services/conversations";
 import { getCustomer, updateCustomer } from "../services/customers";
-import { autoScheduleFollowUp, cancelPendingFollowUps } from "../services/followups";
+import { cancelPendingFollowUps } from "../services/followups";
+import { evaluateLead, safely } from "../opportunities/engine";
 import { latestLeadForCustomer, upsertLead } from "../services/leads";
 import { aiActions } from "@/db/schema";
 import { isAllowed } from "./permissions";
@@ -203,7 +204,8 @@ export async function runAgentTurn(
     if (!active || active.status !== "appointment_booked")
       await upsertLead(ctx, { customerId: tc.customerId, source: conversation.channel, conversationId, serviceId: tc.state.lastServiceId }).catch(() => null);
   }
-  if (!tc.handedOff && isAllowed(settings.permissions, "create_follow_ups")) await autoScheduleFollowUp(ctx, tc.customerId, conversationId).catch(() => null);
+  // The Opportunity Engine decides what happens next (and when), and queues the AI follow-up if permitted.
+  await safely(ctx, "after turn", (c) => evaluateLead(c, tc.customerId));
 
   return { reply, handedOff: tc.handedOff, provider: providerId, toolCalls: tc.events.map((e) => ({ tool: e.tool, ok: e.ok })) };
 }

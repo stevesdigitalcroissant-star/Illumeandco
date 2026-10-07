@@ -9,7 +9,7 @@
  */
 import { and, eq } from "drizzle-orm";
 import { db as rootDb, type Tx } from "@/db";
-import { appointments, conversations, customers, followUps, leads, reviews } from "@/db/schema";
+import { appointments, conversations, customers, followUps, leads, opportunities, reviews } from "@/db/schema";
 import { audit } from "../audit";
 import { dbOf, invalid, notFound, type Ctx } from "../context";
 import { findCustomerByContact, normalizeCustomerEmail, normalizePhone } from "./customers";
@@ -46,6 +46,9 @@ export async function attachContactDetails(
       if (phone && !match.phone) patch.phone = phone;
       await tx.update(customers).set(patch).where(eq(customers.id, match.id));
       // Only an anonymous shell is removed; a real customer record is never deleted.
+      // Opportunities: history moves with the customer; open ones are re-derived for the known customer.
+      await tx.delete(opportunities).where(and(eq(opportunities.businessId, ctx.businessId), eq(opportunities.customerId, current.id), eq(opportunities.status, "open")));
+      await tx.update(opportunities).set({ customerId: match.id }).where(and(eq(opportunities.businessId, ctx.businessId), eq(opportunities.customerId, current.id)));
       if (!current.email && !current.phone) await tx.delete(customers).where(eq(customers.id, current.id));
       await audit(c, {
         action: "customer.updated",

@@ -34,6 +34,16 @@ everything important → audit_logs (same transaction as the change)
 | Audit | `src/server/audit.ts` | Every booking, cancellation, reschedule, message, handoff, customer change and AI action. |
 | Channels | `src/server/channels/` | `ChannelAdapter` abstraction. Web chat is live; SMS/WhatsApp (Twilio) and email (Resend) deliver when configured; Instagram and voice are architected (`voice.ts`) but not available yet. |
 
+## Opportunity Engine
+
+Every conversation has a next step. `src/server/opportunities/` turns each customer journey into a stored **opportunity** — stage (new lead → interested → high intent → booking in progress → booked, or waiting / needs follow-up / cancelled / no-show / reactivation / needs a person / lost), what the customer wants, what is blocking conversion, the next action, who does it (AI or a person) and when, plus the outcome.
+
+- **Evidence-based and deterministic** (`signals.ts`): classifications come from what customers actually wrote, tool results, appointments and follow-ups, and every opportunity stores the evidence behind it (shown under "Why" in the dashboard).
+- **Intelligent timing**: price question → follow up after the configured delay (default 24h); high intent → ~3h; "I'll check my schedule" → 2×; "I need to talk to my husband" → 3×; "don't contact me" → never automatically. Always within 09:00–20:00 business time.
+- **One execution path**: the engine schedules through the existing follow-up service, so permissions, opt-outs, stop conditions and audit apply unchanged.
+- **Honest outcomes**: an opportunity is *recovered* only if a follow-up was sent before the booking; values are service-price estimates and labelled as such.
+- **Idempotent**: one open opportunity per key (partial unique index); hooks (after each AI turn, booking, cancellation, no-show, handoff) and the background sweep converge on the same row.
+
 ## Multi-tenancy
 
 `organization` (the paying account) → `business` (a location/brand) → everything else. Every tenant table carries `business_id`; parent tables expose `UNIQUE (business_id, id)` and children reference them with **composite foreign keys**, so the database itself rejects a row that points at another tenant's customer, service, staff member or conversation. Application code scopes every query by the business id resolved from the server-side session (dashboard), the widget public key (website chat), or the job row (background work) — never from request bodies. `tests/tenant-isolation.test.ts` covers reads, writes, DB-level references, knowledge search and AI tool calls across tenants.

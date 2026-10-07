@@ -15,6 +15,13 @@
       "when": 1791318030238,
       "tag": "0001_integrity_constraints",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791400116021,
+      "tag": "0002_opportunity_engine",
+      "breakpoints": true
     }
   ]
 }
