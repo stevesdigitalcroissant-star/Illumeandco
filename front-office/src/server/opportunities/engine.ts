@@ -82,7 +82,7 @@ export async function safely(ctx: Ctx, label: string, fn: (ctx: Ctx) => Promise<
   }
 }
 
-async function findOpen(ctx: Ctx, key: string) {
+export async function findOpen(ctx: Ctx, key: string) {
   return (
     (await dbOf(ctx).query.opportunities.findFirst({
       where: and(eq(opportunities.businessId, ctx.businessId), eq(opportunities.key, key), eq(opportunities.status, "open")),
@@ -91,7 +91,7 @@ async function findOpen(ctx: Ctx, key: string) {
 }
 
 /** Insert or update the open opportunity for `key`. Safe to call repeatedly and concurrently. */
-async function upsertOpen(ctx: Ctx, key: string, values: Omit<NewOpportunity, "businessId" | "key" | "status">) {
+export async function upsertOpen(ctx: Ctx, key: string, values: Omit<NewOpportunity, "businessId" | "key" | "status">) {
   const now = new Date();
   const [row] = await dbOf(ctx)
     .insert(opportunities)
@@ -105,7 +105,7 @@ async function upsertOpen(ctx: Ctx, key: string, values: Omit<NewOpportunity, "b
   return row!;
 }
 
-async function close(
+export async function close(
   ctx: Ctx,
   opp: Opportunity,
   outcome: { status: "won" | "lost" | "dismissed"; stage: Stage; reason: string; wonAppointmentId?: string | null; recovered?: boolean; recoveredValueCents?: number | null },
@@ -144,7 +144,7 @@ async function close(
 }
 
 /** Was there a recovery action (follow-up sent, or the opportunity was being worked) before this booking? */
-async function recoveryPreceded(ctx: Ctx, customerId: string, since: Date, bookedAt: Date) {
+export async function recoveryPreceded(ctx: Ctx, customerId: string, since: Date, bookedAt: Date) {
   const [f] = await dbOf(ctx)
     .select({ id: followUps.id })
     .from(followUps)
@@ -354,8 +354,10 @@ export async function evaluateLead(ctx: Ctx, customerId: string, opts: { now?: D
     return null;
   }
 
-  const sent = facts.followUps.filter((f) => f.status === "sent");
-  const pending = facts.followUps.find((f) => f.status === "scheduled") ?? null;
+  // Missed-call text-backs are a different worker's; they don't use up the lead's follow-up attempts.
+  const leadFollowUps = facts.followUps.filter((f) => f.purpose === "lead");
+  const sent = leadFollowUps.filter((f) => f.status === "sent");
+  const pending = leadFollowUps.find((f) => f.status === "scheduled") ?? null;
   const lastSent = sent[0] ?? null;
   const lastCustomerAt = customerMsgs.at(-1)?.createdAt ?? null;
   const exhausted = sent.length >= settings.followUp.maxAttempts;
@@ -439,7 +441,7 @@ export async function evaluateLead(ctx: Ctx, customerId: string, opts: { now?: D
   if (opts.schedule !== false && nextActionBy === "ai" && nextAction === "follow_up" && nextActionAt && awaitingCustomer) {
     const needsNew = !pending || Math.abs(pending.scheduledFor.getTime() - nextActionAt.getTime()) > 5 * 60_000;
     if (needsNew) {
-      const rearm = facts.followUps.some((f) => f.statusReason === "Customer replied");
+      const rearm = leadFollowUps.some((f) => f.statusReason === "Customer replied");
       const f = await scheduleFollowUp(ctx, {
         customerId,
         leadId: facts.lead?.lead.id ?? null,
@@ -464,7 +466,7 @@ async function serviceInfo(ctx: Ctx, serviceId: string) {
 
 export async function onAppointmentBooked(ctx: Ctx, appt: Appointment) {
   await evaluateLead(ctx, appt.customerId, { schedule: false });
-  // A rebooking closes this customer's open cancellation / no-show / reactivation opportunities.
+  // A booking closes this customer's open missed-call / cancellation / no-show / reactivation opportunities.
   const open = await dbOf(ctx)
     .select()
     .from(opportunities)
@@ -473,7 +475,7 @@ export async function onAppointmentBooked(ctx: Ctx, appt: Appointment) {
         eq(opportunities.businessId, ctx.businessId),
         eq(opportunities.customerId, appt.customerId),
         eq(opportunities.status, "open"),
-        inArray(opportunities.kind, ["cancellation", "no_show", "reactivation"]),
+        inArray(opportunities.kind, ["missed_call", "cancellation", "no_show", "reactivation"]),
       ),
     );
   for (const o of open) {
@@ -481,7 +483,7 @@ export async function onAppointmentBooked(ctx: Ctx, appt: Appointment) {
     await close(ctx, o, {
       status: "won",
       stage: "booked",
-      reason: recovered ? "Rebooked after follow-up" : "Customer rebooked",
+      reason: o.kind === "missed_call" ? (recovered ? "Booked after the missed-call text-back" : "Booked") : recovered ? "Rebooked after follow-up" : "Customer rebooked",
       wonAppointmentId: appt.id,
       recovered,
       recoveredValueCents: appt.priceCents,
@@ -617,6 +619,10 @@ export async function sweepBusiness(ctx: Ctx, now = new Date()) {
     )
     .limit(100);
   for (const w of waiting) await safely(ctx, "sweep handoff", (c) => onHandoff(c, w.id, w.reason ?? "Customer needs a person"));
+
+  // Missed calls: escalate unanswered text-backs to the team, close stale ones.
+  const { advanceMissedCalls } = await import("../recovery/missed-calls");
+  await safely(ctx, "sweep missed calls", (c) => advanceMissedCalls(c, now));
 
   // Customers who haven't returned (reactivation).
   const cutoff = new Date(now.getTime() - settings.missedOpportunities.noReturnDays * 24 * HOUR);

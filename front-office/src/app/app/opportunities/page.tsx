@@ -22,6 +22,7 @@ const VIEWS = [
 const KINDS = [
   { key: "", label: "All types" },
   { key: "lead", label: "Leads" },
+  { key: "missed_call", label: "Missed calls" },
   { key: "cancellation", label: "Cancellations" },
   { key: "no_show", label: "No-shows" },
   { key: "reactivation", label: "Reactivation" },

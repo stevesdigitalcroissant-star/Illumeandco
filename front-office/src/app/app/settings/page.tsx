@@ -6,15 +6,20 @@ import { Field, Input, NativeSelect, Textarea } from "@/components/ui/input";
 import { EmptyState, PageHeader, Table } from "@/components/ui/misc";
 import { requirePermission } from "@/lib/session";
 import { cn, formatMoney } from "@/lib/utils";
-import { listChannels } from "@/server/channels/registry";
+import { headers } from "next/headers";
+import { DateTime } from "luxon";
+import { getChannel, listChannels } from "@/server/channels/registry";
+import { isAllowed } from "@/server/ai/permissions";
+import { listConnectors, webhookState, type ConnectorStatus } from "@/server/integrations/connectors";
+import { listRecentEvents } from "@/server/integrations/ingest";
 import { roleCan } from "@/server/context";
 import { BUSINESS_TYPES } from "@/server/defaults";
 import { billingConfigured } from "@/server/services/billing";
-import { getBusinessHours } from "@/server/services/business";
+import { getAiSettings, getBusinessHours } from "@/server/services/business";
 import { getStaffAvailability, listBlackouts, listServices, listStaff } from "@/server/services/catalog";
 import { listMembers } from "@/server/services/team";
 import { addBlackoutAction, saveBusinessAction, savePoliciesAction } from "./actions";
-import { CardFooter, HoursCard, RemoveBlackoutButton, ServicesCard, StaffCard, TeamCard } from "./settings-client";
+import { CardFooter, HoursCard, MissedCallCard, RemoveBlackoutButton, ServicesCard, StaffCard, TeamCard, WebhookSecretButton } from "./settings-client";
 
 export const metadata = { title: "Settings" };
 
@@ -60,7 +65,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         {tab === "blackouts" ? <BlackoutsTab r={r} /> : null}
         {tab === "policies" ? <PoliciesTab r={r} /> : null}
         {tab === "team" ? <TeamTab r={r} /> : null}
-        {tab === "integrations" ? <IntegrationsTab /> : null}
+        {tab === "integrations" ? <IntegrationsTab r={r} /> : null}
       </div>
     </>
   );
@@ -291,7 +296,94 @@ function Section({ title, description, items }: { title: string; description: st
   )
 }
 
-function IntegrationsTab() {
+const CONNECTOR_BADGE: Record<ConnectorStatus, React.ReactNode> = {
+  active: <Badge tone="success">Receiving events</Badge>,
+  ready: <Badge tone="primary">Ready</Badge>,
+  config: <Badge tone="warning">Configuration required</Badge>,
+  na: <Badge tone="outline">Not available yet</Badge>,
+};
+const EVENT_TONE = { processed: "success", ignored: "neutral", failed: "danger", received: "info", processing: "info" } as const;
+
+async function IntegrationsTab({ r }: { r: R }) {
+  const [connectors, hook, settings, events] = await Promise.all([listConnectors(r.ctx), webhookState(r.ctx), getAiSettings(r.ctx), listRecentEvents(r.ctx, 15)]);
+  const h = await headers();
+  const origin = process.env.APP_URL ?? `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`;
+  const key = r.business.publicKey;
+  const phoneChannel = getChannel("sms").isConfigured() || getChannel("whatsapp").isConfigured();
+  const textHint = !phoneChannel
+    ? "Texting back needs SMS or WhatsApp (Twilio) — configuration required. Until then, missed calls are listed for your team to call back."
+    : !isAllowed(settings.permissions, "send_messages")
+      ? "The AI's \"Send messages\" permission is off (AI Receptionist → Permissions), so missed calls go to your team to call back."
+      : null;
+  const tz = r.business.timezone;
+  return (
+    <>
+      <Card>
+        <CardHeader title="Connect your existing systems" description="We sit on top of the tools you already use — your phone system, forms and booking software keep working as they are. Events flow in; recovered revenue flows out." />
+        <ul className="divide-y">
+          {connectors.map((c) => (
+            <li key={c.key} className="space-y-3 px-5 py-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium">{c.name}</p>
+                  <p className="text-[13px] text-muted-foreground">{c.description}</p>
+                  {c.hint ? <p className="mt-1 text-xs text-muted-foreground">{c.hint}</p> : null}
+                </div>
+                {CONNECTOR_BADGE[c.status]}
+              </div>
+              {c.key === "webhook" ? (
+                <div className="space-y-3 rounded-md bg-muted/50 p-3 text-[13px]">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Endpoint</p>
+                    <code className="break-all">POST {origin}/api/integrations/webhook/{key}</code>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Headers <code>X-AFO-Timestamp</code> (unix seconds) and <code>X-AFO-Signature</code> = hex HMAC-SHA256 of <code>{"`${timestamp}.${body}`"}</code> with your secret. Body:{" "}
+                    <code className="break-all">{`{"id":"call-123","type":"call.missed","data":{"from":"+971501234567","reason":"no_answer"}}`}</code>. Repeated ids are ignored.
+                  </div>
+                  <WebhookSecretButton hasSecret={hook.hasSecret} disabled={!hook.encryption} />
+                </div>
+              ) : c.key === "twilio_voice" && c.status !== "config" ? (
+                <div className="rounded-md bg-muted/50 p-3 text-[13px]">
+                  <p className="text-xs font-medium text-muted-foreground">In Twilio, set the number&apos;s &quot;A call comes in&quot; webhook to</p>
+                  <code className="break-all">{origin}/api/integrations/twilio-voice/{key}/incoming</code>
+                  <p className="mt-1 text-xs text-muted-foreground">{r.business.phone ? `Calls are forwarded to ${r.business.phone}; unanswered ones become missed-call opportunities.` : "Add your business phone in Settings → Business first — calls are forwarded there."}</p>
+                </div>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      </Card>
+      <MissedCallCard initial={settings.recovery.missedCall} canText={!textHint} textHint={textHint} />
+      <Card>
+        <CardHeader title="Recent events" description="Everything your systems sent us, and what we did with it." />
+        {events.length ? (
+          <Table>
+            <thead>
+              <tr><th>Received</th><th>Source</th><th>Event</th><th>Status</th><th>Result</th></tr>
+            </thead>
+            <tbody>
+              {events.map((e) => (
+                <tr key={e.id}>
+                  <td className="whitespace-nowrap text-muted-foreground">{DateTime.fromJSDate(e.createdAt).setZone(tz).toFormat("d LLL, h:mm a")}</td>
+                  <td>{e.connector === "twilio_voice" ? "Twilio Voice" : "Webhook"}</td>
+                  <td><code className="text-xs">{e.type}</code></td>
+                  <td><Badge tone={EVENT_TONE[e.status]}>{e.status}</Badge></td>
+                  <td className="text-[13px] text-muted-foreground">{e.result}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        ) : (
+          <EmptyState title="No events yet" description="Connect your phone system above; missed calls will appear here as they arrive." />
+        )}
+      </Card>
+      <OtherIntegrations />
+    </>
+  );
+}
+
+function OtherIntegrations() {
   const channels = listChannels();
   const billing = billingConfigured();
   const rows: IntegrationItem[] = [

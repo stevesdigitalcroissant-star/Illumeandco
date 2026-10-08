@@ -7,6 +7,10 @@
  *   - an appointment was booked (or the lead is completed)
  *   - a human took over the conversation
  * Optional: stop when the lead is marked lost.
+ *
+ * A missed-call text-back (purpose "missed_call") answers contact the
+ * customer started, so an existing booking does not stop it — every other
+ * condition applies, and it is sent at most once (never re-armed).
  */
 import { and, desc, eq, gt, inArray, lte, sql } from "drizzle-orm";
 import { appointments, conversations, customers, followUps, leads, services } from "@/db/schema";
@@ -45,7 +49,10 @@ export async function cancelPendingFollowUps(ctx: Ctx, customerId: string, reaso
 }
 
 /** Returns why a follow-up must not be sent, or null if it may go out. */
-export async function checkStopConditions(ctx: Ctx, f: Pick<FollowUp, "customerId" | "leadId" | "createdAt" | "conversationId">) {
+export async function checkStopConditions(
+  ctx: Ctx,
+  f: Pick<FollowUp, "customerId" | "leadId" | "createdAt" | "conversationId"> & { purpose?: FollowUp["purpose"] },
+) {
   const db = dbOf(ctx);
   const customer = await db.query.customers.findFirst({ where: and(eq(customers.businessId, ctx.businessId), eq(customers.id, f.customerId)) });
   if (!customer) return "Customer no longer exists";
@@ -63,7 +70,7 @@ export async function checkStopConditions(ctx: Ctx, f: Pick<FollowUp, "customerI
       ),
     )
     .limit(1);
-  if (future) return "Appointment already booked";
+  if (future && f.purpose !== "missed_call") return "Appointment already booked";
 
   if (f.leadId) {
     const lead = await db.query.leads.findFirst({ where: and(eq(leads.businessId, ctx.businessId), eq(leads.id, f.leadId)) });
@@ -96,6 +103,7 @@ export async function scheduleFollowUp(
     attempt?: number;
     /** Skip the audit entry (used when the AI re-arms its own nudge after a reply). */
     quiet?: boolean;
+    purpose?: FollowUp["purpose"];
   },
 ) {
   const settings = await getAiSettings(ctx);
@@ -109,7 +117,8 @@ export async function scheduleFollowUp(
     if (!lead) throw notFound("Lead");
   }
   const createdAt = new Date();
-  const stop = await checkStopConditions(ctx, { customerId: input.customerId, leadId: input.leadId ?? null, conversationId: input.conversationId ?? null, createdAt: new Date(0) });
+  const purpose = input.purpose ?? "lead";
+  const stop = await checkStopConditions(ctx, { customerId: input.customerId, leadId: input.leadId ?? null, conversationId: input.conversationId ?? null, createdAt: new Date(0), purpose });
   // "Customer replied" is irrelevant at scheduling time — that's what we're following up on.
   if (stop && stop !== "Customer replied") throw invalid(`Follow-up not scheduled: ${stop.toLowerCase()}.`);
 
@@ -134,6 +143,7 @@ export async function scheduleFollowUp(
       attempt: input.attempt ?? 1,
       reason: input.reason ?? null,
       message: input.message ?? null,
+      purpose,
       scheduledFor,
       createdBy: ctx.actor.type,
       createdAt,
@@ -208,7 +218,7 @@ export async function processFollowUp(ctx: Ctx, f: FollowUp) {
   });
 
   const settings = await getAiSettings(ctx);
-  if (f.attempt < settings.followUp.maxAttempts && settings.followUp.enabled) {
+  if (f.purpose === "lead" && f.attempt < settings.followUp.maxAttempts && settings.followUp.enabled) {
     await scheduleFollowUp(ctx, {
       customerId: f.customerId,
       leadId: f.leadId,
@@ -217,7 +227,7 @@ export async function processFollowUp(ctx: Ctx, f: FollowUp) {
       reason: f.reason ?? undefined,
     }).catch(() => null);
   }
-  return { sent: true, channel: delivery.channel };
+  return { sent: true, channel: delivery.channel, conversationId: delivery.conversationId };
 }
 
 export async function dueFollowUps(now = new Date(), limit = 100) {

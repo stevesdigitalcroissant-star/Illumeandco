@@ -16,7 +16,9 @@ import {
   changeRoleAction,
   removeBlackoutAction,
   removeMemberAction,
+  rotateWebhookSecretAction,
   saveHoursAction,
+  saveMissedCallAction,
   saveServiceAction,
   saveStaffAction,
   saveStaffAvailabilityAction,
@@ -453,6 +455,75 @@ export function TeamCard({ members, canManage }: { members: MemberRow[]; canMana
       {state || !canManage ? (
         <div className="border-t px-5 py-3 text-[13px]">{state ? <Msg state={state} /> : <span className="text-muted-foreground">Only owners can add, remove or change members.</span>}</div>
       ) : null}
+    </Card>
+  );
+}
+
+// ─── Integrations: webhook secret + missed-call recovery ─────────────
+export function WebhookSecretButton({ hasSecret, disabled }: { hasSecret: boolean; disabled: boolean }) {
+  const { pending, state, exec } = useAction();
+  const [secret, setSecret] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="space-y-2">
+      {secret ? (
+        <div className="space-y-1.5">
+          <Label>Signing secret — shown only once</Label>
+          <div className="flex gap-2">
+            <Input readOnly value={secret} className="font-mono" onFocus={(e) => e.currentTarget.select()} />
+            <Button variant="outline" onClick={() => { navigator.clipboard?.writeText(secret); setCopied(true); }}>{copied ? <Check /> : <Copy />} {copied ? "Copied" : "Copy"}</Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Store it in your phone system or automation tool. It&apos;s stored encrypted and can&apos;t be shown again — rotate to get a new one.</p>
+        </div>
+      ) : null}
+      <div className="flex items-center gap-3">
+        <Button
+          size="sm"
+          variant={hasSecret ? "outline" : "default"}
+          disabled={disabled || pending}
+          onClick={() => {
+            if (hasSecret && !confirm("Rotate the secret? Anything using the current secret will stop working until you update it.")) return;
+            exec(() => rotateWebhookSecretAction(), (r) => { if (r.ok && r.data) { setSecret(r.data.secret); setCopied(false); } });
+          }}
+        >
+          <RotateCcw /> {hasSecret ? "Rotate secret" : "Generate signing secret"}
+        </Button>
+        <Msg state={state && !state.ok ? state : null} />
+      </div>
+    </div>
+  );
+}
+
+export function MissedCallCard({ initial, canText, textHint }: { initial: { enabled: boolean; textBack: boolean; template: string }; canText: boolean; textHint: string | null }) {
+  const [f, setF] = useState(initial);
+  const { pending, state, exec } = useAction();
+  return (
+    <Card>
+      <CardHeader title="Missed call recovery" description="When a call goes unanswered, the caller becomes an opportunity — and, if you allow it, the AI texts them back so the conversation continues." />
+      <div className="space-y-4 px-5 pb-5">
+        <label className="flex items-center justify-between gap-4">
+          <span>
+            <span className="block text-sm font-medium">Track missed calls</span>
+            <span className="block text-[13px] text-muted-foreground">Each caller is matched to a customer and shown in Opportunities.</span>
+          </span>
+          <Switch checked={f.enabled} onCheckedChange={(v) => setF({ ...f, enabled: v })} aria-label="Track missed calls" />
+        </label>
+        <label className="flex items-center justify-between gap-4">
+          <span>
+            <span className="block text-sm font-medium">AI texts the caller back</span>
+            <span className="block text-[13px] text-muted-foreground">Once per caller per day, never to opted-out customers or while a team member owns the conversation. Also needs the &quot;Send messages&quot; AI permission.</span>
+          </span>
+          <Switch checked={f.textBack} disabled={!f.enabled} onCheckedChange={(v) => setF({ ...f, textBack: v })} aria-label="AI texts the caller back" />
+        </label>
+        {!canText && textHint ? <Notice tone="warning">{textHint}</Notice> : null}
+        <Field label="Text-back message" hint="{{business}} and {{customer_name}} are filled in. The caller's reply goes to the AI receptionist.">
+          <Textarea rows={3} value={f.template} maxLength={480} onChange={(e) => setF({ ...f, template: e.target.value })} />
+        </Field>
+        <div className="flex items-center justify-end gap-3">
+          <span className="mr-auto"><Msg state={state} /></span>
+          <Button size="sm" disabled={pending} onClick={() => exec(() => saveMissedCallAction(f))}>{pending ? "Saving…" : "Save"}</Button>
+        </div>
+      </div>
     </Card>
   );
 }

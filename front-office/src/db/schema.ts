@@ -616,6 +616,15 @@ export type WidgetConfig = {
 };
 export type MissedOpportunityConfig = { noReturnDays: number; staleLeadHours: number };
 export type BookingRules = { requireName: boolean; requireContact: boolean };
+export type RecoveryConfig = {
+  missedCall: {
+    /** Track missed calls as opportunities. */
+    enabled: boolean;
+    /** Let the AI text the caller back (also needs the "Send messages" AI permission). */
+    textBack: boolean;
+    template: string;
+  };
+};
 
 export const aiSettings = pgTable("ai_settings", {
   businessId: uuid("business_id")
@@ -628,6 +637,16 @@ export const aiSettings = pgTable("ai_settings", {
   widget: jsonb("widget").$type<WidgetConfig>().notNull(),
   missedOpportunities: jsonb("missed_opportunities").$type<MissedOpportunityConfig>().notNull(),
   booking: jsonb("booking").$type<BookingRules>().notNull().default({ requireName: true, requireContact: true }),
+  recovery: jsonb("recovery")
+    .$type<RecoveryConfig>()
+    .notNull()
+    .default({
+      missedCall: {
+        enabled: true,
+        textBack: true,
+        template: "Hi, this is {{business}} — sorry we missed your call! How can we help? Reply here and we'll take care of you.",
+      },
+    }),
   updatedAt: updatedAt(),
 });
 
@@ -665,6 +684,12 @@ export const followUps = pgTable(
     reason: text("reason"),
     /** Explicit message; if null the message is composed at send time. */
     message: text("message"),
+    /**
+     * lead: a nudge to someone who enquired and went quiet (all stop conditions, re-armed up to maxAttempts).
+     * missed_call: a single text-back to someone whose call went unanswered — they contacted us, so an
+     * existing booking doesn't stop it (they may be calling about it), and it is never repeated.
+     */
+    purpose: text("purpose").$type<"lead" | "missed_call">().notNull().default("lead"),
     scheduledFor: timestamp("scheduled_for", { withTimezone: true }).notNull(),
     status: scheduledStatus("status").notNull().default("scheduled"),
     /** Why it was cancelled/skipped/failed, or the delivery result. */
@@ -890,10 +915,49 @@ export const integrations = pgTable(
     status: text("status").notNull().default("disconnected"),
     /** Non-secret configuration only. Secrets live in environment variables / a vault. */
     config: jsonb("config").$type<Record<string, unknown>>().notNull().default({}),
+    /** Per-business signing secret (AES-256-GCM with APP_ENCRYPTION_KEY). Never returned to the browser except once on creation. */
+    secretCiphertext: text("secret_ciphertext"),
     connectedAt: timestamp("connected_at", { withTimezone: true }),
+    lastEventAt: timestamp("last_event_at", { withTimezone: true }),
     updatedAt: updatedAt(),
   },
   (t) => [uniqueIndex("integrations_business_provider_idx").on(t.businessId, t.provider)],
+);
+
+export const integrationEventStatus = pgEnum("integration_event_status", ["received", "processing", "processed", "ignored", "failed"]);
+
+/**
+ * Normalized events from the systems a business already uses (phone system,
+ * forms, booking software). Each event is stored once per
+ * (business, connector, external id) — retries and duplicate webhooks are
+ * no-ops — and then processed by the revenue engine.
+ */
+export const integrationEvents = pgTable(
+  "integration_events",
+  {
+    id: id(),
+    businessId: businessRef(),
+    connector: text("connector").notNull(),
+    externalId: text("external_id").notNull(),
+    type: text("type").notNull(),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    status: integrationEventStatus("status").notNull().default("received"),
+    /** What processing did (or why it was ignored / failed). */
+    result: text("result"),
+    attempts: integer("attempts").notNull().default(0),
+    /** Informational links (no FK: the event log outlives deleted customers). Always set by the processor, never from the payload. */
+    customerId: uuid("customer_id"),
+    opportunityId: uuid("opportunity_id"),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    uniqueIndex("integration_events_external_idx").on(t.businessId, t.connector, t.externalId),
+    index("integration_events_business_idx").on(t.businessId, t.createdAt),
+    index("integration_events_pending_idx").on(t.status, t.updatedAt),
+  ],
 );
 
 export const auditLogs = pgTable(

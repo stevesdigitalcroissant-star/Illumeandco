@@ -44,6 +44,30 @@ Every conversation has a next step. `src/server/opportunities/` turns each custo
 - **Honest outcomes**: an opportunity is *recovered* only if a follow-up was sent before the booking; values are service-price estimates and labelled as such.
 - **Idempotent**: one open opportunity per key (partial unique index); hooks (after each AI turn, booking, cancellation, no-show, handoff) and the background sweep converge on the same row.
 
+## Revenue Recovery: integrations and Missed Call Recovery
+
+The product sits **on top of** a business's existing systems (phone system, forms, booking software) instead of replacing them. Each system sends events; a recovery worker acts on each one; outcomes are attributed honestly.
+
+```
+phone system / Zapier / Make / Twilio Voice
+  └─▶ connector (signed webhook · Twilio-signature-verified callbacks)
+        └─▶ integration_events  (stored once per business+connector+external id → duplicates are no-ops)
+              └─▶ normalized event (zod: call.missed, call.completed)
+                    └─▶ Missed Call Recovery worker → opportunity + guarded text-back → AI receptionist handles the reply
+```
+
+- **Universal webhook**: `POST /api/integrations/webhook/<public key>`. It requires `X-AFO-Timestamp` (unix seconds) and `X-AFO-Signature` (hex HMAC-SHA256 of `${timestamp}.${rawBody}`). Requests outside a ±5 min window are rejected. The body is `{ "id", "type", "occurredAt?", "data" }`. The per-business secret is generated in **Settings → Integrations**, shown once, and stored AES-256-GCM-encrypted with `APP_ENCRYPTION_KEY`. Without that key the webhook shows "configuration required".
+- **Twilio Voice**: set the number's "A call comes in" webhook to `/api/integrations/twilio-voice/<key>/incoming`. The call is forwarded to the business phone. `no-answer`, `busy`, `failed` and caller hang-up all become `call.missed`.
+- **Missed Call Recovery** (`src/server/recovery/missed-calls.ts`): the caller is matched by phone, or created, and gets one open `missed_call` opportunity. The AI texts back once per caller per day, and only if every one of these holds:
+  - the owner allows it
+  - the "Send messages" permission is on
+  - the caller hasn't opted out
+  - no person owns their conversation
+  - SMS/WhatsApp is configured
+
+  Otherwise the team is asked to call back, with the reason. Replies thread into the same SMS conversation and the AI receptionist answers them. If there is no reply within 2 hours, the team is asked to call. A booking closes the opportunity as won, and it counts as *recovered* only if the text-back went out first. After 7 quiet days the opportunity is closed as lost.
+- Failed or stranded events are retried by the background tick with backoff, at most 5 attempts.
+
 ## Multi-tenancy
 
 `organization` (the paying account) → `business` (a location/brand) → everything else. Every tenant table carries `business_id`; parent tables expose `UNIQUE (business_id, id)` and children reference them with **composite foreign keys**, so the database itself rejects a row that points at another tenant's customer, service, staff member or conversation. Application code scopes every query by the business id resolved from the server-side session (dashboard), the widget public key (website chat), or the job row (background work) — never from request bodies. `tests/tenant-isolation.test.ts` covers reads, writes, DB-level references, knowledge search and AI tool calls across tenants.
@@ -82,6 +106,7 @@ The database needs the `vector`, `pg_trgm` and `btree_gist` extensions (the firs
 |---|---|---|
 | `DATABASE_URL` | Everything | App won't start |
 | `APP_URL` | Widget snippet, review links, Stripe redirects | Derived from the request where possible |
+| `APP_ENCRYPTION_KEY` | Storing integration secrets (webhook signing) | Webhook connector shows "configuration required" |
 | `CRON_SECRET` | `/api/cron/tick` (follow-ups, reminders, review requests) | Endpoint returns 401; use **Automations → Run due automations now** manually |
 | `ANTHROPIC_API_KEY` (+ `AI_MODEL`, default `claude-opus-5-5`; `AI_EFFORT`) | Claude as the receptionist | Built-in rules engine answers (clearly labelled in the dashboard) |
 | `VOYAGE_API_KEY` | Semantic knowledge search | Full-text + trigram search only |
@@ -131,6 +156,7 @@ Create a Vercel project with **Root Directory = `front-office`**, a Postgres dat
 | Follow-ups, reminders, review requests | Live via cron; delivered by the best configured channel |
 | SMS / WhatsApp (Twilio), email (Resend) | Implemented; require credentials |
 | Stripe subscriptions | Implemented; require Stripe keys and price ids |
+| Missed Call Recovery (universal webhook, Twilio Voice) | Implemented; text-back requires SMS/WhatsApp credentials |
 | Google Calendar / external booking systems | Not available yet (shown as such) |
 | Instagram DMs | Not available yet |
 | Voice receptionist | Architecture and provider contract in `src/server/channels/voice.ts`; needs a telephony + speech provider |

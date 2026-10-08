@@ -2,7 +2,8 @@
  * Background automation tick — run every few minutes by cron
  * (/api/cron/tick, protected by CRON_SECRET) or manually from the dashboard.
  *
- * Processes due follow-ups, appointment reminders and review requests.
+ * Processes due follow-ups, appointment reminders and review requests, and
+ * retries integration events that failed or were stranded mid-way.
  * A Postgres advisory lock guarantees only one tick runs at a time, so
  * nothing is ever sent twice.
  */
@@ -13,14 +14,15 @@ import { dueFollowUps, processFollowUp } from "../services/followups";
 import { dueReminders, processReminder } from "../services/reminders";
 import { dueReviewRequests, processReviewRequest } from "../services/reviews";
 import { sweepAll, sweepBusiness } from "../opportunities/engine";
+import { retryPendingEvents } from "../integrations/ingest";
 
 const LOCK_KEY = 7_342_001;
 
-export type TickReport = { ran: boolean; followUps: number; reminders: number; reviews: number; errors: string[] };
+export type TickReport = { ran: boolean; followUps: number; reminders: number; reviews: number; events: number; errors: string[] };
 
 export async function runTick(opts: { now?: Date; businessId?: string } = {}): Promise<TickReport> {
   const now = opts.now ?? new Date();
-  const report: TickReport = { ran: false, followUps: 0, reminders: 0, reviews: 0, errors: [] };
+  const report: TickReport = { ran: false, followUps: 0, reminders: 0, reviews: 0, events: 0, errors: [] };
   const client = await getPool().connect();
   try {
     const { rows } = await client.query<{ locked: boolean }>("select pg_try_advisory_lock($1) as locked", [LOCK_KEY]);
@@ -54,6 +56,11 @@ export async function runTick(opts: { now?: Date; businessId?: string } = {}): P
         } catch (e) {
           report.errors.push(`review ${r.id}: ${(e as Error).message}`);
         }
+      }
+      try {
+        report.events = await retryPendingEvents(now, opts.businessId);
+      } catch (e) {
+        report.errors.push(`integration events: ${(e as Error).message}`);
       }
       // Advance and reconcile opportunities (idempotent).
       try {

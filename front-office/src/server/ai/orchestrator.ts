@@ -5,7 +5,6 @@
  * and audit trail apply everywhere.
  */
 import { db as rootDb } from "@/db";
-import { sha256 } from "../auth";
 import type { InboundMessage } from "../channels/types";
 import type { Ctx } from "../context";
 import { appendMessage, createConversation, findConversationByIdentity } from "../services/conversations";
@@ -14,7 +13,11 @@ import { onCustomerMessage, runAgentTurn, type AgentTurnResult } from "./agent";
 import type { ModelProvider } from "./providers/types";
 import type { ReplyStreamSink } from "./reply-stream";
 
-export const identityHash = (channel: string, identity: string) => sha256(`${channel}:${identity}`);
+import { identityHash } from "../channels/identity";
+import { safely } from "../opportunities/engine";
+import { syncMissedCallReply } from "../recovery/missed-calls";
+
+export { identityHash };
 
 export type InboundResult = {
   conversationId: string;
@@ -45,6 +48,8 @@ export async function handleInbound(
   await appendMessage(customerCtx, { conversationId: conversation.id, role: "customer", content: text });
   await touchCustomer(customerCtx, conversation.customerId);
   const { optedOut } = await onCustomerMessage(customerCtx, conversation.customerId, text);
+  // A reply to a missed-call text-back: the conversation now carries that opportunity.
+  await safely(customerCtx, "missed call reply", (c) => syncMissedCallReply(c, conversation!.customerId));
 
   if (optedOut) {
     const reply = "You've been unsubscribed and won't receive further messages from us. You can still message here any time.";

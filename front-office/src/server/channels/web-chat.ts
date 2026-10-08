@@ -3,7 +3,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { businesses, conversations, messages } from "@/db/schema";
 import { randomToken } from "../auth";
-import { identityHash } from "../ai/orchestrator";
+import { identityHash } from "./identity";
 import { getAgent, getAiSettings, getBusinessByPublicKey } from "../services/business";
 
 export async function widgetBusiness(publicKey: string) {

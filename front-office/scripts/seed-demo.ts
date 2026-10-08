@@ -26,6 +26,7 @@ import { addSource } from "../src/server/services/knowledge";
 import { seedPlans } from "../src/server/services/billing";
 import { createRulesProvider } from "../src/server/ai/providers/rules";
 import { sweepBusiness } from "../src/server/opportunities/engine";
+import { ingestEvent } from "../src/server/integrations/ingest";
 
 const DEMO_EMAIL = "demo@frontoffice.dev";
 const DEMO_PASSWORD = "demo-front-office";
@@ -164,6 +165,14 @@ async function main() {
   await db.update(leads).set({ createdAt: old, lastContactAt: old }).where(eq(leads.customerId, daniel.customerId));
   await db.update(messages).set({ createdAt: old }).where(eq(messages.conversationId, daniel.conversationId));
   await db.update(conversations).set({ lastMessageAt: old, lastCustomerMessageAt: old, createdAt: old }).where(eq(conversations.id, daniel.conversationId));
+  // A missed call, processed by the real integration pipeline (texted back only if SMS is configured).
+  await ingestEvent(business.id, {
+    connector: "webhook",
+    externalId: "demo-missed-call-1",
+    type: "call.missed",
+    occurredAt: new Date(Date.now() - 20 * 60_000),
+    payload: { from: "+971501110099", reason: "after_hours", voicemailTranscript: "Hi, I wanted to ask about Invisalign for my daughter. Please call me back." },
+  });
   // Let the Opportunity Engine classify everything above (leads, cancellation, lapsed customer, handoffs).
   await sweepBusiness({ businessId: business.id, actor: { type: "system", name: "Opportunity Engine" } });
 

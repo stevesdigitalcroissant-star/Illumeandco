@@ -75,6 +75,7 @@ async function getOpen(ctx: Ctx, id: string) {
 }
 
 const OUTREACH: Partial<Record<Kind, (first: string, service: string) => string>> = {
+  missed_call: (n) => `Hi ${n}, sorry we missed your call! How can we help?`,
   cancellation: (n, s) => `Hi ${n}, we noticed you had to cancel your ${s}. Would you like me to find you a new time?`,
   no_show: (n, s) => `Hi ${n}, we missed you at your ${s} appointment. Would you like me to find you a new time?`,
   reactivation: (n) => `Hi ${n}, it's been a while! Would you like me to find you a time for your next visit?`,
@@ -95,6 +96,7 @@ export async function followUpNow(ctx: Ctx, opportunityId: string) {
     scheduledFor: new Date(),
     message: tpl ? tpl(customer?.name?.split(" ")[0] ?? "there", service?.name.toLowerCase() ?? "appointment") : null,
     reason: o.title,
+    purpose: o.kind === "missed_call" ? "missed_call" : "lead",
   });
   const result = await processFollowUp(ctx, f);
   if (result.sent)

@@ -16,6 +16,8 @@ import {
   updateStaff,
   type AvailabilityInput,
 } from "@/server/services/catalog";
+import { rotateWebhookSecret } from "@/server/integrations/connectors";
+import { updateMissedCallConfig } from "@/server/recovery/config";
 import { addExistingMember, changeMemberRole, inviteNewMember, listMembers, removeMember } from "@/server/services/team";
 
 const revalidate = () => revalidatePath("/app/settings");
@@ -225,4 +227,22 @@ export async function removeMemberAction(memberId: string) {
     await removeMember(ctx, String(memberId));
     revalidate();
   }, "Removed from the team.");
+}
+
+// ─── Integrations & missed-call recovery ─────────────────────────────
+export async function rotateWebhookSecretAction() {
+  return run(async () => {
+    const { ctx } = await requirePermission("business.manage");
+    const secret = await rotateWebhookSecret(ctx);
+    revalidate();
+    return { secret };
+  });
+}
+
+export async function saveMissedCallAction(input: { enabled: boolean; textBack: boolean; template: string }) {
+  return run(async () => {
+    const { ctx } = await requirePermission("business.manage");
+    await updateMissedCallConfig(ctx, { enabled: Boolean(input.enabled), textBack: Boolean(input.textBack), template: String(input.template ?? "") });
+    revalidate();
+  }, "Saved.");
 }

@@ -100,7 +100,7 @@ export function OpportunityCard({ o }: { o: CardData }) {
           {result ? <p className={cn("text-xs", result.ok ? "text-success" : "text-danger")}>{result.text}</p> : null}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
-          {o.kind === "lead" ? (
+          {o.kind === "lead" || o.kind === "missed_call" ? (
             <div className="flex items-center gap-2" title="Intent score from what the customer said and did">
               <span className="text-[11px] text-muted-foreground">Intent</span>
               <span className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">

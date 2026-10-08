@@ -1,5 +1,6 @@
 /** Proactive outbound messages (follow-ups, reminders, review requests). */
 import { and, desc, eq } from "drizzle-orm";
+import { identityHash } from "../channels/identity";
 import { conversations, customers } from "@/db/schema";
 import { getChannel, PROACTIVE_ORDER } from "../channels/registry";
 import type { ChannelKind, DeliveryResult } from "../channels/types";
@@ -41,7 +42,11 @@ export async function deliverToCustomer(
     if (!adapter.isConfigured() || !adapter.canReach(to)) continue;
     const result = await adapter.send({ businessId: ctx.businessId, businessName: business.name, to, text: input.text, subject: input.subject });
     if (!result.ok) continue;
-    const conv = existing.find((c) => c.channel === kind) ?? (await createConversation(ctx, { customerId: customer.id, channel: kind }));
+    // SMS/WhatsApp threads are keyed by phone number, so the customer's reply lands in this same conversation.
+    const hash = (kind === "sms" || kind === "whatsapp") && customer.phone ? identityHash(kind, customer.phone) : null;
+    let conv = existing.find((c) => c.channel === kind) ?? (await createConversation(ctx, { customerId: customer.id, channel: kind, channelIdentityHash: hash }));
+    if (hash && !conv.channelIdentityHash)
+      conv = (await dbOf(ctx).update(conversations).set({ channelIdentityHash: hash }).where(eq(conversations.id, conv.id)).returning())[0] ?? conv;
     const m = await appendMessage(ctx, {
       conversationId: conv.id,
       role: input.role ?? "ai",
