@@ -7,6 +7,7 @@ import { requirePermission } from "@/lib/session";
 import { cn, formatMoney } from "@/lib/utils";
 import { billingConfigured, entitlementsFor, getSubscription, listPlans } from "@/server/services/billing";
 import { BillingButton } from "./billing-client";
+import { usageSummary } from "@/server/ai/usage";
 
 export const metadata = { title: "Billing" };
 
@@ -20,10 +21,12 @@ const STATUS_TONE: Record<string, "success" | "warning" | "danger" | "neutral" |
 };
 
 export default async function BillingPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
-  const { business } = await requirePermission("billing.manage");
+  const { business, ctx } = await requirePermission("billing.manage");
   const sp = await searchParams;
   const orgId = business.organizationId;
-  const [plans, sub, ent] = await Promise.all([listPlans(), getSubscription(orgId), entitlementsFor(orgId)]);
+  const [plans, sub, ent, usage] = await Promise.all([listPlans(), getSubscription(orgId), entitlementsFor(orgId), usageSummary(ctx)]);
+  const usd = (v: number) => `$${v < 1 ? v.toFixed(3) : v.toFixed(2)}`;
+  const tokens = (v: number) => (v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${Math.round(v / 1e3)}K` : String(v));
   const configured = billingConfigured();
   const current = sub?.planId ? plans.find((p) => p.id === sub.planId) : undefined;
   const isActive = sub && ["active", "trialing"].includes(sub.status);
@@ -112,6 +115,26 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
         <Card><EmptyState title="No plans are available" description="Plans are configured in the database (plans table)." /></Card>
       )}
       <p className="mt-4 text-xs text-muted-foreground">Prices exclude applicable taxes. Payments are processed by Stripe; card details never touch our servers.</p>
+      <Card className="mt-6">
+        <CardHeader title="AI usage · last 30 days" description="Tokens reported by the AI provider for this location, and the estimated cost at list prices. Turns answered by the built-in rules engine cost nothing and aren't counted." />
+        {usage.turns ? (
+          <CardBody className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
+              <div><p className="text-xs text-muted-foreground">Estimated cost</p><p className="text-xl font-semibold tabular">{usd(usage.costUsd)}</p></div>
+              <div><p className="text-xs text-muted-foreground">Per conversation</p><p className="text-xl font-semibold tabular">{usage.costPerConversationUsd == null ? "—" : usd(usage.costPerConversationUsd)}</p></div>
+              <div><p className="text-xs text-muted-foreground">AI turns</p><p className="text-xl font-semibold tabular">{usage.turns}</p><p className="text-xs text-muted-foreground">{usage.conversations} conversations</p></div>
+              <div><p className="text-xs text-muted-foreground">Cache hit rate</p><p className="text-xl font-semibold tabular">{usage.cacheHitRate == null ? "—" : `${Math.round(usage.cacheHitRate * 100)}%`}</p><p className="text-xs text-muted-foreground">of prompt tokens</p></div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Tokens: {tokens(usage.tokens.input)} input · {tokens(usage.tokens.output)} output · {tokens(usage.tokens.cacheRead)} cached reads · {tokens(usage.tokens.cacheWrite)} cache writes.{" "}
+              {usage.byModel.map((m) => `${m.model}: ${m.turns} turns, ${usd(m.costUsd)}`).join(" · ")}
+              {usage.unpricedTurns ? ` · ${usage.unpricedTurns} turns on a model with no known price (set AI_PRICING).` : ""}
+            </p>
+          </CardBody>
+        ) : (
+          <EmptyState title="No paid AI usage yet" description="Once the AI receptionist runs on Claude (ANTHROPIC_API_KEY), each turn's tokens and estimated cost appear here." />
+        )}
+      </Card>
     </>
   );
 }

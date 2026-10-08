@@ -1103,6 +1103,27 @@ export const subscriptions = pgTable(
   (t) => [uniqueIndex("subscriptions_org_idx").on(t.organizationId)],
 );
 
+// ─── AI usage ─────────────────────────────────────────────────────────
+/** One row per AI turn that used a paid model: tokens as reported by the API, cost at list prices. */
+export const aiUsage = pgTable(
+  "ai_usage",
+  {
+    id: id(),
+    businessId: businessRef(),
+    conversationId: uuid("conversation_id"),
+    provider: text("provider").notNull(),
+    model: text("model").notNull(),
+    inputTokens: integer("input_tokens").notNull().default(0),
+    outputTokens: integer("output_tokens").notNull().default(0),
+    cacheReadTokens: integer("cache_read_tokens").notNull().default(0),
+    cacheWriteTokens: integer("cache_write_tokens").notNull().default(0),
+    /** Estimated cost in millionths of a US dollar; null when the model's price isn't known. */
+    costMicroUsd: integer("cost_micro_usd"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("ai_usage_business_idx").on(t.businessId, t.createdAt)],
+);
+
 // ─── Slot Recovery ────────────────────────────────────────────────────
 export const waitlistStatus = pgEnum("waitlist_status", ["active", "booked", "removed"]);
 export const slotStatus = pgEnum("slot_status", ["open", "offering", "pending_staff", "filled", "expired", "dismissed"]);

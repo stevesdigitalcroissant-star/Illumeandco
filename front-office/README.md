@@ -142,6 +142,7 @@ The database needs the `vector`, `pg_trgm` and `btree_gist` extensions (the firs
 | `APP_ENCRYPTION_KEY` | Storing integration secrets (webhook signing) | Webhook connector shows "configuration required" |
 | `CRON_SECRET` | `/api/cron/tick` (follow-ups, reminders, review requests) | Endpoint returns 401; use **Automations → Run due automations now** manually |
 | `ANTHROPIC_API_KEY` (+ `AI_MODEL`, default `claude-opus-5-5`; `AI_EFFORT`) | Claude as the receptionist | Built-in rules engine answers (clearly labelled in the dashboard) |
+| `AI_PRICING` (optional JSON) | Override/add $-per-million-token prices for the AI usage tracker | Anthropic list prices built in (Billing → AI usage) |
 | `VOYAGE_API_KEY` | Semantic knowledge search | Full-text + trigram search only |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `plans.stripe_price_id` | Subscriptions | Billing shows "not configured"; no paywall |
 | `RESEND_API_KEY`, `EMAIL_FROM` | Email reminders / follow-ups | Proactive messages go to the customer's chat thread, or are marked undeliverable |

@@ -37,7 +37,7 @@ export function createAnthropicProvider(client?: Pick<Anthropic, "beta">): Model
         { type: "text", text: input.system.dynamic },
       ];
       const useFallbacks = process.env.AI_FALLBACKS !== "off";
-      const usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 };
+      const usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 };
 
       for (let step = 0; step < maxSteps; step++) {
         const params = {
@@ -67,6 +67,7 @@ export function createAnthropicProvider(client?: Pick<Anthropic, "beta">): Model
         usage.inputTokens += response.usage.input_tokens;
         usage.outputTokens += response.usage.output_tokens;
         usage.cacheReadTokens += response.usage.cache_read_input_tokens ?? 0;
+        usage.cacheWriteTokens += response.usage.cache_creation_input_tokens ?? 0;
 
         // A declined request has no usable content — check before reading it.
         if (response.stop_reason === "refusal") return { text: "", stopReason: "refusal", model: response.model, usage };

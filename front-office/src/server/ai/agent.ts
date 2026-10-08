@@ -13,6 +13,7 @@
  */
 import { and, desc, eq } from "drizzle-orm";
 import { DateTime } from "luxon";
+import { recordUsage } from "./usage";
 import { conversations, leads, messages } from "@/db/schema";
 import type { Ctx } from "../context";
 import { dbOf } from "../context";
@@ -154,6 +155,8 @@ export async function runAgentTurn(
           toolContext: tc,
           ...(live ? { stream: { onText: (d: string) => live.push(d), onStepReset: () => live.reset() } } : {}),
         });
+        if (out.usage && provider.id !== "rules")
+          await recordUsage(ctx, { conversationId, provider: provider.id, model: out.model, usage: out.usage }).catch((e) => console.error("[agent] usage not recorded", e));
         if (out.stopReason === "refusal" || (!out.text && !tc.handedOff)) {
           if (!tc.handedOff) await execute("escalate_to_human", { reason: out.stopReason === "refusal" ? "AI declined to answer" : "AI could not produce a reply" });
           reply = HANDOFF_ACK;

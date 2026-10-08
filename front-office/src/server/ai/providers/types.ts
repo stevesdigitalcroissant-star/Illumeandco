@@ -25,7 +25,7 @@ export type ProviderOutput = {
   text: string;
   stopReason: "end_turn" | "max_steps" | "refusal" | "handed_off" | string;
   model: string;
-  usage?: { inputTokens: number; outputTokens: number; cacheReadTokens?: number };
+  usage?: { inputTokens: number; outputTokens: number; cacheReadTokens?: number; cacheWriteTokens?: number };
 };
 
 /**
