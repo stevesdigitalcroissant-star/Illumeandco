@@ -20,6 +20,9 @@ export function AuthForm({ mode, next }: { mode: "login" | "signup"; next?: stri
       <Field label="Password" hint={mode === "signup" ? "At least 10 characters." : undefined}>
         <Input name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={mode === "signup" ? 10 : undefined} />
       </Field>
+      {mode === "login" ? (
+        <p className="-mt-2 text-right text-[13px]"><Link className="text-muted-foreground hover:text-foreground hover:underline" href="/forgot-password">Forgot password?</Link></p>
+      ) : null}
       {next ? <input type="hidden" name="next" value={next} /> : null}
       {state && !state.ok ? <p className="text-[13px] text-danger" role="alert">{state.error}</p> : null}
       <Button type="submit" className="w-full" disabled={pending}>

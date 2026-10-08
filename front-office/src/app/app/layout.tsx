@@ -7,6 +7,8 @@ import { roleCan } from "@/server/context";
 import { countNeedsHuman } from "@/server/services/conversations";
 import { ONBOARDING_STEPS } from "@/server/services/business";
 import { AppShell, type NavItem } from "./shell";
+import { VerifyEmailBanner } from "./verify-banner";
+import { emailConfigured } from "@/server/account";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { ctx, user, business, role, businesses } = await requireBusiness();
@@ -48,7 +50,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ];
   const nav = groups.filter((g) => g.length);
 
-  const banner =
+  const verify = !user.emailVerifiedAt && emailConfigured() ? <VerifyEmailBanner email={user.email} /> : null;
+  const onboarding =
     !business.onboardingCompletedAt && can("business.manage") ? (
       <div className="border-b bg-primary-soft px-4 py-2 text-center text-[13px] text-primary lg:px-8">
         Setup is {Math.round(((Math.min(business.onboardingStep, ONBOARDING_STEPS.length + 1) - 1) / ONBOARDING_STEPS.length) * 100)}% complete.{" "}
@@ -63,7 +66,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       business={{ id: business.id, name: business.name, isDemo: business.isDemo }}
       businesses={businesses.map((b) => ({ id: b.id, name: b.name }))}
       notifications={notes.map((n) => ({ id: n.id, title: n.title, body: n.body, link: n.link, createdAt: n.createdAt.toISOString(), read: !!n.readAt }))}
-      banner={banner}
+      banner={verify || onboarding ? <>{verify}{onboarding}</> : null}
     >
       {children}
     </AppShell>

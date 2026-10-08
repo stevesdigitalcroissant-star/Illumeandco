@@ -103,6 +103,10 @@ phone system / Zapier / Make / Twilio Voice
 
 **Double booking** is prevented by a Postgres exclusion constraint on `(staff_id, [starts_at, blocked_until))` for active appointments (`drizzle/0001_integrity_constraints.sql`), so concurrent bookings can't both succeed. The availability engine (`services/availability.ts`) combines business hours, staff hours and breaks, blackout dates, buffers, minimum notice and max advance, in the business timezone.
 
+## Accounts
+
+Password reset (`/forgot-password`) and email verification use single-use links. Only a hash of each token is stored. Reset links last 1 hour and verification links 7 days, and only the newest link of each kind works. A reset signs the user out everywhere. Asking for a reset never reveals whether an account exists. Both flows need email (`RESEND_API_KEY`, `EMAIL_FROM`); without it they say so instead of pretending to send.
+
 ## Roles
 
 | Role | Access |

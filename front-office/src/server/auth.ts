@@ -78,7 +78,7 @@ export async function createSession(userId: string) {
 export async function validateSessionToken(token: string) {
   const id = sha256(token);
   const row = await db
-    .select({ session: sessions, user: { id: users.id, email: users.email, name: users.name } })
+    .select({ session: sessions, user: { id: users.id, email: users.email, name: users.name, emailVerifiedAt: users.emailVerifiedAt } })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
     .where(and(eq(sessions.id, id), gt(sessions.expiresAt, new Date())))
