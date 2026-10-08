@@ -9,7 +9,7 @@ export type ReviewOutcome = { positive: boolean; links: { label: string; url: st
 /** Public: the token in the URL is the only capability; no session is involved. */
 export async function submitReviewAction(token: string, _: ActionResult<ReviewOutcome> | null, fd: FormData): Promise<ActionResult<ReviewOutcome>> {
   const ip = clientIp(await headers());
-  if (!rateLimit(`review:${ip}`, 20, 15 * 60_000).ok) return { ok: false, error: "Too many attempts. Please try again in a few minutes." };
+  if (!(await rateLimit(`review:${ip}`, 20, 15 * 60_000)).ok) return { ok: false, error: "Too many attempts. Please try again in a few minutes." };
   const rating = Number(fd.get("rating"));
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) return { ok: false, error: "Please choose a rating from 1 to 5 stars." };
   return run(async () => {

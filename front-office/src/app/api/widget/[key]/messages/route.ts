@@ -11,7 +11,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ key: str
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
   if (!isVisitorToken(token)) return NextResponse.json({ error: "Invalid session" }, { status: 400 });
-  if (!rateLimit(`widget-poll:${clientIp(req.headers)}`, 240, 60_000).ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  if (!(await rateLimit(`widget-poll:${clientIp(req.headers)}`, 240, 60_000)).ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   const business = await widgetBusiness(key);
   if (!business) return NextResponse.json({ error: "Unknown widget" }, { status: 404 });
   const after = url.searchParams.get("after") ?? undefined;
@@ -27,7 +27,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ key: st
   if (!text) return NextResponse.json({ error: "Message is empty" }, { status: 400 });
   if (text.length > 2000) return NextResponse.json({ error: "Message is too long" }, { status: 400 });
   const ip = clientIp(req.headers);
-  if (!rateLimit(`widget-msg:${ip}:${key}`, 20, 60_000).ok || !rateLimit(`widget-msg-token:${body.token}`, 12, 60_000).ok)
+  if (!(await rateLimit(`widget-msg:${ip}:${key}`, 20, 60_000)).ok || !(await rateLimit(`widget-msg-token:${body.token}`, 12, 60_000)).ok)
     return NextResponse.json({ error: "You're sending messages too quickly. Please wait a moment." }, { status: 429 });
   const business = await widgetBusiness(key);
   if (!business) return NextResponse.json({ error: "Unknown widget" }, { status: 404 });

@@ -22,7 +22,7 @@ const json = (body: unknown, status = 200) => Response.json(body, { status });
  */
 export async function POST(req: Request, { params }: { params: Promise<{ key: string }> }) {
   const { key } = await params;
-  if (!rateLimit(`hook:${key}:${clientIp(req.headers)}`, 120, 60_000).ok) return json({ error: "Too many requests" }, 429);
+  if (!(await rateLimit(`hook:${key}:${clientIp(req.headers)}`, 120, 60_000)).ok) return json({ error: "Too many requests" }, 429);
   const business = await widgetBusiness(key);
   if (!business) return json({ error: "Unknown business" }, 404);
   const secret = await webhookSecretFor(business.id);

@@ -142,6 +142,7 @@ The database needs the `vector`, `pg_trgm` and `btree_gist` extensions (the firs
 | `APP_ENCRYPTION_KEY` | Storing integration secrets (webhook signing) | Webhook connector shows "configuration required" |
 | `CRON_SECRET` | `/api/cron/tick` (follow-ups, reminders, review requests) | Endpoint returns 401; use **Automations → Run due automations now** manually |
 | `ANTHROPIC_API_KEY` (+ `AI_MODEL`, default `claude-opus-5-5`; `AI_EFFORT`) | Claude as the receptionist | Built-in rules engine answers (clearly labelled in the dashboard) |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Rate limits shared by every server instance | Per-instance in-memory limits |
 | `AI_PRICING` (optional JSON) | Override/add $-per-million-token prices for the AI usage tracker | Anthropic list prices built in (Billing → AI usage) |
 | `VOYAGE_API_KEY` | Semantic knowledge search | Full-text + trigram search only |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `plans.stripe_price_id` | Subscriptions | Billing shows "not configured"; no paywall |
@@ -198,4 +199,4 @@ Create a Vercel project with **Root Directory = `front-office`**, a Postgres dat
 | Google Calendar / external booking systems | Not available yet (shown as such) |
 | Instagram DMs | Not available yet |
 | Voice receptionist | Architecture and provider contract in `src/server/channels/voice.ts`; needs a telephony + speech provider |
-| Rate limiting | In-memory per instance — use a shared store (Redis/Upstash) when running multiple instances |
+| Rate limiting | Shared across instances via Upstash Redis when `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` are set; per-instance in memory otherwise (and if Redis is unreachable) |
