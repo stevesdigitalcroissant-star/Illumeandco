@@ -16,6 +16,7 @@ import { dueReviewRequests, processReviewRequest } from "../services/reviews";
 import { sweepAll, sweepBusiness } from "../opportunities/engine";
 import { retryPendingEvents } from "../integrations/ingest";
 import { deliverPendingAlerts, sendDigests } from "../services/alerts";
+import { recordHeartbeat } from "../health";
 
 const LOCK_KEY = 7_342_001;
 
@@ -77,6 +78,7 @@ export async function runTick(opts: { now?: Date; businessId?: string } = {}): P
       } catch (e) {
         report.errors.push(`opportunities: ${(e as Error).message}`);
       }
+      await recordHeartbeat("tick", { ...report, errors: report.errors.length }, now).catch(() => null);
     } finally {
       await client.query("select pg_advisory_unlock($1)", [LOCK_KEY]);
     }

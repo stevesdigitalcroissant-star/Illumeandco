@@ -1231,3 +1231,10 @@ export const slotOffers = pgTable(
     foreignKey({ columns: [t.businessId, t.customerId], foreignColumns: [customers.businessId, customers.id] }).onDelete("cascade"),
   ],
 );
+
+/** Last time each background job finished, for the health check. */
+export const heartbeats = pgTable("heartbeats", {
+  name: text("name").primaryKey(),
+  at: timestamp("at", { withTimezone: true }).notNull(),
+  detail: jsonb("detail").$type<Record<string, unknown>>().notNull().default({}),
+});

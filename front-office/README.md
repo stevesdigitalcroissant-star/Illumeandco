@@ -191,6 +191,11 @@ Covered: tenant isolation, authentication, booking, double-booking (including a 
 
 ## Deployment (Vercel)
 
+**Health check:** `GET /api/health` returns `{status}` (`ok` / `degraded`, or 503 when the database is down) for uptime monitors. With `Authorization: Bearer $CRON_SECRET` it also returns:
+- the individual checks: database, migrations applied, background job last run (degraded after 20 min)
+- which integrations are configured, as booleans only
+
+
 Create a Vercel project with **Root Directory = `front-office`**, a Postgres database with pgvector (e.g. Neon/Supabase), set the environment variables above, and run `npm run db:migrate` against it. `vercel.json` schedules `/api/cron/tick` every 5 minutes (set `CRON_SECRET`; Vercel sends it as a bearer token).
 
 ## Status — what is real today

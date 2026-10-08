@@ -78,6 +78,13 @@
       "when": 1791499006622,
       "tag": "0010_ai_usage",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791499654117,
+      "tag": "0011_heartbeats",
+      "breakpoints": true
     }
   ]
 }
