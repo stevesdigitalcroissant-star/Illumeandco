@@ -26,7 +26,7 @@ import { DateTime } from "luxon";
 import { conversations, customers, followUps, messages, opportunities, type OpportunityEvidence } from "@/db/schema";
 import { renderTemplate } from "@/lib/templates";
 import { isAllowed } from "../ai/permissions";
-import { getChannel } from "../channels/registry";
+import { channelsFor, hasPhoneChannel, type BusinessSenders } from "../channels/registry";
 import { dbOf, type Ctx } from "../context";
 import { close, findOpen, upsertOpen } from "../opportunities/engine";
 import { getAiSettings, getBusiness } from "../services/business";
@@ -86,8 +86,8 @@ function fmt(at: Date, tz: string) {
 }
 
 /** Is there a channel that can actually text a phone number? */
-function phoneChannelConfigured() {
-  return getChannel("sms").isConfigured() || getChannel("whatsapp").isConfigured();
+function phoneChannelConfigured(business: BusinessSenders) {
+  return hasPhoneChannel(channelsFor(business));
 }
 
 export async function onMissedCall(ctx: Ctx, input: MissedCallInput, now = new Date()): Promise<MissedCallResult> {
@@ -144,7 +144,7 @@ export async function onMissedCall(ctx: Ctx, input: MissedCallInput, now = new D
   else if (customer.optedOut) skip = "Caller opted out of messages";
   else if (humanOwned.length) skip = "A team member owns this customer's conversation";
   else if (recentText) skip = "Already texted back in the last 24 hours";
-  else if (!phoneChannelConfigured()) skip = "SMS/WhatsApp isn't configured, so the AI can't text back (configuration required)";
+  else if (!phoneChannelConfigured(business)) skip = "SMS/WhatsApp isn't configured, so the AI can't text back (configuration required)";
 
   let textBack: "sent" | "scheduled" | "skipped" | "failed" = "skipped";
   let detail = skip ?? "";

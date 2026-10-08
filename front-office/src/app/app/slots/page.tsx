@@ -6,7 +6,7 @@ import { Stat } from "@/components/stat";
 import { requirePermission } from "@/lib/session";
 import { formatMoney } from "@/lib/utils";
 import { isAllowed } from "@/server/ai/permissions";
-import { getChannel } from "@/server/channels/registry";
+import { channelsFor } from "@/server/channels/registry";
 import { roleCan } from "@/server/context";
 import { getAiSettings } from "@/server/services/business";
 import { listServices, listStaff } from "@/server/services/catalog";
@@ -49,7 +49,7 @@ export default async function SlotsPage() {
   const recovered = recent.filter((r) => r.slot.status === "filled" && r.slot.filledBy);
   const cfg = settings.recovery.slots;
   const canSend = isAllowed(settings.permissions, "send_messages");
-  const phone = getChannel("sms").isConfigured() || getChannel("whatsapp").isConfigured() || getChannel("email").isConfigured();
+  const phone = channelsFor(business).size > 0;
   const warning = !phone
     ? "Offers need SMS, WhatsApp or email — configuration required. Until then slots and candidates are listed, but no offers can be delivered."
     : !canSend

@@ -17,6 +17,7 @@ import {
   type AvailabilityInput,
 } from "@/server/services/catalog";
 import { rotateWebhookSecret } from "@/server/integrations/connectors";
+import { updateSenders } from "@/server/services/senders";
 import { updateRecoveryConfig } from "@/server/recovery/config";
 import { addExistingMember, changeMemberRole, inviteNewMember, listMembers, removeMember } from "@/server/services/team";
 
@@ -230,6 +231,14 @@ export async function removeMemberAction(memberId: string) {
 }
 
 // ─── Integrations & missed-call recovery ─────────────────────────────
+export async function saveSendersAction(_prev: Prev, fd: FormData) {
+  return run(async () => {
+    const { ctx } = await requirePermission("business.manage");
+    await updateSenders(ctx, { smsFrom: optStr(fd, "smsFrom"), whatsappFrom: optStr(fd, "whatsappFrom") });
+    revalidate();
+  }, "Saved.");
+}
+
 export async function rotateWebhookSecretAction() {
   return run(async () => {
     const { ctx } = await requirePermission("business.manage");

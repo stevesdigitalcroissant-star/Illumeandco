@@ -46,6 +46,8 @@ export const emailAdapter: ChannelAdapter = {
   },
 };
 
+export const twilioCredentials = () => Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN);
+
 function twilioAdapter(kind: "sms" | "whatsapp", fromEnv: string, label: string): ChannelAdapter {
   return {
     kind,
@@ -54,12 +56,13 @@ function twilioAdapter(kind: "sms" | "whatsapp", fromEnv: string, label: string)
     configurationHint: `Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and ${fromEnv} to enable ${label}.`,
     canReach: (to) => Boolean(to.phone),
     async send(msg: OutboundMessage): Promise<DeliveryResult> {
-      if (!this.isConfigured()) return { ok: false, status: "not_configured", detail: this.configurationHint };
+      const from = msg.from || process.env[fromEnv];
+      if (!twilioCredentials() || !from) return { ok: false, status: "not_configured", detail: this.configurationHint };
       if (!msg.to.phone) return { ok: false, status: "unreachable", detail: "Customer has no phone number." };
       const sid = process.env.TWILIO_ACCOUNT_SID!;
       const prefix = kind === "whatsapp" ? "whatsapp:" : "";
       const form = new URLSearchParams({
-        From: `${prefix}${process.env[fromEnv]}`,
+        From: `${prefix}${from}`,
         To: `${prefix}${msg.to.phone}`,
         Body: msg.text,
       });

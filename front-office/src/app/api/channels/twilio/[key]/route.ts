@@ -1,6 +1,7 @@
 import { handleInbound } from "@/server/ai/orchestrator";
 import { verifyTwilioSignature, twiml } from "@/server/channels/twilio";
 import { widgetBusiness } from "@/server/channels/web-chat";
+import { ownsNumber } from "@/server/services/senders";
 
 export const maxDuration = 60;
 
@@ -22,6 +23,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ key: st
   const phone = from.replace(/^whatsapp:/, "");
   const body = (fields.Body ?? "").trim();
   if (!phone || !body) return new Response(twiml(null), { headers: { "Content-Type": "text/xml" } });
+  // The number messaged must be this business's own number (when it has one) — never route another business's replies here.
+  if (fields.To && !ownsNumber(business, fields.To, whatsapp)) {
+    console.warn(`[twilio] message to ${fields.To} reached business ${business.id}, which doesn't own that number — ignored`);
+    return new Response(twiml(null), { headers: { "Content-Type": "text/xml" } });
+  }
 
   const result = await handleInbound({
     businessId: business.id,

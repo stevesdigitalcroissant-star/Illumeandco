@@ -137,6 +137,8 @@ The database needs the `vector`, `pg_trgm` and `btree_gist` extensions (the firs
 | `RESEND_API_KEY`, `EMAIL_FROM` | Email reminders / follow-ups | Proactive messages go to the customer's chat thread, or are marked undeliverable |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_SMS_FROM`, `TWILIO_WHATSAPP_FROM` | SMS / WhatsApp in and out | Those channels show "configuration required" |
 
+Each business sends from its own numbers (**Settings → Integrations → Your messaging numbers**; a number can belong to only one business). `TWILIO_SMS_FROM` / `TWILIO_WHATSAPP_FROM` are only a fallback for single-business setups and are flagged as shared in the dashboard. Inbound messages to a number the business doesn't own are ignored.
+
 Inbound SMS/WhatsApp: point the Twilio number's messaging webhook at `https://<APP_URL>/api/channels/twilio/<business public key>` (signatures are verified).
 
 ### Website chat

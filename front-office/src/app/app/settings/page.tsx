@@ -8,7 +8,8 @@ import { requirePermission } from "@/lib/session";
 import { cn, formatMoney } from "@/lib/utils";
 import { headers } from "next/headers";
 import { DateTime } from "luxon";
-import { getChannel, listChannels } from "@/server/channels/registry";
+import { channelsFor, hasPhoneChannel, listChannels } from "@/server/channels/registry";
+import { twilioCredentials } from "@/server/channels/adapters";
 import { isAllowed } from "@/server/ai/permissions";
 import { listConnectors, webhookState, type ConnectorStatus } from "@/server/integrations/connectors";
 import { listRecentEvents } from "@/server/integrations/ingest";
@@ -18,7 +19,7 @@ import { billingConfigured } from "@/server/services/billing";
 import { getAiSettings, getBusinessHours } from "@/server/services/business";
 import { getStaffAvailability, listBlackouts, listServices, listStaff } from "@/server/services/catalog";
 import { listMembers } from "@/server/services/team";
-import { addBlackoutAction, saveBusinessAction, savePoliciesAction } from "./actions";
+import { addBlackoutAction, saveBusinessAction, savePoliciesAction, saveSendersAction } from "./actions";
 import { CardFooter, HoursCard, RecoveryCard, RemoveBlackoutButton, ServicesCard, StaffCard, TeamCard, WebhookSecretButton } from "./settings-client";
 
 export const metadata = { title: "Settings" };
@@ -309,8 +310,16 @@ async function IntegrationsTab({ r }: { r: R }) {
   const h = await headers();
   const origin = process.env.APP_URL ?? `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`;
   const key = r.business.publicKey;
-  const phoneChannel = getChannel("sms").isConfigured() || getChannel("whatsapp").isConfigured();
-  const anyChannel = phoneChannel || getChannel("email").isConfigured();
+  const sendable = channelsFor(r.business);
+  const phoneChannel = hasPhoneChannel(sendable);
+  const anyChannel = sendable.size > 0;
+  const creds = twilioCredentials();
+  const senderNote = (kind: "sms" | "whatsapp") => {
+    const s = sendable.get(kind);
+    if (!creds) return "Twilio isn't connected yet (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN) — configuration required.";
+    if (!s) return "No number — this channel can't send for your business.";
+    return s.shared ? `Using the platform's shared number ${s.from}. Add your own so customers see your number and replies always reach you.` : `Sending from ${s.from}.`;
+  };
   const noPermission = !isAllowed(settings.permissions, "send_messages")
     ? "The AI's \"Send messages\" permission is off (AI Receptionist → Permissions), so these go to your team instead."
     : null;
@@ -355,6 +364,19 @@ async function IntegrationsTab({ r }: { r: R }) {
             </li>
           ))}
         </ul>
+      </Card>
+      <Card>
+        <ActionForm action={saveSendersAction} className="space-y-0 [&>p]:px-5 [&>p]:pb-3">
+          <CardHeader title="Your messaging numbers" description="Texts and WhatsApp messages to your customers come from your own number, and replies to it reach only your business." />
+          <CardBody className="grid gap-4 sm:grid-cols-2">
+            <Field label="SMS number" hint={senderNote("sms")}><Input name="smsFrom" defaultValue={r.business.smsFrom ?? ""} placeholder="+9715XXXXXXXX" /></Field>
+            <Field label="WhatsApp number" hint={senderNote("whatsapp")}><Input name="whatsappFrom" defaultValue={r.business.whatsappFrom ?? ""} placeholder="+9715XXXXXXXX" /></Field>
+            <p className="text-xs text-muted-foreground sm:col-span-2">
+              In Twilio, set each number&apos;s messaging webhook to <code className="break-all">{origin}/api/channels/twilio/{key}</code>.
+            </p>
+          </CardBody>
+          <CardFooter><SubmitButton>Save numbers</SubmitButton></CardFooter>
+        </ActionForm>
       </Card>
       <RecoveryCard
         worker="missedCall"

@@ -19,7 +19,7 @@ import { and, eq, gt, gte, ilike, inArray, sql } from "drizzle-orm";
 import { appointments, conversations, customers, followUps, services } from "@/db/schema";
 import { renderTemplate } from "@/lib/templates";
 import { isAllowed } from "../ai/permissions";
-import { getChannel, PROACTIVE_ORDER } from "../channels/registry";
+import { canReachWith, channelsFor, type BusinessSenders } from "../channels/registry";
 import { dbOf, type Ctx } from "../context";
 import { evaluateLead, findOpen } from "../opportunities/engine";
 import { getAiSettings, getBusiness } from "../services/business";
@@ -63,12 +63,9 @@ export async function matchService(ctx: Ctx, text: string | undefined) {
   return like.length === 1 ? like[0]! : null; // ambiguous → keep it as free text
 }
 
-/** Could any configured channel actually deliver to this person? */
-export function reachable(to: { email: string | null; phone: string | null }) {
-  return PROACTIVE_ORDER.some((k) => {
-    const a = getChannel(k);
-    return a.isConfigured() && a.canReach({ name: null, ...to });
-  });
+/** Could any channel configured for this business actually deliver to this person? */
+export function reachable(business: BusinessSenders, to: { email: string | null; phone: string | null }) {
+  return canReachWith(channelsFor(business), to);
 }
 
 export async function onLeadCreated(ctx: Ctx, input: LeadInput, now = new Date()): Promise<LeadResult> {
@@ -134,7 +131,7 @@ export async function onLeadCreated(ctx: Ctx, input: LeadInput, now = new Date()
   else if (humanOwned) skip = "A team member owns this customer's conversation";
   else if (upcoming) skip = "They already have an appointment booked";
   else if (recent) skip = "Already sent a first message in the last 24 hours";
-  else if (!reachable(customer)) skip = "No configured channel can reach them — SMS, WhatsApp or email needs setting up (configuration required)";
+  else if (!reachable(business, customer)) skip = "No configured channel can reach them — SMS, WhatsApp or email needs setting up (configuration required)";
 
   let firstTouch: "sent" | "scheduled" | "skipped" | "failed" = "skipped";
   let detail = skip ? `No first message: ${skip}` : "";

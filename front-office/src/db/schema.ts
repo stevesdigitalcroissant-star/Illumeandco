@@ -212,11 +212,16 @@ export const businesses = pgTable(
     onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
     /** Demo businesses are clearly labelled in the UI and hold seed data only. */
     isDemo: boolean("is_demo").notNull().default(false),
+    /** This business's own Twilio numbers (E.164). A number belongs to exactly one business, so replies route to it. */
+    smsFrom: text("sms_from"),
+    whatsappFrom: text("whatsapp_from"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [
     uniqueIndex("businesses_public_key_idx").on(t.publicKey),
+    uniqueIndex("businesses_sms_from_idx").on(t.smsFrom).where(sql`${t.smsFrom} is not null`),
+    uniqueIndex("businesses_whatsapp_from_idx").on(t.whatsappFrom).where(sql`${t.whatsappFrom} is not null`),
     index("businesses_org_idx").on(t.organizationId),
   ],
 );

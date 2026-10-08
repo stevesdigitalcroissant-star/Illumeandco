@@ -265,7 +265,7 @@ export async function rankCandidates(ctx: Ctx, slot: Slot, now = new Date(), opt
     else if (slot.serviceId && slot.source === "external" && entry.serviceId !== slot.serviceId) blocked = "Different service";
     else if (slot.source === "external" && r.duration * 60_000 > slot.endsAt.getTime() - slot.startsAt.getTime()) blocked = "Their service doesn't fit in this slot";
     else if (mine.some((h) => ["booked", "confirmed"].includes(h.status) && h.startsAt < slot.endsAt && h.endsAt > slot.startsAt)) blocked = "Already booked at that time";
-    else if (!reachable(customer)) blocked = "No configured channel can reach them";
+    else if (!reachable(business, customer)) blocked = "No configured channel can reach them";
     // Built-in calendar: whether their service fits this exact time is checked below (the expensive part).
     const needsFit = !blocked && slot.source !== "external";
     out.push({ entry, customer, serviceName: r.serviceName, priceCents: r.priceCents, score: Math.max(0, Math.min(100, score)), reasons, blocked, needsFit });

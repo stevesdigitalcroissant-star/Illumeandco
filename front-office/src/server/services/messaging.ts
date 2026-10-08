@@ -2,7 +2,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { identityHash } from "../channels/identity";
 import { conversations, customers } from "@/db/schema";
-import { getChannel, PROACTIVE_ORDER } from "../channels/registry";
+import { channelsFor, getChannel, PROACTIVE_ORDER } from "../channels/registry";
 import type { ChannelKind, DeliveryResult } from "../channels/types";
 import { dbOf, notFound, type Ctx } from "../context";
 import { getBusiness } from "./business";
@@ -37,10 +37,12 @@ export async function deliverToCustomer(
     .where(and(eq(conversations.businessId, ctx.businessId), eq(conversations.customerId, customer.id)))
     .orderBy(desc(conversations.lastMessageAt));
 
+  const available = channelsFor(business);
   for (const kind of PROACTIVE_ORDER) {
     const adapter = getChannel(kind);
-    if (!adapter.isConfigured() || !adapter.canReach(to)) continue;
-    const result = await adapter.send({ businessId: ctx.businessId, businessName: business.name, to, text: input.text, subject: input.subject });
+    const sender = available.get(kind);
+    if (!sender || !adapter.canReach(to)) continue;
+    const result = await adapter.send({ businessId: ctx.businessId, businessName: business.name, to, text: input.text, subject: input.subject, from: sender.from });
     if (!result.ok) continue;
     // SMS/WhatsApp threads are keyed by phone number, so the customer's reply lands in this same conversation.
     const hash = (kind === "sms" || kind === "whatsapp") && customer.phone ? identityHash(kind, customer.phone) : null;

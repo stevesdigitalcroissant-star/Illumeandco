@@ -25,6 +25,8 @@ export type OutboundMessage = {
   to: { name: string | null; email: string | null; phone: string | null };
   subject?: string;
   text: string;
+  /** Sender to use (the business's own number). Falls back to the platform default when omitted. */
+  from?: string | null;
 };
 
 export type DeliveryResult =
