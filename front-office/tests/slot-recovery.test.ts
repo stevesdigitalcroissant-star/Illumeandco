@@ -115,6 +115,28 @@ describe("Slot Recovery — freed slots and ranking", () => {
     expect(by(fresh.customer.id).blocked).toBeNull();
   });
 
+  it("checks calendar fit once per service, and only as far as needed", async () => {
+    smsConfigured();
+    const c = await createClinic();
+    const { slot } = await freedSlot(c);
+    // 12 people for the same service + 2 for a service Dr. Omar doesn't do.
+    for (let i = 0; i < 12; i++) await waitlisted(c, `Consult ${i}`, `+9715033301${String(i).padStart(2, "0")}`, { daysAgo: i });
+    for (let i = 0; i < 2; i++) await waitlisted(c, `Whiten ${i}`, `+9715033302${i}0`, { service: c.services.whitening.id });
+
+    const availability = await import("@/server/services/availability");
+    const spy = vi.spyOn(availability, "findSlot");
+    const full = await rankCandidates(c.ctx, slot);
+    expect(spy).toHaveBeenCalledTimes(2); // one per distinct service, not 14
+    expect(full.filter((x) => !x.blocked)).toHaveLength(12);
+
+    spy.mockClear();
+    const top = await rankCandidates(c.ctx, slot, undefined, { need: 3 });
+    expect(spy).toHaveBeenCalledTimes(1);
+    // Same order as the full ranking for the people it returns.
+    expect(top.filter((x) => !x.blocked).map((x) => x.customer.id)).toEqual(full.filter((x) => !x.blocked).slice(0, 3).map((x) => x.customer.id));
+    spy.mockRestore();
+  });
+
   it("without a channel nobody is offered anything — and the reason is honest", async () => {
     const c = await createClinic();
     const { slot } = await freedSlot(c);

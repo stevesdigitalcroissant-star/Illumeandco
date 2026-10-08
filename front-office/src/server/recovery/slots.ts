@@ -189,11 +189,14 @@ export type Candidate = {
 };
 
 /**
- * Rank everyone on the waitlist for a slot. Deterministic and explainable:
+ * Rank everyone on the waitlist for a slot. Deterministic and explainable.
+ * Pass `need` to stop the (expensive) calendar check once that many people are
+ * confirmed eligible; anyone left unchecked is omitted from the result.
+ *
  *   base 20 · value up to +30 · waiting time up to +25 · reliability −20…+10 ·
  *   preferred time of day +10 · preferred staff +10 · needs it soon +5.
  */
-export async function rankCandidates(ctx: Ctx, slot: Slot, now = new Date()): Promise<Candidate[]> {
+export async function rankCandidates(ctx: Ctx, slot: Slot, now = new Date(), opts: { need?: number } = {}): Promise<Candidate[]> {
   const db = dbOf(ctx);
   const business = await getBusiness(ctx);
   const tz = business.timezone;
@@ -219,7 +222,7 @@ export async function rankCandidates(ctx: Ctx, slot: Slot, now = new Date()): Pr
   );
   const sourceCustomer = slot.sourceAppointmentId ? history.find((h) => h.id === slot.sourceAppointmentId)?.customerId : null;
 
-  const out: Candidate[] = [];
+  const out: (Candidate & { needsFit: boolean })[] = [];
   for (const r of rows) {
     const { entry, customer } = r;
     const reasons: string[] = [];
@@ -263,14 +266,31 @@ export async function rankCandidates(ctx: Ctx, slot: Slot, now = new Date()): Pr
     else if (slot.source === "external" && r.duration * 60_000 > slot.endsAt.getTime() - slot.startsAt.getTime()) blocked = "Their service doesn't fit in this slot";
     else if (mine.some((h) => ["booked", "confirmed"].includes(h.status) && h.startsAt < slot.endsAt && h.endsAt > slot.startsAt)) blocked = "Already booked at that time";
     else if (!reachable(customer)) blocked = "No configured channel can reach them";
-    else if (slot.source !== "external") {
-      // Built-in calendar: can their service actually be booked into this exact time with this staff member?
-      const fits = await findSlot(ctx, { serviceId: entry.serviceId, startsAt: slot.startsAt, staffId: slot.staffId ?? undefined, now });
-      if (!fits) blocked = "Their service doesn't fit in this slot";
-    }
-    out.push({ entry, customer, serviceName: r.serviceName, priceCents: r.priceCents, score: Math.max(0, Math.min(100, score)), reasons, blocked });
+    // Built-in calendar: whether their service fits this exact time is checked below (the expensive part).
+    const needsFit = !blocked && slot.source !== "external";
+    out.push({ entry, customer, serviceName: r.serviceName, priceCents: r.priceCents, score: Math.max(0, Math.min(100, score)), reasons, blocked, needsFit });
   }
-  return out.sort((a, b) => Number(Boolean(a.blocked)) - Number(Boolean(b.blocked)) || b.score - a.score || a.entry.createdAt.getTime() - b.entry.createdAt.getTime());
+
+  // Calendar fit, highest score first. The answer depends only on the service (same slot, staff and time),
+  // so it's computed once per service — and with `need`, only until enough people are confirmed.
+  out.sort((a, b) => b.score - a.score || a.entry.createdAt.getTime() - b.entry.createdAt.getTime());
+  const fitByService = new Map<string, boolean>();
+  let eligible = 0;
+  const result: Candidate[] = [];
+  for (const { needsFit, ...c } of out) {
+    if (!c.blocked && needsFit) {
+      if (opts.need !== undefined && eligible >= opts.need) continue; // not needed — left unchecked and omitted
+      let fits = fitByService.get(c.entry.serviceId);
+      if (fits === undefined) {
+        fits = Boolean(await findSlot(ctx, { serviceId: c.entry.serviceId, startsAt: slot.startsAt, staffId: slot.staffId ?? undefined, now }));
+        fitByService.set(c.entry.serviceId, fits);
+      }
+      if (!fits) c.blocked = "Their service doesn't fit in this slot";
+    }
+    if (!c.blocked) eligible++;
+    result.push(c);
+  }
+  return result.sort((a, b) => Number(Boolean(a.blocked)) - Number(Boolean(b.blocked)) || b.score - a.score || a.entry.createdAt.getTime() - b.entry.createdAt.getTime());
 }
 
 // ─── Offering ─────────────────────────────────────────────────────────
@@ -306,7 +326,7 @@ export async function offerSlot(ctx: Ctx, slotId: string, opts: { now?: Date } =
     .from(slotOffers)
     .where(and(eq(slotOffers.slotId, slot.id), eq(slotOffers.status, "sent"), gt(slotOffers.expiresAt, now)));
   const room = Math.max(0, Math.min(10, cfg.batchSize) - live.length);
-  const ranked = await rankCandidates(ctx, slot, now);
+  const ranked = await rankCandidates(ctx, slot, now, { need: room });
   const picks = ranked.filter((c) => !c.blocked).slice(0, room);
   if (!picks.length) {
     const unreachable = ranked.some((c) => c.blocked === "No configured channel can reach them");

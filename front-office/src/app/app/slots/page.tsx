@@ -42,7 +42,7 @@ export default async function SlotsPage() {
   ]);
   // Rank candidates for the slots that still need someone (sequential: each check uses the availability engine).
   const ranked = new Map<string, Awaited<ReturnType<typeof rankCandidates>>>();
-  for (const r of open.slice(0, 10)) if (r.slot.status !== "pending_staff") ranked.set(r.slot.id, await rankCandidates(ctx, r.slot));
+  for (const r of open.slice(0, 10)) if (r.slot.status !== "pending_staff") ranked.set(r.slot.id, await rankCandidates(ctx, r.slot, undefined, { need: 4 }));
 
   const d30 = new Date().getTime() - 30 * 86400_000;
   const recent = closed.filter((r) => (r.slot.closedAt?.getTime() ?? 0) >= d30);

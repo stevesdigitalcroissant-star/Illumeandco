@@ -81,6 +81,7 @@ phone system / Zapier / Make / Twilio Voice
   - **Hand-off to the team:** for external slots, or when the AI may not book, the slot goes to the team to confirm, and the customer is told exactly that.
   - **Expiry:** lapsed offers move on to the next people, and slots expire once inside the minimum notice.
   - **Attribution:** a slot counts as *recovered* only if it was filled through an accepted offer. A slot the team fills directly is closed but not credited.
+  - **Performance:** the calendar-fit check (the expensive part) runs once per service per slot, in score order, and stops once enough people are confirmed (the batch size for offers, 4 on the dashboard).
 - Failed or stranded events are retried by the background tick with backoff, at most 5 attempts.
 - **Revenue attribution** (`src/server/recovery/revenue.ts`, dashboard **Revenue recovery** plus the strip on Overview). It runs over the last 30 days, per worker (missed calls, leads, freed slots, cancellations/no-shows, reactivation):
   - *Identified*: opportunities and freed slots that appeared, valued at service prices. Unknown values use the 90-day average booking value; these are counted and labelled as estimates.
