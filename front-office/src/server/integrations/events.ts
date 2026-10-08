@@ -46,9 +46,18 @@ export const leadCreatedEvent = z
   })
   .refine((v) => Boolean(v.email || v.phone), { message: "email or phone is required", path: ["email"] });
 
-export const normalizedEvent = z.discriminatedUnion("type", [callMissedEvent, callCompletedEvent, leadCreatedEvent]);
+/** A free appointment slot in the business's own booking system (we offer it; their team books it there). */
+export const slotOpenedEvent = z.object({
+  type: z.literal("slot.opened"),
+  startsAt: z.iso.datetime({ offset: true }),
+  durationMinutes: z.number().int().min(5).max(480).default(60),
+  service: z.string().trim().max(120).optional(),
+  staff: z.string().trim().max(120).optional(),
+});
+
+export const normalizedEvent = z.discriminatedUnion("type", [callMissedEvent, callCompletedEvent, leadCreatedEvent, slotOpenedEvent]);
 export type NormalizedEvent = z.infer<typeof normalizedEvent>;
-export const SUPPORTED_EVENT_TYPES = ["call.missed", "call.completed", "lead.created"] as const;
+export const SUPPORTED_EVENT_TYPES = ["call.missed", "call.completed", "lead.created", "slot.opened"] as const;
 
 /** The envelope the universal webhook accepts. */
 export const webhookEnvelope = z.object({

@@ -16,6 +16,7 @@ import type { ReplyStreamSink } from "./reply-stream";
 import { identityHash } from "../channels/identity";
 import { safely } from "../opportunities/engine";
 import { syncMissedCallReply } from "../recovery/missed-calls";
+import { handleSlotReply } from "../recovery/slots";
 
 export { identityHash };
 
@@ -60,6 +61,13 @@ export async function handleInbound(
   if (conversation.owner !== "ai") {
     // A human owns this conversation — the message waits in the inbox.
     return { conversationId: conversation.id, customerId: conversation.customerId, reply: null, aiActive: false, turn: null };
+  }
+
+  // A clear YES/NO to a slot offer is handled deterministically (first come, first served).
+  const slotReply = await handleSlotReply(customerCtx, conversation.customerId, conversation.id, text, opts.now);
+  if (slotReply) {
+    await appendMessage(customerCtx, { conversationId: conversation.id, role: "ai", content: slotReply, metadata: { provider: "slot_recovery" } });
+    return { conversationId: conversation.id, customerId: conversation.customerId, reply: slotReply, aiActive: true, turn: null };
   }
 
   const turn = await runAgentTurn(msg.businessId, conversation.id, opts);

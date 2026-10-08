@@ -624,6 +624,17 @@ export type RecoveryConfig = {
     textBack: boolean;
     template: string;
   };
+  slots: {
+    /** Track freed slots (cancellations, reschedules, slot.opened events) and rank waitlisted customers for them. */
+    enabled: boolean;
+    /** Offer freed slots automatically; when off, a person clicks "Recover slot" to send the offers. */
+    autoOffer: boolean;
+    /** How many top candidates are offered a slot at once (first to accept gets it). */
+    batchSize: number;
+    /** How long an offer stays open before the next candidates are tried. */
+    offerMinutes: number;
+    template: string;
+  };
   leads: {
     /** Turn incoming leads (forms, ads, automation tools) into tracked opportunities. */
     enabled: boolean;
@@ -652,6 +663,13 @@ export const aiSettings = pgTable("ai_settings", {
         enabled: true,
         textBack: true,
         template: "Hi, this is {{business}} — sorry we missed your call! How can we help? Reply here and we'll take care of you.",
+      },
+      slots: {
+        enabled: true,
+        autoOffer: false,
+        batchSize: 3,
+        offerMinutes: 60,
+        template: "Hi {{customer_name}}, good news — a {{service}} appointment just opened up at {{business}}: {{when}}. Reply YES to take it (first come, first served).",
       },
       leads: {
         enabled: true,
@@ -701,8 +719,9 @@ export const followUps = pgTable(
      * missed_call: a single text-back to someone whose call went unanswered — they contacted us, so an
      * existing booking doesn't stop it (they may be calling about it), and it is never repeated.
      * first_touch: the first reply to a new lead from a form/ad/automation tool; sent once, never re-armed.
+     * slot_offer: offering a freed slot to someone on the waitlist (they asked for it, so an existing booking doesn't stop it).
      */
-    purpose: text("purpose").$type<"lead" | "missed_call" | "first_touch">().notNull().default("lead"),
+    purpose: text("purpose").$type<"lead" | "missed_call" | "first_touch" | "slot_offer">().notNull().default("lead"),
     scheduledFor: timestamp("scheduled_for", { withTimezone: true }).notNull(),
     status: scheduledStatus("status").notNull().default("scheduled"),
     /** Why it was cancelled/skipped/failed, or the delivery result. */
@@ -1033,4 +1052,112 @@ export const subscriptions = pgTable(
     updatedAt: updatedAt(),
   },
   (t) => [uniqueIndex("subscriptions_org_idx").on(t.organizationId)],
+);
+
+// ─── Slot Recovery ────────────────────────────────────────────────────
+export const waitlistStatus = pgEnum("waitlist_status", ["active", "booked", "removed"]);
+export const slotStatus = pgEnum("slot_status", ["open", "offering", "pending_staff", "filled", "expired", "dismissed"]);
+export const slotOfferStatus = pgEnum("slot_offer_status", ["sent", "accepted", "declined", "expired", "taken", "failed"]);
+export type Daypart = "morning" | "afternoon" | "evening";
+
+/** Customers who want an earlier/any appointment if one frees up. */
+export const waitlistEntries = pgTable(
+  "waitlist_entries",
+  {
+    id: id(),
+    businessId: businessRef(),
+    customerId: uuid("customer_id").notNull(),
+    serviceId: uuid("service_id").notNull(),
+    /** Preferred staff member; null = anyone who performs the service. */
+    staffId: uuid("staff_id"),
+    earliestDate: text("earliest_date").notNull(), // YYYY-MM-DD, business timezone
+    latestDate: text("latest_date"),
+    dayparts: text("dayparts").array().$type<Daypart[]>().notNull().default([]),
+    notes: text("notes"),
+    status: waitlistStatus("status").notNull().default("active"),
+    source: text("source").notNull(),
+    createdBy: actorType("created_by").notNull(),
+    bookedAppointmentId: uuid("booked_appointment_id"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    unique("waitlist_entries_business_id_unique").on(t.businessId, t.id),
+    index("waitlist_entries_active_idx").on(t.businessId, t.status),
+    foreignKey({ columns: [t.businessId, t.customerId], foreignColumns: [customers.businessId, customers.id] }).onDelete("cascade"),
+    foreignKey({ columns: [t.businessId, t.serviceId], foreignColumns: [services.businessId, services.id] }).onDelete("cascade"),
+    foreignKey({ columns: [t.businessId, t.staffId], foreignColumns: [staff.businessId, staff.id] }),
+  ],
+);
+
+/**
+ * A freed slot — from a cancellation or reschedule in the built-in calendar,
+ * or a `slot.opened` event from the business's own booking system — and what
+ * happened to it.
+ */
+export const slotRecoveries = pgTable(
+  "slot_recoveries",
+  {
+    id: id(),
+    businessId: businessRef(),
+    source: text("source").$type<"cancellation" | "reschedule" | "external">().notNull(),
+    sourceAppointmentId: uuid("source_appointment_id"),
+    /** Their system's id for an external slot (duplicates are ignored). */
+    externalRef: text("external_ref"),
+    staffId: uuid("staff_id"),
+    /** The service of the freed appointment (built-in) or the one named by the event, if any. */
+    serviceId: uuid("service_id"),
+    /** Free text from an external system when it didn't match one of our services/staff. */
+    label: text("label"),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    status: slotStatus("status").notNull().default("open"),
+    /** Value of the appointment that was lost (for "at risk" reporting). */
+    lostValueCents: integer("lost_value_cents"),
+    filledAppointmentId: uuid("filled_appointment_id"),
+    filledCustomerId: uuid("filled_customer_id"),
+    filledValueCents: integer("filled_value_cents"),
+    filledBy: text("filled_by").$type<"ai" | "staff">(),
+    statusNote: text("status_note"),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    unique("slot_recoveries_business_id_unique").on(t.businessId, t.id),
+    uniqueIndex("slot_recoveries_source_appt_idx").on(t.businessId, t.sourceAppointmentId, t.startsAt).where(sql`${t.sourceAppointmentId} is not null`),
+    uniqueIndex("slot_recoveries_external_idx").on(t.businessId, t.externalRef).where(sql`${t.externalRef} is not null`),
+    index("slot_recoveries_status_idx").on(t.businessId, t.status, t.startsAt),
+    foreignKey({ columns: [t.businessId, t.staffId], foreignColumns: [staff.businessId, staff.id] }),
+    foreignKey({ columns: [t.businessId, t.serviceId], foreignColumns: [services.businessId, services.id] }),
+  ],
+);
+
+/** One offer of a slot to one waitlisted customer. */
+export const slotOffers = pgTable(
+  "slot_offers",
+  {
+    id: id(),
+    businessId: businessRef(),
+    slotId: uuid("slot_id").notNull(),
+    waitlistEntryId: uuid("waitlist_entry_id").notNull(),
+    customerId: uuid("customer_id").notNull(),
+    status: slotOfferStatus("status").notNull().default("sent"),
+    score: integer("score").notNull(),
+    /** Why this person was chosen (shown to staff). */
+    reasons: jsonb("reasons").$type<string[]>().notNull().default([]),
+    conversationId: uuid("conversation_id"),
+    followUpId: uuid("follow_up_id"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    respondedAt: timestamp("responded_at", { withTimezone: true }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    uniqueIndex("slot_offers_slot_customer_idx").on(t.slotId, t.customerId),
+    index("slot_offers_customer_idx").on(t.businessId, t.customerId, t.status),
+    foreignKey({ columns: [t.businessId, t.slotId], foreignColumns: [slotRecoveries.businessId, slotRecoveries.id] }).onDelete("cascade"),
+    foreignKey({ columns: [t.businessId, t.waitlistEntryId], foreignColumns: [waitlistEntries.businessId, waitlistEntries.id] }).onDelete("cascade"),
+    foreignKey({ columns: [t.businessId, t.customerId], foreignColumns: [customers.businessId, customers.id] }).onDelete("cascade"),
+  ],
 );

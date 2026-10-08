@@ -16,6 +16,7 @@ import { db as rootDb } from "@/db";
 import { integrationEvents, integrations } from "@/db/schema";
 import { assertCan, type Ctx } from "../context";
 import { onLeadCreated } from "../recovery/leads";
+import { onExternalSlot } from "../recovery/slots";
 import { onCallCompleted, onMissedCall } from "../recovery/missed-calls";
 import { normalizedEvent, SUPPORTED_EVENT_TYPES } from "./events";
 
@@ -88,9 +89,11 @@ export async function processEvent(eventId: string, now = new Date()): Promise<I
         ? await onMissedCall(ctx, { from: ev.from, callerName: ev.callerName, reason: ev.reason, voicemailTranscript: ev.voicemailTranscript, occurredAt: claimed.occurredAt }, now)
         : ev.type === "call.completed"
           ? await onCallCompleted(ctx, { customer: ev.customer, direction: ev.direction, occurredAt: claimed.occurredAt })
-          : await onLeadCreated({ ...ctx, actor: { type: "system", name: "Lead recovery" } }, { ...ev, occurredAt: claimed.occurredAt }, now);
+          : ev.type === "lead.created"
+            ? await onLeadCreated({ ...ctx, actor: { type: "system", name: "Lead recovery" } }, { ...ev, occurredAt: claimed.occurredAt }, now)
+            : await onExternalSlot({ ...ctx, actor: { type: "system", name: "Slot recovery" } }, { externalRef: `${claimed.connector}:${claimed.externalId}`, startsAt: new Date(ev.startsAt), durationMinutes: ev.durationMinutes, service: ev.service, staff: ev.staff }, now);
     if (!r.handled) return finish({ status: "ignored", result: r.detail });
-    return finish({ status: "processed", result: r.detail, customerId: r.customerId, opportunityId: r.opportunityId ?? null });
+    return finish({ status: "processed", result: r.detail, customerId: "customerId" in r ? r.customerId : null, opportunityId: "opportunityId" in r ? (r.opportunityId ?? null) : null });
   } catch (e) {
     console.error(`[integrations] event ${eventId} failed`, e);
     return finish({ status: "failed", result: (e as Error).message.slice(0, 400), processedAt: null });

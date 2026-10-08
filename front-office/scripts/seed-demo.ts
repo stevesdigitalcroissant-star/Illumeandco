@@ -27,6 +27,7 @@ import { seedPlans } from "../src/server/services/billing";
 import { createRulesProvider } from "../src/server/ai/providers/rules";
 import { sweepBusiness } from "../src/server/opportunities/engine";
 import { ingestEvent } from "../src/server/integrations/ingest";
+import { addToWaitlist } from "../src/server/recovery/slots";
 
 const DEMO_EMAIL = "demo@frontoffice.dev";
 const DEMO_PASSWORD = "demo-front-office";
@@ -144,6 +145,9 @@ async function main() {
       createdAt: sql`${appointments.createdAt} - ${`${shiftBack} milliseconds`}::interval`,
     })
     .where(eq(appointments.id, pastBooking.appointment.id));
+  // Two people waiting for an earlier consultation — the cancellation below frees a slot for them.
+  for (const c of [customers[3]!, customers[0]!])
+    await addToWaitlist(ctx, { customerId: c.id, serviceId: consultation.id, earliestDate: now.toISODate()!, latestDate: now.plus({ days: 14 }).toISODate(), source: "staff" });
   const toCancel = await bookAppointment(ctx, { serviceId: consultation.id, startsAt: nextOpen(5, "12:00"), customerId: customers[5]!.id, source: "staff" });
   await cancelAppointment(ctx, toCancel.appointment.id, "Travelling");
 

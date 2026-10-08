@@ -200,6 +200,7 @@ export async function rescheduleAppointment(
       if (isExclusionViolation(e)) throw conflict("Sorry — that time was just taken.");
       throw e;
     }
+    await safely(ctx, "rescheduled", async (c) => (await import("../recovery/slots")).onSlotFreed(c, appt, "reschedule"));
     await cancelReminders(ctx, appt.id, "Appointment rescheduled");
     await scheduleReminders(ctx, updated, { includeConfirmation: !appt.conversationId, now: input.now });
     const customer = await db.query.customers.findFirst({ where: eq(customers.id, appt.customerId) });
@@ -241,6 +242,7 @@ export async function cancelAppointment(ctx: Ctx, appointmentId: string, reason?
       .returning();
     await cancelReminders(ctx, appt.id, "Appointment cancelled");
     await safely(ctx, "cancelled", (c) => onAppointmentLost(c, updated!, "cancellation"));
+    await safely(ctx, "slot freed", async (c) => (await import("../recovery/slots")).onSlotFreed(c, appt, "cancellation"));
     if (appt.leadId)
       await db.update(leads).set({ status: "qualified", appointmentId: null }).where(and(eq(leads.id, appt.leadId), eq(leads.status, "appointment_booked")));
     const business = await getBusiness(ctx);

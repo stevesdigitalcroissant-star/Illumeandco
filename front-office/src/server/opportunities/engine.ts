@@ -487,6 +487,8 @@ async function serviceInfo(ctx: Ctx, serviceId: string) {
 
 export async function onAppointmentBooked(ctx: Ctx, appt: Appointment) {
   await evaluateLead(ctx, appt.customerId, { schedule: false });
+  // A freed slot that someone was booked into is no longer open.
+  await (await import("../recovery/slots")).onAppointmentBookedForSlots(ctx, appt);
   // A booking closes this customer's open missed-call / cancellation / no-show / reactivation opportunities.
   const open = await dbOf(ctx)
     .select()
@@ -644,6 +646,10 @@ export async function sweepBusiness(ctx: Ctx, now = new Date()) {
   // Missed calls: escalate unanswered text-backs to the team, close stale ones.
   const { advanceMissedCalls } = await import("../recovery/missed-calls");
   await safely(ctx, "sweep missed calls", (c) => advanceMissedCalls(c, now));
+
+  // Freed slots: expire stale offers/slots, auto-offer when enabled.
+  const { sweepSlots } = await import("../recovery/slots");
+  await safely(ctx, "sweep slots", (c) => sweepSlots(c, now));
 
   // Customers who haven't returned (reactivation).
   const cutoff = new Date(now.getTime() - settings.missedOpportunities.noReturnDays * 24 * HOUR);

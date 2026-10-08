@@ -35,7 +35,10 @@ export type AuditAction =
   | "staff.updated"
   | "member.updated"
   | "billing.updated"
-  | "integration.updated";
+  | "integration.updated"
+  | "waitlist.updated"
+  | "slot.offered"
+  | "slot.recovered";
 
 /**
  * Record an important action. Written in the same transaction as the change

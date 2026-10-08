@@ -25,6 +25,7 @@ import { attachContactDetails } from "../../services/identity";
 import { searchKnowledge } from "../../services/knowledge";
 import { latestLeadForCustomer, updateLead, upsertLead } from "../../services/leads";
 import { scheduleReviewRequest } from "../../services/reviews";
+import { addToWaitlist } from "../../recovery/slots";
 import { formatMoney, spread } from "@/lib/utils";
 import { parseStartTime, TIME_OF_DAY_WINDOWS } from "../datetime";
 import { defineTool, type ToolContext, type ToolDef } from "./registry";
@@ -414,6 +415,33 @@ export const TOOLS: ToolDef[] = [
         notes: input.notes,
       });
       return { lead_id: lead.id, status: lead.status, created };
+    },
+  }),
+
+  defineTool({
+    name: "add_to_waitlist",
+    description:
+      "Put the customer on the waitlist for a service when no suitable time is available. They'll be offered a slot if one frees up (by message, first come first served). Needs their phone or email first. Never promise they will get a slot.",
+    permission: "capture_leads",
+    input: z.object({
+      service: z.string().describe("Service name or id"),
+      earliest_date: z.string().describe("YYYY-MM-DD, first acceptable day"),
+      latest_date: z.string().optional().describe("YYYY-MM-DD, last acceptable day"),
+      times_of_day: z.array(z.enum(["morning", "afternoon", "evening"])).optional().describe("Empty = any time"),
+    }),
+    async run(tc, input) {
+      const customer = await getCustomer(tc.ctx, tc.customerId);
+      if (!customer.phone && !customer.email) throw invalid("Ask for the customer's phone number or email first, so we can tell them when a slot opens.");
+      const service = await resolveService(tc, input.service);
+      const entry = await addToWaitlist(tc.ctx, {
+        customerId: tc.customerId,
+        serviceId: service.id,
+        earliestDate: input.earliest_date,
+        latestDate: input.latest_date ?? null,
+        dayparts: input.times_of_day ?? [],
+        source: tc.channel,
+      });
+      return { waitlisted: true, service: service.name, from: entry.earliestDate, to: entry.latestDate, times_of_day: entry.dayparts.length ? entry.dayparts : ["any"] };
     },
   }),
 

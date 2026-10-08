@@ -26,7 +26,7 @@ everything important → audit_logs (same transaction as the change)
 | Layer | Where | Responsibility |
 |---|---|---|
 | Agent | `src/server/ai/agent.ts`, `providers/` | Reasoning and conversation. `ModelProvider` interface: `anthropic.ts` (Claude, manual tool-use loop, refusal fallback) and `rules.ts` (deterministic, offline). |
-| Tools | `src/server/ai/tools/` | 18 tools (`get_business_information`, `search_knowledge_base`, `get_services`, `get_service_details`, `get_available_appointments`, `book_appointment`, `get_customer_appointments`, `reschedule_appointment`, `cancel_appointment`, `create_customer`, `update_customer`, `remember_customer_preference`, `create_lead`, `update_lead`, `send_message`, `escalate_to_human`, `create_follow_up`, `request_review`). They act only on the current conversation's customer. |
+| Tools | `src/server/ai/tools/` | 19 tools (`get_business_information`, `search_knowledge_base`, `get_services`, `get_service_details`, `get_available_appointments`, `book_appointment`, `get_customer_appointments`, `reschedule_appointment`, `cancel_appointment`, `create_customer`, `update_customer`, `remember_customer_preference`, `create_lead`, `update_lead`, `add_to_waitlist`, `send_message`, `escalate_to_human`, `create_follow_up`, `request_review`). They act only on the current conversation's customer. |
 | Knowledge | `src/server/services/knowledge.ts` | Text, FAQs, documents, website URLs → chunks → hybrid retrieval (Postgres full-text + trigram, plus pgvector when `VOYAGE_API_KEY` is set). |
 | Permissions | `src/server/ai/permissions.ts` | Owner-controlled toggles. Disabled tools are never offered to the model *and* refused at execution. Refunds and price changes are never available. Handoff can never be disabled. |
 | Memory | `customers.memory`, `conversations.agent_state` | Durable non-medical customer facts; short-lived per-conversation working memory. |
@@ -72,6 +72,15 @@ phone system / Zapier / Make / Twilio Voice
   - sends the first message within seconds (`first_touch`, once per 24h, never re-armed), under the same guardrails as the missed-call text-back. It also stops if the person already has an appointment.
 
   The Opportunity Engine then times further follow-ups from what the customer says. A lead with no conversation yet and no queued first message goes to the team as "Reach out".
+- **Slot Recovery** (`src/server/recovery/slots.ts`, dashboard **Slot recovery**):
+  - **Freed slots** come from cancellations and reschedules in the built-in calendar, or from `slot.opened` events from an external booking system. Each one is recorded once.
+  - **Waitlist:** people get on it via the team, or via the AI's `add_to_waitlist` tool when no time suits.
+  - **Ranking:** waitlisted people are ranked with an explained score: base 20, value up to +30, waiting time up to +25, reliability −20…+10, preferred time of day +10, preferred staff +10, needs it soon +5. Hard rules come first: dates, time of day, staff, service fit (checked against real availability), opt-out, an overlapping booking, reachability, and not the person who gave the slot up.
+  - **Offers:** the top N candidates get the offer, either automatically or when a person clicks **Recover slot**. Offers only go out 09:00–20:00 and need the "Send messages" permission.
+  - **Replies:** a clear YES or NO to the offer, when it was the last thing we sent, is handled without the model. The first YES books it. The exclusion constraint guarantees one winner, and later YESes are told it was taken.
+  - **Hand-off to the team:** for external slots, or when the AI may not book, the slot goes to the team to confirm, and the customer is told exactly that.
+  - **Expiry:** lapsed offers move on to the next people, and slots expire once inside the minimum notice.
+  - **Attribution:** a slot counts as *recovered* only if it was filled through an accepted offer. A slot the team fills directly is closed but not credited.
 - Failed or stranded events are retried by the background tick with backoff, at most 5 attempts.
 
 ## Multi-tenancy
@@ -162,7 +171,7 @@ Create a Vercel project with **Root Directory = `front-office`**, a Postgres dat
 | Follow-ups, reminders, review requests | Live via cron; delivered by the best configured channel |
 | SMS / WhatsApp (Twilio), email (Resend) | Implemented; require credentials |
 | Stripe subscriptions | Implemented; require Stripe keys and price ids |
-| Missed Call Recovery (universal webhook, Twilio Voice) | Implemented; text-back requires SMS/WhatsApp credentials |
+| Missed Call, Lead and Slot Recovery (universal webhook, Twilio Voice) | Implemented; outbound messages require SMS/WhatsApp/email credentials |
 | Google Calendar / external booking systems | Not available yet (shown as such) |
 | Instagram DMs | Not available yet |
 | Voice receptionist | Architecture and provider contract in `src/server/channels/voice.ts`; needs a telephony + speech provider |

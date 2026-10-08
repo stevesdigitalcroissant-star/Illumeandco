@@ -36,6 +36,13 @@
       "when": 1791467991486,
       "tag": "0004_lead_recovery",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791468475964,
+      "tag": "0005_slot_recovery",
+      "breakpoints": true
     }
   ]
 }

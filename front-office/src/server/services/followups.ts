@@ -70,7 +70,8 @@ export async function checkStopConditions(
       ),
     )
     .limit(1);
-  if (future && f.purpose !== "missed_call") return "Appointment already booked";
+  // Missed-call text-backs and slot offers answer something the customer asked for, so a booking doesn't stop them.
+  if (future && f.purpose !== "missed_call" && f.purpose !== "slot_offer") return "Appointment already booked";
 
   if (f.leadId) {
     const lead = await db.query.leads.findFirst({ where: and(eq(leads.businessId, ctx.businessId), eq(leads.id, f.leadId)) });

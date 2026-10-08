@@ -64,7 +64,7 @@ export async function matchService(ctx: Ctx, text: string | undefined) {
 }
 
 /** Could any configured channel actually deliver to this person? */
-function reachable(to: { email: string | null; phone: string | null }) {
+export function reachable(to: { email: string | null; phone: string | null }) {
   return PROACTIVE_ORDER.some((k) => {
     const a = getChannel(k);
     return a.isConfigured() && a.canReach({ name: null, ...to });

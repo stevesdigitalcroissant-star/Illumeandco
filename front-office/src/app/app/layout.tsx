@@ -26,6 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       ...(can("leads.manage") ? [{ href: "/app/leads", label: "Leads", icon: "leads" as const }, { href: "/app/opportunities", label: "Opportunities", icon: "opportunities" as const }] : []),
       { href: "/app/customers", label: "Customers", icon: "customers" as const },
       { href: "/app/appointments", label: "Appointments", icon: "appointments" as const },
+      ...(can("appointments.view_all") ? [{ href: "/app/slots", label: "Slot recovery", icon: "slots" as const }] : []),
       { href: "/app/calendar", label: "Calendar", icon: "calendar" as const },
     ],
     [
