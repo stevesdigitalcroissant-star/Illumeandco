@@ -82,6 +82,13 @@ phone system / Zapier / Make / Twilio Voice
   - **Expiry:** lapsed offers move on to the next people, and slots expire once inside the minimum notice.
   - **Attribution:** a slot counts as *recovered* only if it was filled through an accepted offer. A slot the team fills directly is closed but not credited.
 - Failed or stranded events are retried by the background tick with backoff, at most 5 attempts.
+- **Revenue attribution** (`src/server/recovery/revenue.ts`, dashboard **Revenue recovery** plus the strip on Overview). It runs over the last 30 days, per worker (missed calls, leads, freed slots, cancellations/no-shows, reactivation):
+  - *Identified*: opportunities and freed slots that appeared, valued at service prices. Unknown values use the 90-day average booking value; these are counted and labelled as estimates.
+  - *Influenced*: bookings made after one of our messages was delivered. Valued at the booked price.
+  - *Realized*: influenced bookings whose appointment was completed. Slots booked in an external system are reported as not verifiable.
+
+  Nothing is projected.
+- **What to do next**: a prioritized feed of what needs a person. A customer waiting for a person always comes first, then a customer who accepted a slot. Everything else is ordered by value × intent, with empty time in the next 48h doubled. Each item has one approval: *Let AI handle*, *Offer a new time*, *Reactivate*, *Recover slot*, *Confirm booking* or *Open conversation*.
 
 ## Multi-tenancy
 

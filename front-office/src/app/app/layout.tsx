@@ -19,6 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const groups: NavItem[][] = [
     [
       { href: "/app", label: "Overview", icon: "overview" as const },
+      ...(can("analytics.view") ? [{ href: "/app/revenue", label: "Revenue recovery", icon: "revenue" as const }] : []),
       { href: "/app/inbox", label: "Inbox", icon: "inbox" as const, badge: needsHuman || undefined, badgeTone: "danger" as const },
       ...(can("business.manage") ? [{ href: "/app/receptionist", label: "AI Receptionist", icon: "receptionist" as const }] : []),
     ],

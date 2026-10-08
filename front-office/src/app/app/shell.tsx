@@ -19,6 +19,7 @@ import {
   Sparkles,
   Star,
   Target,
+  TrendingUp,
   TriangleAlert,
   Users,
   Workflow,
@@ -36,6 +37,7 @@ export type NavItem = { href: string; label: string; icon: keyof typeof ICONS; b
 
 const ICONS = {
   overview: LayoutDashboard,
+  revenue: TrendingUp,
   inbox: Inbox,
   receptionist: Bot,
   leads: Target,

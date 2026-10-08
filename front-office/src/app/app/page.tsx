@@ -14,6 +14,8 @@ import { requireBusiness } from "@/lib/session";
 import { activeEngineInfo } from "@/server/ai/agent";
 import { roleCan } from "@/server/context";
 import { overviewMetrics } from "@/server/services/analytics";
+import { revenueSummary } from "@/server/recovery/revenue";
+import { formatMoney } from "@/lib/utils";
 import { listAppointments } from "@/server/services/appointments";
 import { listConversations } from "@/server/services/conversations";
 
@@ -24,14 +26,16 @@ export default async function OverviewPage() {
   const tz = business.timezone;
   const now = new Date();
   const local = DateTime.fromJSDate(now).setZone(tz);
-  const [m, waiting, today, activity] = await Promise.all([
+  const [m, waiting, today, activity, revenue] = await Promise.all([
     overviewMetrics(ctx, now),
     listConversations(ctx, { status: "needs_human", limit: 5 }),
     listAppointments(ctx, { from: now, to: local.endOf("day").toJSDate(), status: ["booked", "confirmed"] }),
     roleCan(role, "audit.view")
       ? db.select().from(auditLogs).where(and(eq(auditLogs.businessId, business.id), eq(auditLogs.actorType, "ai"))).orderBy(desc(auditLogs.createdAt)).limit(7)
       : Promise.resolve([]),
+    roleCan(role, "analytics.view") ? revenueSummary(ctx, { now }) : Promise.resolve(null),
   ]);
+  const money = (c: number) => formatMoney(c, business.currency);
   const engine = activeEngineInfo();
   const greeting = local.hour < 12 ? "Good morning" : local.hour < 18 ? "Good afternoon" : "Good evening";
 
@@ -46,6 +50,14 @@ export default async function OverviewPage() {
           </Badge>
         }
       />
+
+      {revenue ? (
+        <div className="mb-3 grid gap-3 md:grid-cols-3">
+          <Stat label="Identified · 30 days" value={money(revenue.identified.valueCents)} sub={`${revenue.identified.count} missed calls, leads, empty slots & lapsed customers`} href="/app/revenue" />
+          <Stat label="Influenced · 30 days" value={money(revenue.influenced.valueCents)} sub={`${revenue.influenced.count} bookings after an AI action`} href="/app/revenue" />
+          <Stat label="Realized · 30 days" value={money(revenue.realized.valueCents)} sub={`${revenue.realized.count} completed appointments`} href="/app/revenue" />
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Conversations today" value={m.conversationsToday} href="/app/inbox" />
