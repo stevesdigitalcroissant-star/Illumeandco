@@ -107,6 +107,14 @@ phone system / Zapier / Make / Twilio Voice
 
 Password reset (`/forgot-password`) and email verification use single-use links. Only a hash of each token is stored. Reset links last 1 hour and verification links 7 days, and only the newest link of each kind works. A reset signs the user out everywhere. Asking for a reset never reveals whether an account exists. Both flows need email (`RESEND_API_KEY`, `EMAIL_FROM`); without it they say so instead of pretending to send.
 
+## Customer data rights
+
+On a customer's profile, owners and managers can:
+- **export** everything held about that customer as JSON
+- **delete it permanently**
+
+Deletion removes their conversations, messages, appointments, leads, opportunities, follow-ups, reviews, waitlist entries, offers and AI action logs. It also redacts their name, email and phone (case-insensitive) from audit summaries, notifications and integration event payloads. Afterwards, one audit entry records that an erasure happened, with no personal data. Deletion is refused while the customer has an upcoming appointment.
+
 ## Roles
 
 | Role | Access |

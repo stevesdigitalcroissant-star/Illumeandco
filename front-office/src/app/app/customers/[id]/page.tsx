@@ -18,6 +18,7 @@ import { bookingOptions } from "../../appointments/data";
 import { NewAppointmentDialog } from "../../appointments/new-appointment-dialog";
 import { sourceLabel } from "../labels";
 import { CustomerDetailsForm } from "./details-form";
+import { PrivacyCard } from "./privacy";
 
 export const metadata = { title: "Customer" };
 
@@ -270,6 +271,12 @@ export default async function CustomerPage({ params, searchParams }: { params: P
             )}
           </Card>
 
+          {roleCan(role, "business.manage") ? (
+            <Card>
+              <CardHeader title="Data & privacy" description="For a customer's request to see or delete their data." />
+              <PrivacyCard customerId={customer.id} label={customer.name ?? customer.phone ?? customer.email ?? "this customer"} />
+            </Card>
+          ) : null}
         </div>
       </div>
     </>

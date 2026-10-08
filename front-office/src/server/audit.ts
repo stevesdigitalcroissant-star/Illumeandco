@@ -16,6 +16,8 @@ export type AuditAction =
   | "customer.created"
   | "customer.updated"
   | "customer.opted_out"
+  | "customer.exported"
+  | "customer.erased"
   | "lead.created"
   | "lead.updated"
   | "follow_up.scheduled"
