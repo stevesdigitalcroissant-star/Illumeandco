@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Circle, CircleCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState, PageHeader, Table } from "@/components/ui/misc";
@@ -7,13 +9,19 @@ import { formatMoney } from "@/lib/utils";
 import { roleCan } from "@/server/context";
 import { revenueFeed, revenueSummary, WORKER_LABELS } from "@/server/recovery/revenue";
 import { FeedActionButton } from "./feed-action";
+import { setupChecklist } from "@/server/recovery/setup";
 
 export const metadata = { title: "Revenue recovery" };
 
 export default async function RevenuePage() {
   const { ctx, business, role } = await requirePermission("analytics.view");
   const money = (c: number | null | undefined) => (c == null ? "—" : formatMoney(c, business.currency));
-  const [s, feed] = await Promise.all([revenueSummary(ctx), roleCan(role, "leads.manage") ? revenueFeed(ctx) : Promise.resolve([])]);
+  const [s, feed, setup] = await Promise.all([
+    revenueSummary(ctx),
+    roleCan(role, "leads.manage") ? revenueFeed(ctx) : Promise.resolve([]),
+    roleCan(role, "business.manage") ? setupChecklist(ctx) : Promise.resolve([]),
+  ]);
+  const setupDone = setup.filter((i) => i.done).length;
 
   return (
     <>
@@ -21,6 +29,23 @@ export default async function RevenuePage() {
         title="Revenue recovery"
         description="Revenue that would have slipped away — missed calls, unanswered leads, empty slots, lapsed customers — and what your AI workers did about it. Last 30 days."
       />
+      {setup.length && setupDone < setup.length ? (
+        <Card className="mb-6">
+          <CardHeader title={`Get recovery running · ${setupDone} of ${setup.length} done`} description="Each step is checked against your real setup." />
+          <ul className="divide-y">
+            {setup.map((i) => (
+              <li key={i.key} className="flex items-start gap-3 px-5 py-3">
+                {i.done ? <CircleCheck className="mt-0.5 size-4 shrink-0 text-success" /> : <Circle className="mt-0.5 size-4 shrink-0 text-muted-foreground" />}
+                <div className="min-w-0 flex-1">
+                  <p className={i.done ? "text-sm text-muted-foreground line-through" : "text-sm font-medium"}>{i.label}</p>
+                  {!i.done ? <p className="text-[13px] text-muted-foreground">{i.hint}</p> : null}
+                </div>
+                {!i.done && !i.needsOperator && i.key !== "win" ? <Link href={i.href} className="shrink-0 text-[13px] font-medium text-primary hover:underline">Set up →</Link> : null}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
       <div className="mb-2 grid gap-3 md:grid-cols-3">
         <Stat
           label="Opportunities identified"

@@ -15,7 +15,7 @@ describe("health check", () => {
     await recordHeartbeat("tick", {}, new Date(Date.now() - 3600_000));
     const stale = await healthReport();
     expect(stale.status).toBe("degraded");
-    expect(stale.checks.backgroundJobs?.detail).toMatch(/Last ran 60 min ago/);
+    expect((stale.checks as Record<string, { detail?: string }>).backgroundJobs?.detail).toMatch(/Last ran 60 min ago/);
     await recordHeartbeat("tick", {}, new Date());
   });
 

@@ -95,6 +95,7 @@ phone system / Zapier / Make / Twilio Voice
   - **When:** urgent alerts go out 07:00–22:00 business time. Later ones, and ones raised inside a transaction, are sent by the tick.
   - **Morning summary:** once a day, covering what needs the team and what was recovered.
   - **Honest results:** each alert records whether it went out, e.g. "Sent to 2" or "Not sent — SMS isn't configured".
+- **Setup checklist** (top of **Revenue recovery** until complete): own messaging number, phone system, forms and ads, chat widget, alert recipients, waitlist, WhatsApp templates (when WhatsApp is available), and the first recovered booking. Each item is checked against real configuration and data.
 - **What to do next**: a prioritized feed of what needs a person. A customer waiting for a person always comes first, then a customer who accepted a slot. Everything else is ordered by value × intent, with empty time in the next 48h doubled. Each item has one approval: *Let AI handle*, *Offer a new time*, *Reactivate*, *Recover slot*, *Confirm booking* or *Open conversation*.
 
 ## Multi-tenancy
