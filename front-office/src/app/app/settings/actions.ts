@@ -18,6 +18,7 @@ import {
 } from "@/server/services/catalog";
 import { rotateWebhookSecret } from "@/server/integrations/connectors";
 import { updateSenders } from "@/server/services/senders";
+import { updateAlertsConfig } from "@/server/services/alerts";
 import { updateRecoveryConfig } from "@/server/recovery/config";
 import { addExistingMember, changeMemberRole, inviteNewMember, listMembers, removeMember } from "@/server/services/team";
 
@@ -228,6 +229,15 @@ export async function removeMemberAction(memberId: string) {
     await removeMember(ctx, String(memberId));
     revalidate();
   }, "Removed from the team.");
+}
+
+// ─── Staff alerts ────────────────────────────────────────────────────
+export async function saveAlertsAction(input: { instant: boolean; digest: boolean; digestHour: number; smsTo: string; emailTo: string }) {
+  return run(async () => {
+    const { ctx } = await requirePermission("business.manage");
+    await updateAlertsConfig(ctx, { ...input, digestHour: Number(input.digestHour) });
+    revalidate();
+  }, "Saved.");
 }
 
 // ─── Integrations & missed-call recovery ─────────────────────────────

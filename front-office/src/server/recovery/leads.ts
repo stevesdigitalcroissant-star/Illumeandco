@@ -26,6 +26,7 @@ import { getAiSettings, getBusiness } from "../services/business";
 import { createCustomer, findCustomerByContact, normalizeCustomerEmail, normalizePhone } from "../services/customers";
 import { civilHours, processFollowUp, scheduleFollowUp } from "../services/followups";
 import { upsertLead } from "../services/leads";
+import { notifyStaff } from "../services/alerts";
 
 const HOUR = 3600_000;
 const IMMEDIATE_WINDOW_MS = 30 * 60_000;
@@ -153,6 +154,18 @@ export async function onLeadCreated(ctx: Ctx, input: LeadInput, now = new Date()
       detail = "First message queued for messaging hours";
     }
   }
+
+  // Nobody will hear from us automatically — the team needs to reach out (unless there's nothing to do).
+  const needsPerson = firstTouch === "failed" || (skip && !["They already have an appointment booked", "Already sent a first message in the last 24 hours"].includes(skip));
+  if (needsPerson)
+    await notifyStaff(ctx, {
+      kind: "new_lead",
+      title: `New lead — ${customer.name ?? customer.phone ?? customer.email}${service ? ` (${service.name})` : input.service ? ` (${input.service})` : ""}`,
+      body: `Via ${input.source}. Reach out: ${detail.replace(/^No first message: /, "")}`,
+      link: "/app/opportunities?kind=lead",
+      dedupeKey: `lead_reach_out:${lead.id}`,
+      urgent: true,
+    }, now);
 
   // The Opportunity Engine takes it from here (stage, blocker, follow-up timing).
   await evaluateLead(ctx, customer.id, { now });

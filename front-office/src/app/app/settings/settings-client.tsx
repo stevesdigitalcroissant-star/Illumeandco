@@ -18,6 +18,7 @@ import {
   removeMemberAction,
   rotateWebhookSecretAction,
   saveHoursAction,
+  saveAlertsAction,
   saveRecoveryAction,
   saveServiceAction,
   saveStaffAction,
@@ -545,6 +546,41 @@ export function RecoveryCard({
         <div className="flex items-center justify-end gap-3">
           <span className="mr-auto"><Msg state={state} /></span>
           <Button size="sm" disabled={pending} onClick={() => exec(() => saveRecoveryAction(worker, f))}>{pending ? "Saving…" : "Save"}</Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ─── Staff alerts ────────────────────────────────────────────────────
+export function AlertsCard({ initial, hint }: { initial: { instant: boolean; digest: boolean; digestHour: number; smsTo: string[]; emailTo: string[] }; hint: string | null }) {
+  const [f, setF] = useState({ ...initial, smsTo: initial.smsTo.join(", "), emailTo: initial.emailTo.join(", ") });
+  const { pending, state, exec } = useAction();
+  return (
+    <Card>
+      <CardHeader title="Staff alerts" description="When something only a person can do comes up — a missed caller to call back, a new lead to reach, an accepted slot to book, a customer asking for a person — your team is told straight away, not just in the dashboard." />
+      <div className="space-y-4 px-5 pb-5">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Text alerts to" hint="Phone numbers, comma-separated (international format)"><Input value={f.smsTo} placeholder="+971501234567" onChange={(e) => setF({ ...f, smsTo: e.target.value })} /></Field>
+          <Field label="Email alerts to" hint="Email addresses, comma-separated"><Input value={f.emailTo} placeholder="frontdesk@clinic.com" onChange={(e) => setF({ ...f, emailTo: e.target.value })} /></Field>
+        </div>
+        <label className="flex items-center justify-between gap-4">
+          <span><span className="block text-sm font-medium">Instant alerts</span><span className="block text-[13px] text-muted-foreground">Sent 07:00–22:00 your time; anything later goes out in the morning.</span></span>
+          <Switch checked={f.instant} onCheckedChange={(v) => setF({ ...f, instant: v })} aria-label="Instant alerts" />
+        </label>
+        <label className="flex items-center justify-between gap-4">
+          <span><span className="block text-sm font-medium">Morning summary</span><span className="block text-[13px] text-muted-foreground">What needs the team today and what was recovered yesterday.</span></span>
+          <span className="flex items-center gap-2">
+            <NativeSelect className="h-8 w-24" value={f.digestHour} disabled={!f.digest} onChange={(e) => setF({ ...f, digestHour: Number(e.target.value) })} aria-label="Summary time">
+              {[5, 6, 7, 8, 9, 10, 11, 12].map((h) => <option key={h} value={h}>{`${String(h).padStart(2, "0")}:00`}</option>)}
+            </NativeSelect>
+            <Switch checked={f.digest} onCheckedChange={(v) => setF({ ...f, digest: v })} aria-label="Morning summary" />
+          </span>
+        </label>
+        {hint ? <Notice tone="warning">{hint}</Notice> : null}
+        <div className="flex items-center justify-end gap-3">
+          <span className="mr-auto"><Msg state={state} /></span>
+          <Button size="sm" disabled={pending} onClick={() => exec(() => saveAlertsAction(f))}>{pending ? "Saving…" : "Save"}</Button>
         </div>
       </div>
     </Card>

@@ -17,10 +17,10 @@ import {
   customers,
   leads,
   messages,
-  notifications,
   users,
 } from "@/db/schema";
 import { audit } from "../audit";
+import { notifyStaff } from "./alerts";
 import { getChannel } from "../channels/registry";
 import type { ChannelKind } from "../channels/types";
 import { assertCan, dbOf, forbidden, invalid, isRestrictedStaff, notFound, type Ctx } from "../context";
@@ -158,12 +158,13 @@ export async function requestHandoff(ctx: Ctx, conversationId: string, reason: s
     .returning();
   const customer = await dbOf(ctx).query.customers.findFirst({ where: eq(customers.id, conv.customerId) });
   const who = customer?.name ?? customer?.email ?? customer?.phone ?? "a website visitor";
-  await dbOf(ctx).insert(notifications).values({
-    businessId: ctx.businessId,
+  await notifyStaff(ctx, {
     kind: "handoff",
     title: `Human required — ${who.charAt(0).toUpperCase()}${who.slice(1)}`,
     body: reason,
     link: `/app/inbox?c=${conv.id}`,
+    dedupeKey: `handoff:${conv.id}:${c!.handoffRequestedAt!.toISOString()}`,
+    urgent: true,
   });
   await addEvent(ctx, conv.id, `Handed off to a human: ${reason}`, { kind: "handoff" });
   // A human is now responsible — automated follow-ups must stop.

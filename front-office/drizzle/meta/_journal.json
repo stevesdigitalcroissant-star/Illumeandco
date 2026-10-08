@@ -50,6 +50,13 @@
       "when": 1791497629948,
       "tag": "0006_business_senders",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791497926658,
+      "tag": "0007_staff_alerts",
+      "breakpoints": true
     }
   ]
 }

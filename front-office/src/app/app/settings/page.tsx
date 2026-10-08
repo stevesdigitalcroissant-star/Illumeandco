@@ -20,7 +20,7 @@ import { getAiSettings, getBusinessHours } from "@/server/services/business";
 import { getStaffAvailability, listBlackouts, listServices, listStaff } from "@/server/services/catalog";
 import { listMembers } from "@/server/services/team";
 import { addBlackoutAction, saveBusinessAction, savePoliciesAction, saveSendersAction } from "./actions";
-import { CardFooter, HoursCard, RecoveryCard, RemoveBlackoutButton, ServicesCard, StaffCard, TeamCard, WebhookSecretButton } from "./settings-client";
+import { AlertsCard, CardFooter, HoursCard, RecoveryCard, RemoveBlackoutButton, ServicesCard, StaffCard, TeamCard, WebhookSecretButton } from "./settings-client";
 
 export const metadata = { title: "Settings" };
 
@@ -244,7 +244,9 @@ function PoliciesTab({ r }: { r: R }) {
 }
 
 async function TeamTab({ r }: { r: R }) {
-  const members = await listMembers(r.ctx);
+  const [members, settings] = await Promise.all([listMembers(r.ctx), getAiSettings(r.ctx)]);
+  const sendable = channelsFor(r.business);
+  const alertHint = !sendable.has("sms") && !sendable.has("email") ? "Neither SMS nor email is set up yet — alerts will show in the dashboard bell only until one is (configuration required)." : null;
   const roles = [
     { role: "Owner", text: "Full access: settings, AI, automations, billing, team members, analytics and every conversation, customer and appointment." },
     { role: "Manager", text: "Day-to-day operations: all conversations, customers, leads and appointments, settings and AI configuration, analytics and the audit log. No billing or team management." },
@@ -252,6 +254,7 @@ async function TeamTab({ r }: { r: R }) {
   ];
   return (
     <>
+      <AlertsCard initial={settings.alerts} hint={alertHint} />
       <TeamCard
         canManage={roleCan(r.role, "members.manage")}
         members={members.map((m) => ({ id: m.id, userId: m.userId, name: m.name, email: m.email, role: m.role, isMe: m.userId === r.user.id }))}

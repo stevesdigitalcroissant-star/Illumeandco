@@ -15,14 +15,15 @@ import { dueReminders, processReminder } from "../services/reminders";
 import { dueReviewRequests, processReviewRequest } from "../services/reviews";
 import { sweepAll, sweepBusiness } from "../opportunities/engine";
 import { retryPendingEvents } from "../integrations/ingest";
+import { deliverPendingAlerts, sendDigests } from "../services/alerts";
 
 const LOCK_KEY = 7_342_001;
 
-export type TickReport = { ran: boolean; followUps: number; reminders: number; reviews: number; events: number; errors: string[] };
+export type TickReport = { ran: boolean; followUps: number; reminders: number; reviews: number; events: number; alerts: number; errors: string[] };
 
 export async function runTick(opts: { now?: Date; businessId?: string } = {}): Promise<TickReport> {
   const now = opts.now ?? new Date();
-  const report: TickReport = { ran: false, followUps: 0, reminders: 0, reviews: 0, events: 0, errors: [] };
+  const report: TickReport = { ran: false, followUps: 0, reminders: 0, reviews: 0, events: 0, alerts: 0, errors: [] };
   const client = await getPool().connect();
   try {
     const { rows } = await client.query<{ locked: boolean }>("select pg_try_advisory_lock($1) as locked", [LOCK_KEY]);
@@ -61,6 +62,12 @@ export async function runTick(opts: { now?: Date; businessId?: string } = {}): P
         report.events = await retryPendingEvents(now, opts.businessId);
       } catch (e) {
         report.errors.push(`integration events: ${(e as Error).message}`);
+      }
+      // Alerts that couldn't go out immediately, and the morning summary.
+      try {
+        report.alerts = (await deliverPendingAlerts(now, opts.businessId)) + (await sendDigests(now, opts.businessId));
+      } catch (e) {
+        report.errors.push(`alerts: ${(e as Error).message}`);
       }
       // Advance and reconcile opportunities (idempotent).
       try {

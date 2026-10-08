@@ -621,6 +621,15 @@ export type WidgetConfig = {
 };
 export type MissedOpportunityConfig = { noReturnDays: number; staleLeadHours: number };
 export type BookingRules = { requireName: boolean; requireContact: boolean };
+export type AlertsConfig = {
+  /** Text/email the team the moment something needs a person (07:00–22:00 business time). */
+  instant: boolean;
+  /** A morning summary of what needs the team and what was recovered yesterday. */
+  digest: boolean;
+  digestHour: number;
+  smsTo: string[];
+  emailTo: string[];
+};
 export type RecoveryConfig = {
   missedCall: {
     /** Track missed calls as opportunities. */
@@ -660,6 +669,7 @@ export const aiSettings = pgTable("ai_settings", {
   widget: jsonb("widget").$type<WidgetConfig>().notNull(),
   missedOpportunities: jsonb("missed_opportunities").$type<MissedOpportunityConfig>().notNull(),
   booking: jsonb("booking").$type<BookingRules>().notNull().default({ requireName: true, requireContact: true }),
+  alerts: jsonb("alerts").$type<AlertsConfig>().notNull().default({ instant: true, digest: true, digestHour: 8, smsTo: [], emailTo: [] }),
   recovery: jsonb("recovery")
     .$type<RecoveryConfig>()
     .notNull()
@@ -937,9 +947,20 @@ export const notifications = pgTable(
     body: text("body"),
     link: text("link"),
     readAt: timestamp("read_at", { withTimezone: true }),
+    /** Same key → one notification (hooks and sweeps can fire repeatedly). */
+    dedupeKey: text("dedupe_key"),
+    /** Also push to the team's phones/inboxes (Settings → Team → Staff alerts). */
+    urgent: boolean("urgent").notNull().default(false),
+    alertedAt: timestamp("alerted_at", { withTimezone: true }),
+    /** What happened to the outside alert: "sent to 2", "no alert channel configured", … */
+    alertResult: text("alert_result"),
     createdAt: createdAt(),
   },
-  (t) => [index("notifications_business_idx").on(t.businessId, t.createdAt)],
+  (t) => [
+    index("notifications_business_idx").on(t.businessId, t.createdAt),
+    uniqueIndex("notifications_dedupe_idx").on(t.businessId, t.dedupeKey).where(sql`${t.dedupeKey} is not null`),
+    index("notifications_alert_pending_idx").on(t.urgent, t.alertedAt),
+  ],
 );
 
 // ─── Integrations, audit, billing ───────────────────────────────────

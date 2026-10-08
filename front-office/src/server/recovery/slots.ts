@@ -38,6 +38,7 @@ import { bookAppointment } from "../services/appointments";
 import { findSlot } from "../services/availability";
 import { getAgent, getAiSettings, getBusiness } from "../services/business";
 import { processFollowUp, scheduleFollowUp } from "../services/followups";
+import { notifyStaff } from "../services/alerts";
 import { reachable } from "./leads";
 
 export type Slot = typeof slotRecoveries.$inferSelect;
@@ -476,6 +477,15 @@ export async function handleSlotReply(ctx: Ctx, customerId: string, conversation
   }
   await db.update(slotOffers).set({ status: "accepted", respondedAt: now }).where(eq(slotOffers.id, offer.id));
   await db.update(slotOffers).set({ status: "taken" }).where(and(eq(slotOffers.slotId, slot.id), eq(slotOffers.status, "sent")));
+  const who = await db.query.customers.findFirst({ where: eq(customers.id, customerId) });
+  await notifyStaff(ctx, {
+    kind: "slot_accepted",
+    title: `${who?.name ?? who?.phone ?? "A customer"} accepted ${when} — book them in`,
+    body: slot.source === "external" ? "Book it in your booking system, then mark it recovered." : "The AI isn't allowed to book — book it, then mark it recovered.",
+    link: "/app/slots",
+    dedupeKey: `slot_accepted:${slot.id}`,
+    urgent: true,
+  }, now);
   return `Thank you! I've passed this to the team to confirm your ${when} appointment — they'll confirm it with you directly.`;
 }
 

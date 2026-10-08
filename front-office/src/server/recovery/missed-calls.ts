@@ -31,6 +31,7 @@ import { dbOf, type Ctx } from "../context";
 import { close, findOpen, upsertOpen } from "../opportunities/engine";
 import { getAiSettings, getBusiness } from "../services/business";
 import { createCustomer, findCustomerByContact, normalizePhone } from "../services/customers";
+import { notifyStaff } from "../services/alerts";
 import { civilHours, processFollowUp, scheduleFollowUp } from "../services/followups";
 
 type Opportunity = typeof opportunities.$inferSelect;
@@ -205,6 +206,15 @@ export async function onMissedCall(ctx: Ctx, input: MissedCallInput, now = new D
     estimatedValueCents: open?.estimatedValueCents ?? null,
     lastActivityAt: input.occurredAt,
   });
+  if (!aiWaiting)
+    await notifyStaff(ctx, {
+      kind: "missed_call",
+      title: `Missed call — call back ${customer.name ? `${customer.name} (${phone})` : phone}`,
+      body: skip ?? detail,
+      link: "/app/opportunities?kind=missed_call",
+      dedupeKey: `missed_call:${customer.id}:${DateTime.fromJSDate(now).setZone(tz).toISODate()}`,
+      urgent: true,
+    }, now);
   return { handled: true, customerId: customer.id, opportunityId: row.id, textBack, detail: detail || "Recorded" };
 }
 
@@ -324,4 +334,12 @@ async function advanceOne(ctx: Ctx, o: Opportunity, now: Date, tz: string) {
       evidence: [...o.evidence, { at: now.toISOString(), kind: "escalated", detail: why }].slice(-10),
     })
     .where(and(eq(opportunities.id, o.id), eq(opportunities.status, "open")));
+  await notifyStaff(ctx, {
+    kind: "missed_call",
+    title: `Call back ${customer?.name ? `${customer.name} (${customer.phone})` : (customer?.phone ?? "a missed caller")}`,
+    body: why,
+    link: "/app/opportunities?kind=missed_call",
+    dedupeKey: `missed_call_escalated:${o.id}:${lastCallAt(o).toISOString()}`,
+    urgent: true,
+  }, now);
 }
