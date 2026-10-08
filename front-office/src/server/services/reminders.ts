@@ -84,6 +84,10 @@ export async function processReminder(ctx: Ctx, reminder: typeof appointmentRemi
     text,
     subject: reminder.kind === "confirmation" ? "Appointment confirmed" : "Appointment reminder",
     metadata: { reminderId: reminder.id, kind: reminder.kind },
+    whatsapp: {
+      purpose: "reminder",
+      vars: { customer_name: row.customer.name?.split(" ")[0] ?? null, service: row.serviceName, business: business.name, date: local.toFormat("cccc d LLLL"), time: local.toFormat("h:mm a") },
+    },
   });
   if (!delivery.ok) return finish("failed", delivery.detail);
   await finish("sent", `${delivery.channel}: ${delivery.status}`);

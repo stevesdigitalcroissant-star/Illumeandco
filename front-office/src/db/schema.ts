@@ -621,6 +621,9 @@ export type WidgetConfig = {
 };
 export type MissedOpportunityConfig = { noReturnDays: number; staleLeadHours: number };
 export type BookingRules = { requireName: boolean; requireContact: boolean };
+/** Messages a business sends first on WhatsApp must use a template Meta approved (Twilio Content API). */
+export type WhatsappPurpose = "follow_up" | "missed_call" | "first_touch" | "slot_offer" | "reminder" | "review";
+export type WhatsappTemplates = Partial<Record<WhatsappPurpose, { contentSid: string; /** our variable names, in template order: {{1}}, {{2}}… */ variables: string[] }>>;
 export type AlertsConfig = {
   /** Text/email the team the moment something needs a person (07:00–22:00 business time). */
   instant: boolean;
@@ -669,6 +672,7 @@ export const aiSettings = pgTable("ai_settings", {
   widget: jsonb("widget").$type<WidgetConfig>().notNull(),
   missedOpportunities: jsonb("missed_opportunities").$type<MissedOpportunityConfig>().notNull(),
   booking: jsonb("booking").$type<BookingRules>().notNull().default({ requireName: true, requireContact: true }),
+  whatsappTemplates: jsonb("whatsapp_templates").$type<WhatsappTemplates>().notNull().default({}),
   alerts: jsonb("alerts").$type<AlertsConfig>().notNull().default({ instant: true, digest: true, digestHour: 8, smsTo: [], emailTo: [] }),
   recovery: jsonb("recovery")
     .$type<RecoveryConfig>()
@@ -737,6 +741,8 @@ export const followUps = pgTable(
      * slot_offer: offering a freed slot to someone on the waitlist (they asked for it, so an existing booking doesn't stop it).
      */
     purpose: text("purpose").$type<"lead" | "missed_call" | "first_touch" | "slot_offer">().notNull().default("lead"),
+    /** Values for a WhatsApp template (service, when…) when the message has to go out as one. */
+    templateVars: jsonb("template_vars").$type<Record<string, string>>(),
     scheduledFor: timestamp("scheduled_for", { withTimezone: true }).notNull(),
     status: scheduledStatus("status").notNull().default("scheduled"),
     /** Why it was cancelled/skipped/failed, or the delivery result. */

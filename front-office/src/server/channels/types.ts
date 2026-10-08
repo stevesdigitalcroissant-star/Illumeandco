@@ -27,6 +27,12 @@ export type OutboundMessage = {
   text: string;
   /** Sender to use (the business's own number). Falls back to the platform default when omitted. */
   from?: string | null;
+  /**
+   * WhatsApp only: whether the customer messaged us in the last 24h (free text allowed), and the
+   * approved template to use otherwise. Without either, WhatsApp refuses and delivery falls back.
+   */
+  sessionOpen?: boolean;
+  template?: { contentSid: string; variables: Record<string, string> } | null;
 };
 
 export type DeliveryResult =

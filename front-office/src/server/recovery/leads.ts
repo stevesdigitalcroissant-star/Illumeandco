@@ -144,7 +144,7 @@ export async function onLeadCreated(ctx: Ctx, input: LeadInput, now = new Date()
       customer_name: customer.name?.split(" ")[0] ?? "",
       about_service: service ? ` about ${service.name.toLowerCase()}` : input.service ? ` about ${input.service.toLowerCase()}` : "",
     });
-    const f = await scheduleFollowUp(ctx, { customerId: customer.id, leadId: lead.id, scheduledFor, message, reason: `New lead via ${input.source}`, purpose: "first_touch" });
+    const f = await scheduleFollowUp(ctx, { customerId: customer.id, leadId: lead.id, scheduledFor, message, reason: `New lead via ${input.source}`, purpose: "first_touch", templateVars: { service: service?.name.toLowerCase() ?? input.service ?? "an appointment" } });
     if (scheduledFor.getTime() <= now.getTime()) {
       const r = await processFollowUp(ctx, f);
       firstTouch = r.sent ? "sent" : "failed";

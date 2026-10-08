@@ -105,6 +105,8 @@ export async function scheduleFollowUp(
     /** Skip the audit entry (used when the AI re-arms its own nudge after a reply). */
     quiet?: boolean;
     purpose?: FollowUp["purpose"];
+    /** Extra values for a WhatsApp template (service, when…). */
+    templateVars?: Record<string, string> | null;
   },
 ) {
   const settings = await getAiSettings(ctx);
@@ -145,6 +147,7 @@ export async function scheduleFollowUp(
       reason: input.reason ?? null,
       message: input.message ?? null,
       purpose,
+      templateVars: input.templateVars ?? null,
       scheduledFor,
       createdBy: ctx.actor.type,
       createdAt,
@@ -198,7 +201,26 @@ export async function processFollowUp(ctx: Ctx, f: FollowUp) {
     return { sent: false, reason: stop };
   }
   const text = await composeFollowUpMessage(ctx, f);
-  const delivery = await deliverToCustomer(ctx, { customerId: f.customerId, text, subject: "Following up", metadata: { followUpId: f.id } });
+  const customer = await dbOf(ctx).query.customers.findFirst({ where: eq(customers.id, f.customerId) });
+  const business = await getBusiness(ctx);
+  const [leadService] = f.leadId
+    ? await dbOf(ctx).select({ name: services.name, interest: leads.serviceInterest }).from(leads).leftJoin(services, eq(services.id, leads.serviceId)).where(eq(leads.id, f.leadId))
+    : [];
+  const delivery = await deliverToCustomer(ctx, {
+    customerId: f.customerId,
+    text,
+    subject: "Following up",
+    metadata: { followUpId: f.id },
+    whatsapp: {
+      purpose: f.purpose === "lead" ? "follow_up" : f.purpose,
+      vars: {
+        customer_name: customer?.name?.split(" ")[0] ?? null,
+        business: business.name,
+        service: (leadService?.name ?? leadService?.interest)?.toLowerCase() ?? null,
+        ...(f.templateVars ?? {}),
+      },
+    },
+  });
   if (!delivery.ok) {
     await dbOf(ctx).update(followUps).set({ status: "failed", statusReason: delivery.detail }).where(eq(followUps.id, f.id));
     return { sent: false, reason: delivery.detail };

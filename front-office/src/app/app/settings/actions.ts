@@ -19,6 +19,7 @@ import {
 import { rotateWebhookSecret } from "@/server/integrations/connectors";
 import { updateSenders } from "@/server/services/senders";
 import { updateAlertsConfig } from "@/server/services/alerts";
+import { updateWhatsappTemplates } from "@/server/services/whatsapp-templates";
 import { updateRecoveryConfig } from "@/server/recovery/config";
 import { addExistingMember, changeMemberRole, inviteNewMember, listMembers, removeMember } from "@/server/services/team";
 
@@ -229,6 +230,14 @@ export async function removeMemberAction(memberId: string) {
     await removeMember(ctx, String(memberId));
     revalidate();
   }, "Removed from the team.");
+}
+
+export async function saveWhatsappTemplatesAction(input: Record<string, { contentSid: string; variables: string }>) {
+  return run(async () => {
+    const { ctx } = await requirePermission("business.manage");
+    await updateWhatsappTemplates(ctx, input);
+    revalidate();
+  }, "Saved.");
 }
 
 // ─── Staff alerts ────────────────────────────────────────────────────

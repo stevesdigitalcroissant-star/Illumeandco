@@ -145,6 +145,8 @@ The database needs the `vector`, `pg_trgm` and `btree_gist` extensions (the firs
 
 Each business sends from its own numbers (**Settings → Integrations → Your messaging numbers**; a number can belong to only one business). `TWILIO_SMS_FROM` / `TWILIO_WHATSAPP_FROM` are only a fallback for single-business setups and are flagged as shared in the dashboard. Inbound messages to a number the business doesn't own are ignored.
 
+WhatsApp follows Meta's rules. Free text is sent only within 24 hours of the customer's last WhatsApp message. Outside that window, messages the business starts use the approved template the business set for that kind of message (**Settings → Integrations → WhatsApp templates**: Twilio Content SID plus variable order). Without one, the message falls back to SMS, and the delivery result says so.
+
 Inbound SMS/WhatsApp: point the Twilio number's messaging webhook at `https://<APP_URL>/api/channels/twilio/<business public key>` (signatures are verified).
 
 ### Website chat

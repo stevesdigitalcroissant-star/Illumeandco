@@ -63,7 +63,13 @@ export async function processReviewRequest(ctx: Ctx, review: typeof reviews.$inf
     service: row.serviceName,
     review_link: reviewLink(review.token),
   });
-  const delivery = await deliverToCustomer(ctx, { customerId: row.customer.id, text, subject: `How was your visit to ${business.name}?`, metadata: { reviewId: review.id } });
+  const delivery = await deliverToCustomer(ctx, {
+    customerId: row.customer.id,
+    text,
+    subject: `How was your visit to ${business.name}?`,
+    metadata: { reviewId: review.id },
+    whatsapp: { purpose: "review", vars: { customer_name: row.customer.name?.split(" ")[0] ?? null, business: business.name, service: row.serviceName, review_link: reviewLink(review.token) } },
+  });
   if (!delivery.ok) return setStatus("skipped", delivery.detail);
   await setStatus("sent", `${delivery.channel}: ${delivery.status}`);
   await audit(ctx, {

@@ -10,6 +10,7 @@ import { headers } from "next/headers";
 import { DateTime } from "luxon";
 import { channelsFor, hasPhoneChannel, listChannels } from "@/server/channels/registry";
 import { twilioCredentials } from "@/server/channels/adapters";
+import { WHATSAPP_PURPOSES } from "@/server/services/whatsapp-templates";
 import { isAllowed } from "@/server/ai/permissions";
 import { listConnectors, webhookState, type ConnectorStatus } from "@/server/integrations/connectors";
 import { listRecentEvents } from "@/server/integrations/ingest";
@@ -20,7 +21,7 @@ import { getAiSettings, getBusinessHours } from "@/server/services/business";
 import { getStaffAvailability, listBlackouts, listServices, listStaff } from "@/server/services/catalog";
 import { listMembers } from "@/server/services/team";
 import { addBlackoutAction, saveBusinessAction, savePoliciesAction, saveSendersAction } from "./actions";
-import { AlertsCard, CardFooter, HoursCard, RecoveryCard, RemoveBlackoutButton, ServicesCard, StaffCard, TeamCard, WebhookSecretButton } from "./settings-client";
+import { AlertsCard, WhatsappTemplatesCard, CardFooter, HoursCard, RecoveryCard, RemoveBlackoutButton, ServicesCard, StaffCard, TeamCard, WebhookSecretButton } from "./settings-client";
 
 export const metadata = { title: "Settings" };
 
@@ -381,6 +382,7 @@ async function IntegrationsTab({ r }: { r: R }) {
           <CardFooter><SubmitButton>Save numbers</SubmitButton></CardFooter>
         </ActionForm>
       </Card>
+      <WhatsappTemplatesCard purposes={WHATSAPP_PURPOSES} initial={settings.whatsappTemplates} />
       <RecoveryCard
         worker="missedCall"
         initial={{ enabled: settings.recovery.missedCall.enabled, auto: settings.recovery.missedCall.textBack, template: settings.recovery.missedCall.template }}

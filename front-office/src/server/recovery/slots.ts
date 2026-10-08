@@ -361,7 +361,15 @@ export async function offerSlot(ctx: Ctx, slotId: string, opts: { now?: Date } =
       .returning();
     if (!offer) continue; // offered concurrently
     try {
-      const f = await scheduleFollowUp(aiCtx, { customerId: c.customer.id, scheduledFor: now, message, reason: `Slot offer: ${fmt(slot.startsAt, business.timezone)}`, purpose: "slot_offer", quiet: true });
+      const f = await scheduleFollowUp(aiCtx, {
+        customerId: c.customer.id,
+        scheduledFor: now,
+        message,
+        reason: `Slot offer: ${fmt(slot.startsAt, business.timezone)}`,
+        purpose: "slot_offer",
+        quiet: true,
+        templateVars: { service: c.serviceName.toLowerCase(), when: fmt(slot.startsAt, business.timezone) },
+      });
       const r = await processFollowUp(aiCtx, f);
       await dbOf(ctx)
         .update(slotOffers)

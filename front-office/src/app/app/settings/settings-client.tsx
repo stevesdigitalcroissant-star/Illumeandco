@@ -20,6 +20,7 @@ import {
   saveHoursAction,
   saveAlertsAction,
   saveRecoveryAction,
+  saveWhatsappTemplatesAction,
   saveServiceAction,
   saveStaffAction,
   saveStaffAvailabilityAction,
@@ -581,6 +582,37 @@ export function AlertsCard({ initial, hint }: { initial: { instant: boolean; dig
         <div className="flex items-center justify-end gap-3">
           <span className="mr-auto"><Msg state={state} /></span>
           <Button size="sm" disabled={pending} onClick={() => exec(() => saveAlertsAction(f))}>{pending ? "Saving…" : "Save"}</Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ─── WhatsApp templates ──────────────────────────────────────────────
+export function WhatsappTemplatesCard({ purposes, initial }: { purposes: { purpose: string; label: string; vars: string[] }[]; initial: Record<string, { contentSid: string; variables: string[] }> }) {
+  const [f, setF] = useState<Record<string, { contentSid: string; variables: string }>>(
+    Object.fromEntries(purposes.map((p) => [p.purpose, { contentSid: initial[p.purpose]?.contentSid ?? "", variables: initial[p.purpose]?.variables.join(", ") ?? "" }])),
+  );
+  const { pending, state, exec } = useAction();
+  return (
+    <Card>
+      <CardHeader
+        title="WhatsApp templates"
+        description="WhatsApp only allows free text within 24 hours of the customer's last message. Outside that window, messages you start must use a template Meta approved. Without one, the message goes by SMS instead."
+      />
+      <div className="space-y-3 px-5 pb-5">
+        {purposes.map((p) => (
+          <div key={p.purpose} className="grid gap-2 sm:grid-cols-[1fr_1.2fr_1.2fr] sm:items-end">
+            <p className="text-sm font-medium sm:pb-2">{p.label}</p>
+            <Field label="Content SID"><Input className="font-mono" placeholder="HX…" value={f[p.purpose]!.contentSid} onChange={(e) => setF({ ...f, [p.purpose]: { ...f[p.purpose]!, contentSid: e.target.value } })} /></Field>
+            <Field label="Variables in order ({{1}}, {{2}}…)" hint={`Available: ${p.vars.join(", ")}`}>
+              <Input placeholder={p.vars.slice(0, 2).join(", ")} value={f[p.purpose]!.variables} onChange={(e) => setF({ ...f, [p.purpose]: { ...f[p.purpose]!, variables: e.target.value } })} />
+            </Field>
+          </div>
+        ))}
+        <div className="flex items-center justify-end gap-3 pt-1">
+          <span className="mr-auto"><Msg state={state} /></span>
+          <Button size="sm" disabled={pending} onClick={() => exec(() => saveWhatsappTemplatesAction(f))}>{pending ? "Saving…" : "Save templates"}</Button>
         </div>
       </div>
     </Card>

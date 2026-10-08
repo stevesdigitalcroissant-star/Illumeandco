@@ -5,10 +5,19 @@ import { conversations, customers } from "@/db/schema";
 import { channelsFor, getChannel, PROACTIVE_ORDER } from "../channels/registry";
 import type { ChannelKind, DeliveryResult } from "../channels/types";
 import { dbOf, notFound, type Ctx } from "../context";
-import { getBusiness } from "./business";
+import { getAiSettings, getBusiness } from "./business";
+import type { WhatsappPurpose } from "@/db/schema";
 import { appendMessage, createConversation } from "./conversations";
 
 export { renderTemplate } from "@/lib/templates";
+
+/** The business's approved WhatsApp template for this kind of message, with its variables filled in. */
+async function whatsappTemplateFor(ctx: Ctx, purpose: WhatsappPurpose, vars: Record<string, string | null | undefined>) {
+  const t = (await getAiSettings(ctx)).whatsappTemplates[purpose];
+  if (!t) return null;
+  // WhatsApp rejects empty variables, so fall back to a neutral word rather than send a broken template.
+  return { contentSid: t.contentSid, variables: Object.fromEntries(t.variables.map((name, i) => [String(i + 1), vars[name]?.trim() || "there"])) };
+}
 
 export type ProactiveDelivery = DeliveryResult & { channel: ChannelKind | null; conversationId: string | null; messageId: string | null };
 
@@ -20,7 +29,15 @@ export type ProactiveDelivery = DeliveryResult & { channel: ChannelKind | null; 
  */
 export async function deliverToCustomer(
   ctx: Ctx,
-  input: { customerId: string; text: string; subject?: string; role?: "ai" | "system" | "human"; metadata?: Record<string, unknown> },
+  input: {
+    customerId: string;
+    text: string;
+    subject?: string;
+    role?: "ai" | "system" | "human";
+    metadata?: Record<string, unknown>;
+    /** What this message is, so WhatsApp can use the business's approved template outside the 24h window. */
+    whatsapp?: { purpose: WhatsappPurpose; vars: Record<string, string | null | undefined> };
+  },
 ): Promise<ProactiveDelivery> {
   const customer = await dbOf(ctx).query.customers.findFirst({
     where: and(eq(customers.businessId, ctx.businessId), eq(customers.id, input.customerId)),
@@ -38,12 +55,19 @@ export async function deliverToCustomer(
     .orderBy(desc(conversations.lastMessageAt));
 
   const available = channelsFor(business);
+  const skipped: string[] = [];
+  const waConv = existing.find((c) => c.channel === "whatsapp");
+  const sessionOpen = Boolean(waConv?.lastCustomerMessageAt && Date.now() - waConv.lastCustomerMessageAt.getTime() < 24 * 3600_000);
+  const template = input.whatsapp ? await whatsappTemplateFor(ctx, input.whatsapp.purpose, input.whatsapp.vars) : null;
   for (const kind of PROACTIVE_ORDER) {
     const adapter = getChannel(kind);
     const sender = available.get(kind);
     if (!sender || !adapter.canReach(to)) continue;
-    const result = await adapter.send({ businessId: ctx.businessId, businessName: business.name, to, text: input.text, subject: input.subject, from: sender.from });
-    if (!result.ok) continue;
+    const result = await adapter.send({ businessId: ctx.businessId, businessName: business.name, to, text: input.text, subject: input.subject, from: sender.from, sessionOpen, template });
+    if (!result.ok) {
+      skipped.push(`${adapter.label}: ${result.detail}`);
+      continue;
+    }
     // SMS/WhatsApp threads are keyed by phone number, so the customer's reply lands in this same conversation.
     const hash = (kind === "sms" || kind === "whatsapp") && customer.phone ? identityHash(kind, customer.phone) : null;
     let conv = existing.find((c) => c.channel === kind) ?? (await createConversation(ctx, { customerId: customer.id, channel: kind, channelIdentityHash: hash }));
@@ -56,7 +80,7 @@ export async function deliverToCustomer(
       deliveryStatus: result.status,
       metadata: { proactive: true, ...input.metadata },
     });
-    return { ...result, channel: kind, conversationId: conv.id, messageId: m.id };
+    return { ...result, channel: kind, conversationId: conv.id, messageId: m.id, detail: skipped.length ? `Fell back to ${adapter.label} (${skipped.join("; ")})` : result.detail };
   }
 
   const chat = existing.find((c) => c.channel === "web_chat");
@@ -75,7 +99,9 @@ export async function deliverToCustomer(
   return {
     ok: false,
     status: "unreachable",
-    detail: "No configured channel can reach this customer (connect WhatsApp, SMS or email, or the customer must have a chat thread).",
+    detail: skipped.length
+      ? `Not delivered — ${skipped.join("; ")}`
+      : "No configured channel can reach this customer (connect WhatsApp, SMS or email, or the customer must have a chat thread).",
     channel: null,
     conversationId: null,
     messageId: null,

@@ -61,11 +61,14 @@ function twilioAdapter(kind: "sms" | "whatsapp", fromEnv: string, label: string)
       if (!msg.to.phone) return { ok: false, status: "unreachable", detail: "Customer has no phone number." };
       const sid = process.env.TWILIO_ACCOUNT_SID!;
       const prefix = kind === "whatsapp" ? "whatsapp:" : "";
-      const form = new URLSearchParams({
-        From: `${prefix}${from}`,
-        To: `${prefix}${msg.to.phone}`,
-        Body: msg.text,
-      });
+      const form = new URLSearchParams({ From: `${prefix}${from}`, To: `${prefix}${msg.to.phone}` });
+      if (kind === "whatsapp" && !msg.sessionOpen) {
+        // WhatsApp only allows free text within 24h of the customer's last message; otherwise an approved template.
+        if (!msg.template)
+          return { ok: false, status: "unreachable", detail: "Outside WhatsApp's 24-hour window and no approved template for this message" };
+        form.set("ContentSid", msg.template.contentSid);
+        form.set("ContentVariables", JSON.stringify(msg.template.variables));
+      } else form.set("Body", msg.text);
       try {
         const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
           method: "POST",

@@ -57,6 +57,13 @@
       "when": 1791497926658,
       "tag": "0007_staff_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791498317814,
+      "tag": "0008_whatsapp_templates",
+      "breakpoints": true
     }
   ]
 }
