@@ -30,9 +30,25 @@ export const callCompletedEvent = z.object({
   durationSeconds: z.number().int().min(0).max(86_400).optional(),
 });
 
-export const normalizedEvent = z.discriminatedUnion("type", [callMissedEvent, callCompletedEvent]);
+/** A new enquiry from a form, ad, or automation tool. Needs a way to reach them: email or phone. */
+export const leadCreatedEvent = z
+  .object({
+    type: z.literal("lead.created"),
+    name: z.string().trim().max(120).optional(),
+    email: z.string().trim().max(200).optional(),
+    phone: phone.optional(),
+    /** The service they asked about, as free text — matched to your services by name. */
+    service: z.string().trim().max(120).optional(),
+    /** What they wrote. Stored on the lead and shown as evidence. */
+    message: z.string().trim().max(4000).optional(),
+    /** Where it came from: "website form", "facebook ads", "google ads"… */
+    source: z.string().trim().min(1).max(60).default("form"),
+  })
+  .refine((v) => Boolean(v.email || v.phone), { message: "email or phone is required", path: ["email"] });
+
+export const normalizedEvent = z.discriminatedUnion("type", [callMissedEvent, callCompletedEvent, leadCreatedEvent]);
 export type NormalizedEvent = z.infer<typeof normalizedEvent>;
-export const SUPPORTED_EVENT_TYPES = ["call.missed", "call.completed"] as const;
+export const SUPPORTED_EVENT_TYPES = ["call.missed", "call.completed", "lead.created"] as const;
 
 /** The envelope the universal webhook accepts. */
 export const webhookEnvelope = z.object({

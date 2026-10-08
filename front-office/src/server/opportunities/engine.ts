@@ -66,6 +66,9 @@ export const STAGE_LABELS: Record<Stage, string> = {
   lost: "Lost",
 };
 
+/** Lead sources that are our own conversations (their evidence comes from the messages themselves). */
+const CHAT_SOURCES = new Set(["web_chat", "sms", "whatsapp", "email", "instagram", "voice", "ai", "staff"]);
+
 const BASE_INTENT: Partial<Record<Stage, number>> = { new_lead: 20, interested: 40, high_intent: 65, booking_in_progress: 85 };
 
 /**
@@ -244,6 +247,10 @@ function classify(facts: NonNullable<LeadFacts>, now: Date): Classification {
   if (picked) quote(picked, "Chose a time");
   if (contact) evidence.push({ at: contact.at.toISOString(), kind: "shared_contact", detail: "Shared contact details", messageId: contact.messageId });
 
+  const lead = facts.lead?.lead;
+  if (lead && !CHAT_SOURCES.has(lead.source))
+    evidence.push({ at: lead.createdAt.toISOString(), kind: "lead_source", detail: `Enquiry via ${lead.source}${lead.notes ? ` — “${lead.notes.replace(/^[^:]*:\s*/, "").slice(0, 160)}”` : ""}` });
+
   const offered = facts.actions.find((a) => a.tool === "get_available_appointments" && a.status === "success");
   const offeredSlots = offered ? ((offered.output as { available?: unknown[] } | null)?.available?.length ?? 0) : null;
   if (offered) evidence.push({ at: offered.createdAt.toISOString(), kind: "tool", detail: offeredSlots ? `Was offered ${offeredSlots} real time${offeredSlots === 1 ? "" : "s"}` : "Availability was checked — nothing free in that period" });
@@ -389,7 +396,21 @@ export async function evaluateLead(ctx: Ctx, customerId: string, opts: { now?: D
     nextAction = "human_review";
     label = `AI follow-ups used (${sent.length}) — consider a personal call`;
     nextActionAt = now;
-  } else if (!awaitingCustomer) {
+  } else if (!facts.msgs.length) {
+    // A lead with no conversation yet (a form, an ad, an import): someone has to make first contact.
+    const firstTouch = facts.followUps.find((f) => f.purpose === "first_touch" && f.status === "scheduled");
+    if (firstTouch) {
+      nextActionBy = "ai";
+      nextActionAt = firstTouch.scheduledFor;
+      label = `AI sends the first message ${DateTime.fromJSDate(firstTouch.scheduledFor).setZone(business.timezone).toFormat("ccc d LLL, h:mm a")}`;
+    } else {
+      nextAction = "human_review";
+      nextActionBy = "human";
+      nextActionAt = now;
+      const failed = facts.followUps.find((f) => f.purpose === "first_touch" && f.status === "failed");
+      label = `Reach out — they haven't heard from you yet${failed?.statusReason ? ` (first message failed: ${failed.statusReason})` : ""}`;
+    }
+} else if (!awaitingCustomer) {
     nextAction = "none";
     label = "Conversation in progress — the AI is replying";
   } else {

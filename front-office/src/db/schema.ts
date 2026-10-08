@@ -624,6 +624,13 @@ export type RecoveryConfig = {
     textBack: boolean;
     template: string;
   };
+  leads: {
+    /** Turn incoming leads (forms, ads, automation tools) into tracked opportunities. */
+    enabled: boolean;
+    /** Let the AI send the first message right away (also needs the "Send messages" AI permission). */
+    firstTouch: boolean;
+    template: string;
+  };
 };
 
 export const aiSettings = pgTable("ai_settings", {
@@ -645,6 +652,11 @@ export const aiSettings = pgTable("ai_settings", {
         enabled: true,
         textBack: true,
         template: "Hi, this is {{business}} — sorry we missed your call! How can we help? Reply here and we'll take care of you.",
+      },
+      leads: {
+        enabled: true,
+        firstTouch: true,
+        template: "Hi {{customer_name}}, thanks for your enquiry{{about_service}} at {{business}}! When would suit you? Reply here and I'll check availability.",
       },
     }),
   updatedAt: updatedAt(),
@@ -688,8 +700,9 @@ export const followUps = pgTable(
      * lead: a nudge to someone who enquired and went quiet (all stop conditions, re-armed up to maxAttempts).
      * missed_call: a single text-back to someone whose call went unanswered — they contacted us, so an
      * existing booking doesn't stop it (they may be calling about it), and it is never repeated.
+     * first_touch: the first reply to a new lead from a form/ad/automation tool; sent once, never re-armed.
      */
-    purpose: text("purpose").$type<"lead" | "missed_call">().notNull().default("lead"),
+    purpose: text("purpose").$type<"lead" | "missed_call" | "first_touch">().notNull().default("lead"),
     scheduledFor: timestamp("scheduled_for", { withTimezone: true }).notNull(),
     status: scheduledStatus("status").notNull().default("scheduled"),
     /** Why it was cancelled/skipped/failed, or the delivery result. */

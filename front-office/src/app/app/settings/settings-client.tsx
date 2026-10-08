@@ -18,7 +18,7 @@ import {
   removeMemberAction,
   rotateWebhookSecretAction,
   saveHoursAction,
-  saveMissedCallAction,
+  saveRecoveryAction,
   saveServiceAction,
   saveStaffAction,
   saveStaffAvailabilityAction,
@@ -494,34 +494,57 @@ export function WebhookSecretButton({ hasSecret, disabled }: { hasSecret: boolea
   );
 }
 
-export function MissedCallCard({ initial, canText, textHint }: { initial: { enabled: boolean; textBack: boolean; template: string }; canText: boolean; textHint: string | null }) {
+export type RecoveryCardCopy = {
+  title: string;
+  description: string;
+  enabledLabel: string;
+  enabledHint: string;
+  autoLabel: string;
+  autoHint: string;
+  messageLabel: string;
+  messageHint: string;
+};
+
+export function RecoveryCard({
+  worker,
+  copy,
+  initial,
+  canSend,
+  sendHint,
+}: {
+  worker: "missedCall" | "leads";
+  copy: RecoveryCardCopy;
+  initial: { enabled: boolean; auto: boolean; template: string };
+  canSend: boolean;
+  sendHint: string | null;
+}) {
   const [f, setF] = useState(initial);
   const { pending, state, exec } = useAction();
   return (
     <Card>
-      <CardHeader title="Missed call recovery" description="When a call goes unanswered, the caller becomes an opportunity — and, if you allow it, the AI texts them back so the conversation continues." />
+      <CardHeader title={copy.title} description={copy.description} />
       <div className="space-y-4 px-5 pb-5">
         <label className="flex items-center justify-between gap-4">
           <span>
-            <span className="block text-sm font-medium">Track missed calls</span>
-            <span className="block text-[13px] text-muted-foreground">Each caller is matched to a customer and shown in Opportunities.</span>
+            <span className="block text-sm font-medium">{copy.enabledLabel}</span>
+            <span className="block text-[13px] text-muted-foreground">{copy.enabledHint}</span>
           </span>
-          <Switch checked={f.enabled} onCheckedChange={(v) => setF({ ...f, enabled: v })} aria-label="Track missed calls" />
+          <Switch checked={f.enabled} onCheckedChange={(v) => setF({ ...f, enabled: v })} aria-label={copy.enabledLabel} />
         </label>
         <label className="flex items-center justify-between gap-4">
           <span>
-            <span className="block text-sm font-medium">AI texts the caller back</span>
-            <span className="block text-[13px] text-muted-foreground">Once per caller per day, never to opted-out customers or while a team member owns the conversation. Also needs the &quot;Send messages&quot; AI permission.</span>
+            <span className="block text-sm font-medium">{copy.autoLabel}</span>
+            <span className="block text-[13px] text-muted-foreground">{copy.autoHint}</span>
           </span>
-          <Switch checked={f.textBack} disabled={!f.enabled} onCheckedChange={(v) => setF({ ...f, textBack: v })} aria-label="AI texts the caller back" />
+          <Switch checked={f.auto} disabled={!f.enabled} onCheckedChange={(v) => setF({ ...f, auto: v })} aria-label={copy.autoLabel} />
         </label>
-        {!canText && textHint ? <Notice tone="warning">{textHint}</Notice> : null}
-        <Field label="Text-back message" hint="{{business}} and {{customer_name}} are filled in. The caller's reply goes to the AI receptionist.">
+        {!canSend && sendHint ? <Notice tone="warning">{sendHint}</Notice> : null}
+        <Field label={copy.messageLabel} hint={copy.messageHint}>
           <Textarea rows={3} value={f.template} maxLength={480} onChange={(e) => setF({ ...f, template: e.target.value })} />
         </Field>
         <div className="flex items-center justify-end gap-3">
           <span className="mr-auto"><Msg state={state} /></span>
-          <Button size="sm" disabled={pending} onClick={() => exec(() => saveMissedCallAction(f))}>{pending ? "Saving…" : "Save"}</Button>
+          <Button size="sm" disabled={pending} onClick={() => exec(() => saveRecoveryAction(worker, f))}>{pending ? "Saving…" : "Save"}</Button>
         </div>
       </div>
     </Card>

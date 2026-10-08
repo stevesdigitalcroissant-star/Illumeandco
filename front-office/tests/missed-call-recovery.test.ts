@@ -246,10 +246,10 @@ describe("Missed Call Recovery", () => {
     expect((await missed(c, p3)).event.result).toMatch(/team member owns/);
 
     const s = await db.query.aiSettings.findFirst({ where: eq(aiSettings.businessId, c.business.id) });
-    await db.update(aiSettings).set({ recovery: { missedCall: { ...s!.recovery.missedCall, textBack: false } } }).where(eq(aiSettings.businessId, c.business.id));
+    await db.update(aiSettings).set({ recovery: { ...s!.recovery, missedCall: { ...s!.recovery.missedCall, textBack: false } } }).where(eq(aiSettings.businessId, c.business.id));
     expect((await missed(c, newPhone())).event.result).toMatch(/turned off/);
 
-    await db.update(aiSettings).set({ recovery: { missedCall: { ...s!.recovery.missedCall, enabled: false } } }).where(eq(aiSettings.businessId, c.business.id));
+    await db.update(aiSettings).set({ recovery: { ...s!.recovery, missedCall: { ...s!.recovery.missedCall, enabled: false } } }).where(eq(aiSettings.businessId, c.business.id));
     const off = await missed(c, newPhone());
     expect(off.event.status).toBe("ignored");
 

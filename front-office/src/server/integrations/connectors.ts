@@ -47,7 +47,7 @@ export async function listConnectors(ctx: Ctx): Promise<ConnectorInfo[]> {
       description: "Any phone system, form tool or automation platform (Zapier, Make, n8n, RingCentral, Aircall, 3CX…) can send signed events.",
       status: !hook.encryption ? "config" : hook.lastEventAt ? "active" : hook.hasSecret ? "ready" : "config",
       hint: !hook.encryption ? ENCRYPTION_HINT : hook.hasSecret ? undefined : "Generate a signing secret below to start receiving events.",
-      events: ["call.missed", "call.completed"],
+      events: ["call.missed", "call.completed", "lead.created"],
     },
     {
       key: TWILIO_VOICE_PROVIDER,

@@ -66,6 +66,12 @@ phone system / Zapier / Make / Twilio Voice
   - SMS/WhatsApp is configured
 
   Otherwise the team is asked to call back, with the reason. Replies thread into the same SMS conversation and the AI receptionist answers them. If there is no reply within 2 hours, the team is asked to call. A booking closes the opportunity as won, and it counts as *recovered* only if the text-back went out first. After 7 quiet days the opportunity is closed as lost.
+- **Lead Recovery** (`src/server/recovery/leads.ts`): a `lead.created` event (`name`, `email` and/or `phone`, `service`, `message`, `source`) from a form, ad or automation tool:
+  - matches the person to an existing customer, filling only missing details
+  - records one active lead, with the service matched by name
+  - sends the first message within seconds (`first_touch`, once per 24h, never re-armed), under the same guardrails as the missed-call text-back. It also stops if the person already has an appointment.
+
+  The Opportunity Engine then times further follow-ups from what the customer says. A lead with no conversation yet and no queued first message goes to the team as "Reach out".
 - Failed or stranded events are retried by the background tick with backoff, at most 5 attempts.
 
 ## Multi-tenancy

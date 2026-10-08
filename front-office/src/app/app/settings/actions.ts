@@ -17,7 +17,7 @@ import {
   type AvailabilityInput,
 } from "@/server/services/catalog";
 import { rotateWebhookSecret } from "@/server/integrations/connectors";
-import { updateMissedCallConfig } from "@/server/recovery/config";
+import { updateRecoveryConfig } from "@/server/recovery/config";
 import { addExistingMember, changeMemberRole, inviteNewMember, listMembers, removeMember } from "@/server/services/team";
 
 const revalidate = () => revalidatePath("/app/settings");
@@ -239,10 +239,10 @@ export async function rotateWebhookSecretAction() {
   });
 }
 
-export async function saveMissedCallAction(input: { enabled: boolean; textBack: boolean; template: string }) {
+export async function saveRecoveryAction(worker: "missedCall" | "leads", input: { enabled: boolean; auto: boolean; template: string }) {
   return run(async () => {
     const { ctx } = await requirePermission("business.manage");
-    await updateMissedCallConfig(ctx, { enabled: Boolean(input.enabled), textBack: Boolean(input.textBack), template: String(input.template ?? "") });
+    await updateRecoveryConfig(ctx, worker === "leads" ? "leads" : "missedCall", { enabled: Boolean(input.enabled), auto: Boolean(input.auto), template: String(input.template ?? "") });
     revalidate();
   }, "Saved.");
 }

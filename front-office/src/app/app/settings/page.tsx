@@ -19,7 +19,7 @@ import { getAiSettings, getBusinessHours } from "@/server/services/business";
 import { getStaffAvailability, listBlackouts, listServices, listStaff } from "@/server/services/catalog";
 import { listMembers } from "@/server/services/team";
 import { addBlackoutAction, saveBusinessAction, savePoliciesAction } from "./actions";
-import { CardFooter, HoursCard, MissedCallCard, RemoveBlackoutButton, ServicesCard, StaffCard, TeamCard, WebhookSecretButton } from "./settings-client";
+import { CardFooter, HoursCard, RecoveryCard, RemoveBlackoutButton, ServicesCard, StaffCard, TeamCard, WebhookSecretButton } from "./settings-client";
 
 export const metadata = { title: "Settings" };
 
@@ -310,11 +310,12 @@ async function IntegrationsTab({ r }: { r: R }) {
   const origin = process.env.APP_URL ?? `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`;
   const key = r.business.publicKey;
   const phoneChannel = getChannel("sms").isConfigured() || getChannel("whatsapp").isConfigured();
-  const textHint = !phoneChannel
-    ? "Texting back needs SMS or WhatsApp (Twilio) — configuration required. Until then, missed calls are listed for your team to call back."
-    : !isAllowed(settings.permissions, "send_messages")
-      ? "The AI's \"Send messages\" permission is off (AI Receptionist → Permissions), so missed calls go to your team to call back."
-      : null;
+  const anyChannel = phoneChannel || getChannel("email").isConfigured();
+  const noPermission = !isAllowed(settings.permissions, "send_messages")
+    ? "The AI's \"Send messages\" permission is off (AI Receptionist → Permissions), so these go to your team instead."
+    : null;
+  const textHint = !phoneChannel ? "Texting back needs SMS or WhatsApp (Twilio) — configuration required. Until then, missed calls are listed for your team to call back." : noPermission;
+  const leadHint = !anyChannel ? "A first message needs SMS, WhatsApp or email to be set up — configuration required. Until then, new leads are listed for your team to contact." : noPermission;
   const tz = r.business.timezone;
   return (
     <>
@@ -339,7 +340,8 @@ async function IntegrationsTab({ r }: { r: R }) {
                   </div>
                   <div className="text-xs text-muted-foreground">
                     Headers <code>X-AFO-Timestamp</code> (unix seconds) and <code>X-AFO-Signature</code> = hex HMAC-SHA256 of <code>{"`${timestamp}.${body}`"}</code> with your secret. Body:{" "}
-                    <code className="break-all">{`{"id":"call-123","type":"call.missed","data":{"from":"+971501234567","reason":"no_answer"}}`}</code>. Repeated ids are ignored.
+                    <code className="break-all">{`{"id":"call-123","type":"call.missed","data":{"from":"+971501234567","reason":"no_answer"}}`}</code> or{" "}
+                    <code className="break-all">{`{"id":"form-88","type":"lead.created","data":{"name":"Sara","email":"sara@example.com","service":"Teeth whitening","message":"…","source":"website form"}}`}</code>. Repeated ids are ignored.
                   </div>
                   <WebhookSecretButton hasSecret={hook.hasSecret} disabled={!hook.encryption} />
                 </div>
@@ -354,7 +356,38 @@ async function IntegrationsTab({ r }: { r: R }) {
           ))}
         </ul>
       </Card>
-      <MissedCallCard initial={settings.recovery.missedCall} canText={!textHint} textHint={textHint} />
+      <RecoveryCard
+        worker="missedCall"
+        initial={{ enabled: settings.recovery.missedCall.enabled, auto: settings.recovery.missedCall.textBack, template: settings.recovery.missedCall.template }}
+        canSend={!textHint}
+        sendHint={textHint}
+        copy={{
+          title: "Missed call recovery",
+          description: "When a call goes unanswered, the caller becomes an opportunity — and, if you allow it, the AI texts them back so the conversation continues.",
+          enabledLabel: "Track missed calls",
+          enabledHint: "Each caller is matched to a customer and shown in Opportunities.",
+          autoLabel: "AI texts the caller back",
+          autoHint: "Once per caller per day, never to opted-out customers or while a team member owns the conversation. Also needs the \"Send messages\" AI permission.",
+          messageLabel: "Text-back message",
+          messageHint: "{{business}} and {{customer_name}} are filled in. The caller's reply goes to the AI receptionist.",
+        }}
+      />
+      <RecoveryCard
+        worker="leads"
+        initial={{ enabled: settings.recovery.leads.enabled, auto: settings.recovery.leads.firstTouch, template: settings.recovery.leads.template }}
+        canSend={!leadHint}
+        sendHint={leadHint}
+        copy={{
+          title: "Lead recovery",
+          description: "New enquiries from your forms, ads and tools (via the webhook, event type lead.created) get an answer within seconds, and the AI keeps following up until they book or say no.",
+          enabledLabel: "Track incoming leads",
+          enabledHint: "Matched to existing customers by email or phone; the service is matched to your services by name.",
+          autoLabel: "AI sends the first message",
+          autoHint: "Once per lead per day — not to opted-out customers, people who already have an appointment, or conversations a team member owns. Also needs the \"Send messages\" AI permission.",
+          messageLabel: "First message",
+          messageHint: "{{customer_name}}, {{business}} and {{about_service}} (e.g. \" about teeth whitening\") are filled in.",
+        }}
+      />
       <Card>
         <CardHeader title="Recent events" description="Everything your systems sent us, and what we did with it." />
         {events.length ? (
