@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { Field, Input, NativeSelect, Textarea } from "@/components/ui/input";
-import { EmptyState, PageHeader, Table } from "@/components/ui/misc";
+import { EmptyState, Notice, PageHeader, Table } from "@/components/ui/misc";
 import { requirePermission } from "@/lib/session";
 import { cn, formatMoney } from "@/lib/utils";
 import { headers } from "next/headers";
@@ -20,6 +20,7 @@ import { billingConfigured } from "@/server/services/billing";
 import { getAiSettings, getBusinessHours } from "@/server/services/business";
 import { getStaffAvailability, listBlackouts, listServices, listStaff } from "@/server/services/catalog";
 import { listMembers } from "@/server/services/team";
+import { planLimits } from "@/server/services/plan-limits";
 import { addBlackoutAction, saveBusinessAction, savePoliciesAction, saveSendersAction } from "./actions";
 import { AlertsCard, SimulateCard, WhatsappTemplatesCard, CardFooter, HoursCard, RecoveryCard, RemoveBlackoutButton, ServicesCard, StaffCard, TeamCard, WebhookSecretButton } from "./settings-client";
 
@@ -245,7 +246,7 @@ function PoliciesTab({ r }: { r: R }) {
 }
 
 async function TeamTab({ r }: { r: R }) {
-  const [members, settings] = await Promise.all([listMembers(r.ctx), getAiSettings(r.ctx)]);
+  const [members, settings, limits] = await Promise.all([listMembers(r.ctx), getAiSettings(r.ctx), planLimits(r.ctx)]);
   const sendable = channelsFor(r.business);
   const alertHint = !sendable.has("sms") && !sendable.has("email") ? "Neither SMS nor email is set up yet — alerts will show in the dashboard bell only until one is (configuration required)." : null;
   const roles = [
@@ -256,6 +257,12 @@ async function TeamTab({ r }: { r: R }) {
   return (
     <>
       <AlertsCard initial={settings.alerts} hint={alertHint} />
+      {limits.maxStaff !== null && limits.source !== "unlimited" ? (
+        <Notice tone={members.length >= limits.maxStaff ? "warning" : "neutral"} className="mb-4">
+          {members.length} of {limits.maxStaff} team members on your {limits.source === "trial" ? "trial" : `${limits.planName} plan`}.
+          {members.length >= limits.maxStaff ? " Upgrade on the Billing page to add more people." : ""}
+        </Notice>
+      ) : null}
       <TeamCard
         canManage={roleCan(r.role, "members.manage")}
         members={members.map((m) => ({ id: m.id, userId: m.userId, name: m.name, email: m.email, role: m.role, isMe: m.userId === r.user.id }))}

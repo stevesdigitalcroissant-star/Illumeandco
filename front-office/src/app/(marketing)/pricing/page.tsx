@@ -39,7 +39,7 @@ export default async function PricingPage() {
     { label: "Missed call & lead recovery", value: () => true },
     { label: "AI website chat & booking", value: () => true },
     { label: "Revenue dashboard & staff alerts", value: () => true },
-    { label: "Slot recovery & waitlist", value: (p) => p.id !== "starter" },
+    { label: "Slot recovery & waitlist", value: (p) => Boolean(p.entitlements.slotRecovery) },
     { label: "WhatsApp", value: (p) => p.entitlements.channels.includes("whatsapp") },
   ];
   return (

@@ -17,6 +17,7 @@
  * channel accepted them, and a slot only counts as recovered when it was
  * filled through an accepted offer.
  */
+import { assertFeature, hasFeature } from "../services/plan-limits";
 import { and, asc, desc, eq, gt, inArray, lt, sql } from "drizzle-orm";
 import { DateTime } from "luxon";
 import {
@@ -130,7 +131,7 @@ export async function listWaitlist(ctx: Ctx) {
 /** Record a slot freed in the built-in calendar. Called from cancellation/reschedule (inside their transaction). */
 export async function onSlotFreed(ctx: Ctx, appt: Pick<Appointment, "id" | "staffId" | "serviceId" | "startsAt" | "endsAt" | "priceCents">, source: "cancellation" | "reschedule", now = new Date()) {
   const settings = await getAiSettings(ctx);
-  if (!settings.recovery.slots.enabled) return null;
+  if (!settings.recovery.slots.enabled || !(await hasFeature(ctx, "slotRecovery", now))) return null;
   const business = await getBusiness(ctx);
   if (appt.startsAt.getTime() - business.minNoticeMinutes * 60_000 <= now.getTime()) return null; // too late to refill
   const [row] = await dbOf(ctx)
@@ -155,6 +156,7 @@ export async function onSlotFreed(ctx: Ctx, appt: Pick<Appointment, "id" | "staf
 export async function onExternalSlot(ctx: Ctx, input: { externalRef: string; startsAt: Date; durationMinutes: number; service?: string; staff?: string }, now = new Date()) {
   const settings = await getAiSettings(ctx);
   if (!settings.recovery.slots.enabled) return { handled: false as const, detail: "Slot recovery is turned off" };
+  if (!(await hasFeature(ctx, "slotRecovery", now))) return { handled: false as const, detail: "Slot recovery isn't included in this plan" };
   if (input.startsAt.getTime() <= now.getTime()) return { handled: false as const, detail: "That slot is already in the past" };
   const { matchService } = await import("./leads");
   const service = await matchService(ctx, input.service);
@@ -313,6 +315,7 @@ function withinMessagingHours(now: Date, tz: string) {
 export async function offerSlot(ctx: Ctx, slotId: string, opts: { now?: Date } = {}) {
   if (ctx.actor.type === "user") assertCan(ctx, "appointments.manage");
   const now = opts.now ?? new Date();
+  await assertFeature(ctx, "slotRecovery", now);
   const settings = await getAiSettings(ctx);
   const cfg = settings.recovery.slots;
   const business = await getBusiness(ctx);
@@ -575,7 +578,7 @@ export async function sweepSlots(ctx: Ctx, now = new Date()) {
     update slot_recoveries s set status = 'open', status_note = 'Offers expired without a reply'
     where s.business_id = ${ctx.businessId} and s.status = 'offering'
       and not exists (select 1 from slot_offers o where o.slot_id = s.id and o.status = 'sent')`);
-  if (!settings.recovery.slots.enabled || !settings.recovery.slots.autoOffer) return;
+  if (!settings.recovery.slots.enabled || !settings.recovery.slots.autoOffer || !(await hasFeature(ctx, "slotRecovery", now))) return;
   if (!isAllowed(settings.permissions, "send_messages") || !withinMessagingHours(now, business.timezone)) return;
   const open = await db
     .select({ id: slotRecoveries.id })

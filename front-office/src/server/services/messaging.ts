@@ -9,6 +9,7 @@ import { getAiSettings, getBusiness } from "./business";
 import type { WhatsappPurpose } from "@/db/schema";
 import { appendMessage, createConversation } from "./conversations";
 import { automatedTextAllowed, notifyLimitReached } from "./allowance";
+import { hasFeature } from "./plan-limits";
 
 export { renderTemplate } from "@/lib/templates";
 
@@ -66,6 +67,10 @@ export async function deliverToCustomer(
     const adapter = getChannel(kind);
     const sender = available.get(kind);
     if (!sender || !adapter.canReach(to)) continue;
+    if (kind === "whatsapp" && !(await hasFeature(ctx, "whatsapp"))) {
+      skipped.push(`${adapter.label}: Not included in your plan`);
+      continue;
+    }
     if (kind === "sms" || kind === "whatsapp") {
       if (textsOk === null) {
         const check = await automatedTextAllowed(ctx);

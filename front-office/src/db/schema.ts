@@ -1092,6 +1092,8 @@ export type PlanEntitlements = {
   textsPerMonth?: number | null;
   maxStaff: number | null;
   maxLocations: number | null;
+  /** Cancellation refills from the waitlist. */
+  slotRecovery?: boolean;
   followUps: boolean;
   advancedAnalytics: boolean;
   channels: string[];

@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { businesses } from "@/db/schema";
 import { audit } from "../audit";
 import { assertCan, conflict, dbOf, invalid, type Ctx } from "../context";
+import { assertFeature } from "./plan-limits";
 
 const E164 = /^\+[1-9]\d{6,14}$/;
 
@@ -17,6 +18,10 @@ export async function updateSenders(ctx: Ctx, input: { smsFrom?: string | null; 
   assertCan(ctx, "business.manage");
   const smsFrom = clean(input.smsFrom, "SMS number");
   const whatsappFrom = clean(input.whatsappFrom, "WhatsApp number");
+  if (whatsappFrom) {
+    const current = await dbOf(ctx).query.businesses.findFirst({ where: eq(businesses.id, ctx.businessId), columns: { whatsappFrom: true } });
+    if (current?.whatsappFrom !== whatsappFrom) await assertFeature(ctx, "whatsapp");
+  }
   try {
     const [b] = await dbOf(ctx).update(businesses).set({ smsFrom, whatsappFrom }).where(eq(businesses.id, ctx.businessId)).returning();
     await audit(ctx, {

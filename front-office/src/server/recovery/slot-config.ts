@@ -3,6 +3,7 @@ import { aiSettings, type RecoveryConfig } from "@/db/schema";
 import { audit } from "../audit";
 import { assertCan, dbOf, invalid, type Ctx } from "../context";
 import { getAiSettings } from "../services/business";
+import { assertFeature } from "../services/plan-limits";
 
 export async function updateSlotConfig(ctx: Ctx, input: RecoveryConfig["slots"]) {
   assertCan(ctx, "business.manage");
@@ -11,6 +12,7 @@ export async function updateSlotConfig(ctx: Ctx, input: RecoveryConfig["slots"])
   if (!/\{\{\s*when\s*\}\}/.test(template)) throw invalid("The offer message must include {{when}} so customers know which time is offered.");
   if (!Number.isInteger(input.batchSize) || input.batchSize < 1 || input.batchSize > 10) throw invalid("Offer at most 1–10 people at once.");
   if (!Number.isInteger(input.offerMinutes) || input.offerMinutes < 10 || input.offerMinutes > 24 * 60) throw invalid("Offers must stay open between 10 minutes and 24 hours.");
+  if (input.enabled) await assertFeature(ctx, "slotRecovery");
   const current = await getAiSettings(ctx);
   const slots = { enabled: Boolean(input.enabled), autoOffer: Boolean(input.autoOffer), batchSize: input.batchSize, offerMinutes: input.offerMinutes, template };
   await dbOf(ctx).update(aiSettings).set({ recovery: { ...current.recovery, slots } }).where(eq(aiSettings.businessId, ctx.businessId));

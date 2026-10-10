@@ -1,4 +1,5 @@
 "use server";
+import { assertCanAddLocation } from "@/server/services/plan-limits";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { moneyToCents, num, optStr, run, str, type ActionResult } from "@/lib/action";
@@ -51,6 +52,7 @@ export async function createBusinessAction(_: ActionResult<unknown> | null, fd: 
     const orgs = await membershipsFor(user.id);
     const owned = orgs.find((m) => m.role === "owner");
     if (!owned) throw invalid("Only an organization owner can create a business.");
+    await assertCanAddLocation(owned.organizationId);
     const business = await createBusiness(owned.organizationId, { name });
     await setActiveBusiness(token, business.id);
     return business.id;

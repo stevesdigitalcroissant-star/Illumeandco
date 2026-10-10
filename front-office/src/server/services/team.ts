@@ -9,6 +9,7 @@ import { businesses, organizationMembers, sessions, users } from "@/db/schema";
 import { audit } from "../audit";
 import { hashPassword, normalizeEmail, randomToken } from "../auth";
 import { AppError, assertCan, dbOf, invalid, notFound, type Ctx, type Role } from "../context";
+import { assertCanAddMember } from "./plan-limits";
 
 const ROLES: Role[] = ["owner", "manager", "staff"];
 
@@ -66,6 +67,7 @@ async function inTx<T>(ctx: Ctx, fn: (tx: Tx) => Promise<T>) {
 export async function addExistingMember(ctx: Ctx, input: { email: string; role: string }) {
   assertCan(ctx, "members.manage");
   assertRole(input.role);
+  await assertCanAddMember(ctx);
   const email = normalizeEmail(input.email);
   const organizationId = await organizationOf(ctx);
   const user = await dbOf(ctx).query.users.findFirst({ where: sql`lower(${users.email}) = ${email}` });
@@ -93,6 +95,7 @@ export async function inviteNewMember(ctx: Ctx, input: { name: string; email: st
   assertRole(input.role);
   const name = input.name.trim();
   if (!name) throw invalid("Please enter the person's name.");
+  await assertCanAddMember(ctx);
   const email = normalizeEmail(input.email);
   const organizationId = await organizationOf(ctx);
   const temporaryPassword = randomToken(12);

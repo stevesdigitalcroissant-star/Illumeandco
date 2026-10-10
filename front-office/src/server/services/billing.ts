@@ -26,7 +26,7 @@ export const DEFAULT_PLANS: (typeof plans.$inferInsert)[] = [
     priceMonthlyCents: 5900,
     currency: "USD",
     features: ["150 AI conversations / month", "100 texts / month", "Missed call recovery", "Lead recovery & first reply in seconds", "AI website chat & booking", "Revenue dashboard & staff alerts", "Up to 3 team members"],
-    entitlements: { aiConversationsPerMonth: 150, textsPerMonth: 100, maxStaff: 3, maxLocations: 1, followUps: true, advancedAnalytics: false, channels: ["web_chat", "email", "sms"], voice: false },
+    entitlements: { aiConversationsPerMonth: 150, textsPerMonth: 100, maxStaff: 3, maxLocations: 1, slotRecovery: false, followUps: true, advancedAnalytics: false, channels: ["web_chat", "email", "sms"], voice: false },
     sortOrder: 1,
   },
   {
@@ -36,7 +36,7 @@ export const DEFAULT_PLANS: (typeof plans.$inferInsert)[] = [
     priceMonthlyCents: 14900,
     currency: "USD",
     features: ["450 AI conversations / month", "250 texts / month", "Everything in Starter", "Slot recovery & waitlist", "WhatsApp", "Smart follow-ups & morning summary", "Up to 10 team members"],
-    entitlements: { aiConversationsPerMonth: 450, textsPerMonth: 250, maxStaff: 10, maxLocations: 1, followUps: true, advancedAnalytics: true, channels: ["web_chat", "email", "sms", "whatsapp"], voice: false },
+    entitlements: { aiConversationsPerMonth: 450, textsPerMonth: 250, maxStaff: 10, maxLocations: 1, slotRecovery: true, followUps: true, advancedAnalytics: true, channels: ["web_chat", "email", "sms", "whatsapp"], voice: false },
     highlighted: true,
     sortOrder: 2,
   },
@@ -47,7 +47,7 @@ export const DEFAULT_PLANS: (typeof plans.$inferInsert)[] = [
     priceMonthlyCents: 34900,
     currency: "USD",
     features: ["1,000 AI conversations / month", "700 texts / month", "Everything in Growth", "Up to 3 locations", "Unlimited team members", "Priority support", "AI voice answering (when available)"],
-    entitlements: { aiConversationsPerMonth: 1000, textsPerMonth: 700, maxStaff: null, maxLocations: 3, followUps: true, advancedAnalytics: true, channels: ["web_chat", "email", "sms", "whatsapp", "instagram", "voice"], voice: true },
+    entitlements: { aiConversationsPerMonth: 1000, textsPerMonth: 700, maxStaff: null, maxLocations: 3, slotRecovery: true, followUps: true, advancedAnalytics: true, channels: ["web_chat", "email", "sms", "whatsapp", "instagram", "voice"], voice: true },
     sortOrder: 3,
   },
 ];
