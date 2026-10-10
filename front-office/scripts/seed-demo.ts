@@ -30,7 +30,9 @@ import { ingestEvent } from "../src/server/integrations/ingest";
 import { addToWaitlist } from "../src/server/recovery/slots";
 
 const DEMO_EMAIL = "demo@frontoffice.dev";
-const DEMO_PASSWORD = "demo-front-office";
+// On a public deployment the demo password comes from the environment, never the well-known default.
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD || (process.env.VERCEL_ENV ? "" : "demo-front-office");
+if (!DEMO_PASSWORD) throw new Error("Set DEMO_PASSWORD to seed the demo on a deployment");
 const TZ = "Asia/Dubai";
 
 async function main() {
