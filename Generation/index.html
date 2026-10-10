@@ -1528,7 +1528,7 @@ let syncing = false;
 const account = {};           // this person's data, as loaded from the server
 let unsynced = {}, syncTimer = null, syncWarned = false;
 const clone = v => (v == null ? v : JSON.parse(JSON.stringify(v)));
-function queueSync(k, v) { unsynced[k] = v; clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 4000); } // batched: each save is a metered Blob write
+function queueSync(k, v) { unsynced[k] = v; clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 12000); } // batched: each save is a metered Blob write (and leaving the page saves straight away)
 async function syncNow() {
   const batch = unsynced; if (!Object.keys(batch).length) return;
   unsynced = {};
@@ -1554,6 +1554,7 @@ async function syncNow() {
   } finally { syncing = false; }
 }
 // Leaving the page: send anything not yet saved.
+document.addEventListener("visibilitychange", () => { if (document.hidden && Object.keys(unsynced).length) { clearTimeout(syncTimer); syncNow(); } }); // phones often skip pagehide
 window.addEventListener("pagehide", () => {
   if (!Object.keys(unsynced).length) return;
   const base = {}; Object.keys(unsynced).forEach(k => { if (baseIds[k]) base[k] = baseIds[k]; });
@@ -1598,6 +1599,11 @@ $("msg").onclick = () => $("msg").classList.remove("show");
 // Signed in with a session cookie (HttpOnly, set by /api/auth) — the browser
 // sends it on every same-site request, so no key or code is ever stored here.
 let me = null; // { name, role }
+// Background checks only run while someone is actually using the page: every check reads the
+// Blob store, and the free plan's monthly allowance of reads is small (an idle open tab used it up).
+let lastActive = Date.now();
+["pointerdown", "keydown", "wheel", "touchstart"].forEach(e => addEventListener(e, () => { lastActive = Date.now(); }, { passive: true }));
+const awake = () => !document.hidden && Date.now() - lastActive < 10 * 60e3;
 function headers() { return { "Content-Type":"application/json" }; }
 async function api(path, opts={}) {
   const r = await fetch(path, { ...opts, headers: headers() });
@@ -1786,7 +1792,7 @@ async function pullShared() {
     if (changed.length) applyRemote(changed);
   } catch {}
 }
-setInterval(pullShared, 20000);
+setInterval(() => { if (awake()) pullShared(); }, 45000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) pullShared(); });
 async function teamCall(body) { return api("/api/studio?fn=team", { method: "POST", body: JSON.stringify(body) }); }
 function renderTeam() {
@@ -1966,7 +1972,7 @@ $("inboxBtn").onclick = e => {
   setTimeout(() => document.addEventListener("click", function off(ev) { if (!panel.contains(ev.target)) { panel.remove(); document.removeEventListener("click", off); } }), 0);
   setRaw("il.inboxSeen", Date.now()); renderInbox();
 };
-setInterval(() => { if (me && !document.hidden) loadInbox(); }, 60000);
+setInterval(() => { if (me && awake()) loadInbox(); }, 180000);
 
 /* ---------- use these settings again: the whole recipe of a take ---------- */
 function useRecipe(it) {
@@ -2669,9 +2675,9 @@ async function refreshBalance() {
     if (!low) refreshBalance.warned = false;
   } catch { $("balance").textContent = ""; } // stay quiet — this is a nice-to-have, not worth an error message
 }
-// Keep it current while the tab is open: every minute in the foreground, and the
-// moment you come back to the tab. Completed generations also refresh it (see poll).
-setInterval(() => { if (!document.hidden && me && me.role === "owner") refreshBalance(); }, 60000);
+// Keep it current while you're using the page: every 3 minutes, and the moment you come back
+// to the tab. Completed generations also refresh it (see poll).
+setInterval(() => { if (awake() && me && me.role === "owner") refreshBalance(); }, 180000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && me && me.role === "owner") refreshBalance(); });
 async function loadModels(force=false) {
   catalogue = load(LS.models, []);
@@ -4132,7 +4138,7 @@ function mergeMcp(m) {
 async function pullMcp() {
   try { const { data } = await api("/api/data?only=mcp", { cache: "no-store" }); mergeMcp(data && data["il.mcp"]); } catch {}
 }
-setInterval(() => { if (me && !document.hidden) pullMcp(); }, 20000);
+setInterval(() => { if (me && awake()) pullMcp(); }, 60000);
 document.addEventListener("visibilitychange", () => { if (me && !document.hidden) pullMcp(); });
 
 
@@ -4221,7 +4227,7 @@ async function loadReviewFb(loud) {
     else if (loud) note("No new client feedback yet.");
   } catch {}
 }
-setInterval(() => { if (me && !document.hidden && viewMode === "board") loadReviewFb(); }, 30000);
+setInterval(() => { if (me && awake() && viewMode === "board") loadReviewFb(); }, 60000);
 $("tabBoard").addEventListener("click", () => loadReviewFb());
 
 /* ---------- export cut: every storyboard shot in one video file ---------- */
