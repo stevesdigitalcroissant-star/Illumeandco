@@ -51,7 +51,7 @@ async function main() {
   }
   const existing = await db.query.businesses.findFirst({ where: and(eq(businesses.organizationId, organizationId), eq(businesses.isDemo, true)) });
   if (existing && !reset) {
-    console.log(`Demo business already exists. Sign in with ${DEMO_EMAIL} / ${DEMO_PASSWORD} (use --reset to recreate).`);
+    console.log(`Demo business already exists. Sign in with ${DEMO_EMAIL}${process.env.VERCEL_ENV ? "" : ` / ${DEMO_PASSWORD}`} (use --reset to recreate).`);
     return;
   }
   if (existing) await db.delete(businesses).where(eq(businesses.id, existing.id));
@@ -183,7 +183,7 @@ async function main() {
   await sweepBusiness({ businessId: business.id, actor: { type: "system", name: "Opportunity Engine" } });
 
   console.log("✓ Demo business created: Dubai Smile Clinic");
-  console.log(`  Sign in at /login with ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
+  console.log(`  Sign in at /login with ${DEMO_EMAIL}${process.env.VERCEL_ENV ? " (password: the DEMO_PASSWORD setting)" : ` / ${DEMO_PASSWORD}`}`);
   console.log(`  Widget key: ${business.publicKey}`);
 }
 
