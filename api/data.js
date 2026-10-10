@@ -47,8 +47,9 @@ module.exports = async (req, res) => {
     const c = await T.ctx(user);
     const own = fileOf(user.name), space = fileOf(c.space), shared = space !== own;
     if (req.method === "GET") {
-      if (!(await db.getUser(user.name))) { db.endSession(req, res); return res.status(401).json({ error: "This account no longer exists." }); }
       const q = req.query || {};
+      // the background checks (only=…) skip this: one Blob read fewer each time; the full load still checks
+      if (!q.only && !(await db.getUser(user.name))) { db.endSession(req, res); return res.status(401).json({ error: "This account no longer exists." }); }
       const mf = `mcpdata/${db.fileKey(user.name)}.json`;
       if (q.only === "mcp") { const m = await db.readJson(mf).catch(() => null); return res.status(200).json({ data: { "il.mcp": (m && m.value) || null } }); }
       if (q.only === "shared") {

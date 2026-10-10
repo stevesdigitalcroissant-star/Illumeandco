@@ -36,7 +36,7 @@ const nameFromKey = k => String(k || "").replace(/~([0-9a-f]{2})/g, (_, h) => St
 const cache = new Map();
 async function ctx(user) {
   const name = typeof user === "string" ? user : user.name;
-  const hit = cache.get(name); if (hit && Date.now() - hit.t < 20000) return hit.v;
+  const hit = cache.get(name); if (hit && Date.now() - hit.t < 120000) return hit.v; // 2 min: team changes call forget()
   const r = await db.readJson(`users/${db.fileKey(name)}.json`).catch(() => null);
   const u = (r && r.value) || {};
   let v;
