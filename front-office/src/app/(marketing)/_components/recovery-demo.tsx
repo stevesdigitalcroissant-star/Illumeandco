@@ -12,13 +12,13 @@ import { cn } from "@/lib/utils";
 type Step = { icon: typeof PhoneMissed; tone: "danger" | "primary" | "success" | "muted"; title: string; detail: string; value?: number };
 
 const STEPS: Step[] = [
-  { icon: PhoneMissed, tone: "danger", title: "Missed call · 1:12 PM", detail: "+971 50 ••• 4417 — reception was with a patient" },
+  { icon: PhoneMissed, tone: "danger", title: "Missed call · 1:12 PM", detail: "••• ••• 4417 — reception was with a patient" },
   { icon: MessageSquare, tone: "primary", title: "AI texted back in 4 seconds", detail: "“Sorry we missed your call! How can we help?”" },
   { icon: UserRound, tone: "muted", title: "Sara replied", detail: "“How much is teeth whitening? Anything this week?”" },
-  { icon: CalendarCheck, tone: "success", title: "Booked · Teeth whitening", detail: "Thu 4:30 PM — recovered from a missed call", value: 650 },
+  { icon: CalendarCheck, tone: "success", title: "Booked · Teeth whitening", detail: "Thu 4:30 PM — recovered from a missed call", value: 180 },
   { icon: CalendarClock, tone: "danger", title: "Cancellation · Fri 10:00 AM", detail: "Cleaning with Dr. Omar — slot is now empty" },
   { icon: Sparkles, tone: "primary", title: "Offered to the top 3 on the waitlist", detail: "Ranked by fit, value and how long they've waited" },
-  { icon: CalendarCheck, tone: "success", title: "Slot refilled · Ahmed replied YES", detail: "Booked automatically — first come, first served", value: 300 },
+  { icon: CalendarCheck, tone: "success", title: "Slot refilled · Ahmed replied YES", detail: "Booked automatically — first come, first served", value: 85 },
 ];
 
 const TONE = {
@@ -79,7 +79,7 @@ export function RecoveryDemo() {
               <p className="truncate text-xs text-muted-foreground">{s.detail}</p>
             </div>
             {s.value ? (
-              <span className="shrink-0 rounded-md bg-success-soft px-1.5 py-0.5 text-xs font-semibold text-success tabular">+AED {s.value}</span>
+              <span className="shrink-0 rounded-md bg-success-soft px-1.5 py-0.5 text-xs font-semibold text-success tabular">+${s.value}</span>
             ) : null}
           </li>
         ))}
@@ -89,7 +89,7 @@ export function RecoveryDemo() {
         <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
           <Check className="size-3.5 text-success" aria-hidden /> Recovered today
         </span>
-        <span className="text-lg font-semibold tabular transition-all">AED {recovered.toLocaleString("en-US")}</span>
+        <span className="text-lg font-semibold tabular transition-all">${recovered.toLocaleString("en-US")}</span>
       </div>
     </div>
   );

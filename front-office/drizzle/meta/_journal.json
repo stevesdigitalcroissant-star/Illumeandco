@@ -85,6 +85,13 @@
       "when": 1791499654117,
       "tag": "0011_heartbeats",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791639112659,
+      "tag": "0012_plans_usd_allowances",
+      "breakpoints": true
     }
   ]
 }

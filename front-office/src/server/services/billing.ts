@@ -11,36 +11,51 @@ import { businesses, organizations, plans, subscriptions, type PlanEntitlements 
 import { audit } from "../audit";
 import { AppError, assertCan, type Ctx } from "../context";
 
+/**
+ * Plans (USD). Each includes a monthly allowance of AI conversations and
+ * outbound texts so every plan stays profitable: at a cautious ~$0.10 of AI
+ * cost per conversation and ~$0.05 per SMS/WhatsApp message, each plan keeps
+ * roughly 60%+ gross margin. Real costs per business are on the Billing page
+ * (AI usage) — adjust these rows in the database as you learn.
+ */
 export const DEFAULT_PLANS: (typeof plans.$inferInsert)[] = [
   {
     id: "starter",
     name: "Starter",
-    description: "For a single location getting started with an AI front desk.",
-    priceMonthlyCents: 4900,
-    features: ["1 AI receptionist", "Website chat", "Basic knowledge base", "Lead capture", "Appointment booking"],
-    entitlements: { maxStaff: 2, maxLocations: 1, followUps: false, advancedAnalytics: false, channels: ["web_chat"], voice: false },
+    description: "For a single clinic or salon that wants every missed call and enquiry answered.",
+    priceMonthlyCents: 5900,
+    currency: "USD",
+    features: ["150 AI conversations / month", "100 texts / month", "Missed call recovery", "Lead recovery & first reply in seconds", "AI website chat & booking", "Revenue dashboard & staff alerts", "Up to 3 team members"],
+    entitlements: { aiConversationsPerMonth: 150, textsPerMonth: 100, maxStaff: 3, maxLocations: 1, followUps: true, advancedAnalytics: false, channels: ["web_chat", "email", "sms"], voice: false },
     sortOrder: 1,
   },
   {
     id: "growth",
     name: "Growth",
-    description: "For busy teams that want every lead followed up.",
+    description: "For busy practices that want cancellations refilled and every lead chased.",
     priceMonthlyCents: 14900,
-    features: ["Everything in Starter", "AI follow-ups", "Advanced analytics", "Multiple staff", "Additional channels"],
-    entitlements: { maxStaff: 15, maxLocations: 1, followUps: true, advancedAnalytics: true, channels: ["web_chat", "email", "sms", "whatsapp"], voice: false },
+    currency: "USD",
+    features: ["450 AI conversations / month", "250 texts / month", "Everything in Starter", "Slot recovery & waitlist", "WhatsApp", "Smart follow-ups & morning summary", "Up to 10 team members"],
+    entitlements: { aiConversationsPerMonth: 450, textsPerMonth: 250, maxStaff: 10, maxLocations: 1, followUps: true, advancedAnalytics: true, channels: ["web_chat", "email", "sms", "whatsapp"], voice: false },
     highlighted: true,
     sortOrder: 2,
   },
   {
     id: "pro",
     name: "Pro",
-    description: "For multi-location businesses and phone-heavy front desks.",
-    priceMonthlyCents: 39900,
-    features: ["Everything in Growth", "Voice receptionist (coming soon)", "Advanced automation", "Multiple locations", "Priority support"],
-    entitlements: { maxStaff: null, maxLocations: null, followUps: true, advancedAnalytics: true, channels: ["web_chat", "email", "sms", "whatsapp", "instagram", "voice"], voice: true },
+    description: "For multi-location and high-volume front desks.",
+    priceMonthlyCents: 34900,
+    currency: "USD",
+    features: ["1,000 AI conversations / month", "700 texts / month", "Everything in Growth", "Up to 3 locations", "Unlimited team members", "Priority support", "AI voice answering (when available)"],
+    entitlements: { aiConversationsPerMonth: 1000, textsPerMonth: 700, maxStaff: null, maxLocations: 3, followUps: true, advancedAnalytics: true, channels: ["web_chat", "email", "sms", "whatsapp", "instagram", "voice"], voice: true },
     sortOrder: 3,
   },
 ];
+
+/** What an organization without a paid plan can use while trying the product (when billing is on). */
+export const TRIAL_ALLOWANCE = { aiConversationsPerMonth: 50, textsPerMonth: 25 };
+/** Free trial without a card, counted from sign-up. */
+export const TRIAL_DAYS = 14;
 
 /** Insert default plans if missing (never overwrites edited plans). */
 export async function seedPlans() {

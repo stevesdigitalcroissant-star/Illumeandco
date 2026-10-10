@@ -14,6 +14,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { DateTime } from "luxon";
 import { recordUsage } from "./usage";
+import { aiConversationAllowed, notifyLimitReached } from "../services/allowance";
 import { conversations, leads, messages } from "@/db/schema";
 import type { Ctx } from "../context";
 import { dbOf } from "../context";
@@ -108,11 +109,19 @@ export async function runAgentTurn(
     reply = HANDOFF_ACK;
   } else {
     const check = lastCustomer ? preCheck(lastCustomer.content, business.type) : { kind: "none" as const };
+    const provider = opts.provider ?? defaultProvider();
+    // A paid AI model counts against the plan's monthly conversation allowance (the rules engine is free).
+    const allowance = check.kind !== "handoff" && provider.id !== "rules" ? await aiConversationAllowed(ctx, conversationId, now) : null;
     if (check.kind === "handoff") {
       await execute("escalate_to_human", { reason: check.reason });
       reply = check.reply;
+    } else if (allowance && !allowance.ok) {
+      // Over the limit: the team answers instead — the customer is never left without a reply.
+      providerId = "allowance";
+      await execute("escalate_to_human", { reason: "Monthly AI conversation allowance reached" });
+      await notifyLimitReached(ctx, "ai", allowance.allowance, now);
+      reply = HANDOFF_ACK;
     } else {
-      const provider = opts.provider ?? defaultProvider();
       providerId = provider.id;
       const turns: HistoryTurn[] = [];
       for (const m of history) {

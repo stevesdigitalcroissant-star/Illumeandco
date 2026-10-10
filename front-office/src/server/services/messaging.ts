@@ -8,6 +8,7 @@ import { dbOf, notFound, type Ctx } from "../context";
 import { getAiSettings, getBusiness } from "./business";
 import type { WhatsappPurpose } from "@/db/schema";
 import { appendMessage, createConversation } from "./conversations";
+import { automatedTextAllowed, notifyLimitReached } from "./allowance";
 
 export { renderTemplate } from "@/lib/templates";
 
@@ -59,10 +60,23 @@ export async function deliverToCustomer(
   const waConv = existing.find((c) => c.channel === "whatsapp");
   const sessionOpen = Boolean(waConv?.lastCustomerMessageAt && Date.now() - waConv.lastCustomerMessageAt.getTime() < 24 * 3600_000);
   const template = input.whatsapp ? await whatsappTemplateFor(ctx, input.whatsapp.purpose, input.whatsapp.vars) : null;
+  // Automated texts count against the plan's monthly allowance (a team member's own message never does).
+  let textsOk: boolean | null = input.role === "human" ? true : null;
   for (const kind of PROACTIVE_ORDER) {
     const adapter = getChannel(kind);
     const sender = available.get(kind);
     if (!sender || !adapter.canReach(to)) continue;
+    if (kind === "sms" || kind === "whatsapp") {
+      if (textsOk === null) {
+        const check = await automatedTextAllowed(ctx);
+        textsOk = check.ok;
+        if (!check.ok) await notifyLimitReached(ctx, "texts", check.allowance);
+      }
+      if (!textsOk) {
+        skipped.push(`${adapter.label}: Monthly text allowance reached`);
+        continue;
+      }
+    }
     const result = await adapter.send({ businessId: ctx.businessId, businessName: business.name, to, text: input.text, subject: input.subject, from: sender.from, sessionOpen, template });
     if (!result.ok) {
       skipped.push(`${adapter.label}: ${result.detail}`);

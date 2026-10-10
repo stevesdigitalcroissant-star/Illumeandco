@@ -8,6 +8,7 @@ import { cn, formatMoney } from "@/lib/utils";
 import { billingConfigured, entitlementsFor, getSubscription, listPlans } from "@/server/services/billing";
 import { BillingButton } from "./billing-client";
 import { usageSummary } from "@/server/ai/usage";
+import { allowanceFor, monthlyUsage } from "@/server/services/allowance";
 
 export const metadata = { title: "Billing" };
 
@@ -24,7 +25,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
   const { business, ctx } = await requirePermission("billing.manage");
   const sp = await searchParams;
   const orgId = business.organizationId;
-  const [plans, sub, ent, usage] = await Promise.all([listPlans(), getSubscription(orgId), entitlementsFor(orgId), usageSummary(ctx)]);
+  const [plans, sub, ent, usage, allowance, month] = await Promise.all([listPlans(), getSubscription(orgId), entitlementsFor(orgId), usageSummary(ctx), allowanceFor(ctx), monthlyUsage(ctx)]);
   const usd = (v: number) => `$${v < 1 ? v.toFixed(3) : v.toFixed(2)}`;
   const tokens = (v: number) => (v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${Math.round(v / 1e3)}K` : String(v));
   const configured = billingConfigured();
@@ -65,6 +66,23 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           {configured && ent.enforced && !ent.plan ? (
             <Notice tone="warning" className="sm:col-span-3">There is no active subscription. Choose a plan below to keep using paid features.</Notice>
           ) : null}
+        </CardBody>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader
+          title="This month's usage"
+          description={
+            allowance.source === "unlimited"
+              ? "Billing isn't on in this environment, so there are no limits. Counted across all locations."
+              : allowance.source === "none"
+                ? "No active plan, so the AI and automated texts are paused. Choose a plan below."
+                : `Your ${allowance.source === "trial" ? "trial" : "plan"} allowance, counted across all locations. Resets on the 1st.`
+          }
+        />
+        <CardBody className="grid gap-6 sm:grid-cols-2">
+          <Meter label="AI conversations" hint="A conversation counts once a month, the first time the AI answers in it." used={month.aiConversations} limit={allowance.aiConversations} />
+          <Meter label="Texts (SMS + WhatsApp)" hint="Outgoing texts. Replies to customers who wrote to you are never blocked." used={month.texts} limit={allowance.texts} />
         </CardBody>
       </Card>
 
@@ -136,5 +154,26 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
         )}
       </Card>
     </>
+  );
+}
+
+function Meter({ label, hint, used, limit }: { label: string; hint: string; used: number; limit: number | null }) {
+  const pct = limit ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-[13px] font-medium">{label}</p>
+        <p className="text-sm tabular">
+          <span className="font-semibold">{used.toLocaleString("en-US")}</span>
+          <span className="text-muted-foreground"> / {limit === null ? "no limit" : limit.toLocaleString("en-US")}</span>
+        </p>
+      </div>
+      {limit !== null ? (
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
+          <div className={cn("h-full rounded-full", pct >= 100 ? "bg-danger" : pct >= 80 ? "bg-warning" : "bg-primary")} style={{ width: `${pct}%` }} />
+        </div>
+      ) : null}
+      <p className="mt-1.5 text-xs text-muted-foreground">{limit !== null && used >= limit ? "Limit reached — upgrade to keep everything automatic." : hint}</p>
+    </div>
   );
 }

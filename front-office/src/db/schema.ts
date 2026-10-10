@@ -1063,6 +1063,10 @@ export const auditLogs = pgTable(
 );
 
 export type PlanEntitlements = {
+  /** Customer conversations the AI may handle per calendar month (null = unlimited). */
+  aiConversationsPerMonth?: number | null;
+  /** Outbound SMS/WhatsApp messages per calendar month (null = unlimited). */
+  textsPerMonth?: number | null;
   maxStaff: number | null;
   maxLocations: number | null;
   followUps: boolean;

@@ -8,7 +8,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-const CURRENCIES = ["AED", "USD", "GBP", "EUR", "SAR"] as const;
+const CURRENCIES = ["USD", "AED", "GBP", "EUR", "SAR"] as const;
 
 function NumberField({ label, hint, value, onChange, min = 0, max = 1000, step = 1 }: { label: string; hint: string; value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number }) {
   return (
@@ -33,17 +33,17 @@ function NumberField({ label, hint, value, onChange, min = 0, max = 1000, step =
 }
 
 export function RoiCalculator() {
-  const [currency, setCurrency] = useState<(typeof CURRENCIES)[number]>("AED");
+  const [currency, setCurrency] = useState<(typeof CURRENCIES)[number]>("USD");
   const [missed, setMissed] = useState(15);
   const [enquiries, setEnquiries] = useState(10);
   const [cancellations, setCancellations] = useState(5);
-  const [value, setValue] = useState(400);
+  const [value, setValue] = useState(120);
   const [rate, setRate] = useState(20);
 
   const weeks = 4.33;
   const atRisk = Math.round((missed + enquiries + cancellations) * value * weeks);
   const recovered = Math.round((atRisk * rate) / 100);
-  const fmt = (n: number) => `${currency} ${n.toLocaleString("en-US")}`;
+  const fmt = (n: number) => (currency === "USD" ? `$${n.toLocaleString("en-US")}` : `${currency} ${n.toLocaleString("en-US")}`);
 
   return (
     <div className="grid gap-8 rounded-2xl border bg-background p-6 sm:p-8 lg:grid-cols-[1.2fr_1fr]">
