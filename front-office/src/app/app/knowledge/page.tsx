@@ -7,6 +7,8 @@ import { fmtDateTime, fmtRelative } from "@/lib/format";
 import { requirePermission } from "@/lib/session";
 import { embeddingsEnabled } from "@/server/ai/embeddings";
 import { knowledgeStats, listSources, parseFaqs } from "@/server/services/knowledge";
+import { listOpenGaps, ANSWERS_SOURCE_TITLE } from "@/server/services/knowledge-gaps";
+import { GapList } from "./gaps-client";
 import { AddSourceDialog, KindIcon, SourceActions, TestRetrieval } from "./knowledge-client";
 
 export const metadata = { title: "Knowledge base" };
@@ -17,7 +19,7 @@ const KIND_LABEL: Record<string, string> = { text: "Text", faq: "FAQ", document:
 
 export default async function KnowledgePage() {
   const { ctx, business } = await requirePermission("business.manage");
-  const [sources, stats] = await Promise.all([listSources(ctx), knowledgeStats(ctx)]);
+  const [sources, stats, gaps] = await Promise.all([listSources(ctx), knowledgeStats(ctx), listOpenGaps(ctx)]);
   const semantic = embeddingsEnabled();
   const failed = sources.filter((s) => s.status === "failed").length;
 
@@ -43,6 +45,20 @@ export default async function KnowledgePage() {
           </p>
         </div>
       </div>
+
+      <Card className="mt-6">
+        <CardHeader
+          title={gaps.length ? `Questions your AI couldn't answer (${gaps.length})` : "Questions your AI couldn't answer"}
+          description={`Answer once and the AI knows it from then on — answers are saved to “${ANSWERS_SOURCE_TITLE}”. Most-asked first.`}
+        />
+        <CardBody className="pt-0">
+          {gaps.length ? (
+            <GapList gaps={gaps.map((g) => ({ id: g.id, question: g.question, timesAsked: g.timesAsked, lastAsked: fmtRelative(g.lastAskedAt) }))} />
+          ) : (
+            <p className="text-sm text-muted-foreground">Nothing yet. When a customer asks something your information doesn&apos;t cover, it shows up here.</p>
+          )}
+        </CardBody>
+      </Card>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-3">
         <Card className="xl:col-span-2">

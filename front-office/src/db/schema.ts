@@ -568,6 +568,29 @@ export const knowledgeChunks = pgTable(
   ],
 );
 
+/**
+ * Questions customers asked that the AI couldn't answer from the business's
+ * information. The owner answers them once (added to the knowledge base) or
+ * dismisses them. One row per distinct question; repeats bump the count.
+ * Holds the question only — never who asked it.
+ */
+export const knowledgeGaps = pgTable(
+  "knowledge_gaps",
+  {
+    id: id(),
+    businessId: businessRef(),
+    question: text("question").notNull(),
+    /** Lower-cased, punctuation-free form used to group repeats. */
+    normalized: text("normalized").notNull(),
+    timesAsked: integer("times_asked").notNull().default(1),
+    status: text("status").notNull().default("open"), // open | answered | dismissed
+    firstAskedAt: timestamp("first_asked_at", { withTimezone: true }).notNull().defaultNow(),
+    lastAskedAt: timestamp("last_asked_at", { withTimezone: true }).notNull().defaultNow(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  },
+  (t) => [uniqueIndex("knowledge_gaps_question_idx").on(t.businessId, t.normalized), index("knowledge_gaps_open_idx").on(t.businessId, t.status, t.lastAskedAt)],
+);
+
 // ─── AI configuration ────────────────────────────────────────────────
 export type AiPermissions = {
   answer_faqs: boolean;

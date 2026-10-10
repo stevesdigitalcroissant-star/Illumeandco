@@ -5,6 +5,7 @@ import { requirePermission } from "@/lib/session";
 import { invalid } from "@/server/context";
 import { extractDocumentText } from "@/server/services/documents";
 import { importWebsite } from "@/server/services/website-import";
+import { answerGap, dismissGap } from "@/server/services/knowledge-gaps";
 import { addSource, deleteSource, formatFaqs, htmlToText, indexSource, searchKnowledge, updateSourceContent } from "@/server/services/knowledge";
 
 type Faq = { q: string; a: string };
@@ -96,4 +97,20 @@ export async function importWebsiteAction(url: string) {
     revalidatePath("/app/knowledge");
     return { added: r.added, updated: r.updated, failed: r.failed, more: r.more, site: r.site };
   });
+}
+
+export async function answerGapAction(id: string, input: { question: string; answer: string }) {
+  return run(async () => {
+    const { ctx } = await requirePermission("business.manage");
+    await answerGap(ctx, String(id), { question: String(input.question ?? ""), answer: String(input.answer ?? "") });
+    revalidatePath("/app/knowledge");
+  }, "Saved. The AI will use this answer from now on.");
+}
+
+export async function dismissGapAction(id: string) {
+  return run(async () => {
+    const { ctx } = await requirePermission("business.manage");
+    await dismissGap(ctx, String(id));
+    revalidatePath("/app/knowledge");
+  }, "Dismissed.");
 }

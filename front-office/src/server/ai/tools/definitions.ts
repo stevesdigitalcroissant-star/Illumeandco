@@ -23,6 +23,7 @@ import { getCustomer, rememberFact, updateCustomer } from "../../services/custom
 import { scheduleFollowUp } from "../../services/followups";
 import { attachContactDetails } from "../../services/identity";
 import { searchKnowledge } from "../../services/knowledge";
+import { recordGap } from "../../services/knowledge-gaps";
 import { latestLeadForCustomer, updateLead, upsertLead } from "../../services/leads";
 import { scheduleReviewRequest } from "../../services/reviews";
 import { addToWaitlist } from "../../recovery/slots";
@@ -138,9 +139,22 @@ export const TOOLS: ToolDef[] = [
     input: z.object({ query: z.string().min(2).max(300).describe("The customer's question, rephrased as a search query") }),
     async run(tc, { query }) {
       const hits = await searchKnowledge(tc.ctx, query, 4);
+      if (!hits.length) await recordGap(tc.ctx, query, tc.now).catch((e) => console.error("[knowledge] gap not recorded", e));
       return hits.length
         ? { results: hits.map((h) => ({ source: h.sourceTitle, content: h.content })) }
         : { results: [], note: "Nothing in the knowledge base matches. Do not guess — say you don't have that information and offer to have the team confirm." };
+    },
+  }),
+
+  defineTool({
+    name: "note_unanswered_question",
+    description:
+      "Record a customer question you could not answer from the business's information, so the owner can add the answer for next time. Call it whenever you have to say you don't have that information. Write the question in general terms, without the customer's name or personal details.",
+    permission: "answer_faqs",
+    input: z.object({ question: z.string().min(6).max(300).describe("The question in general terms, e.g. \"Do you offer payment plans?\"") }),
+    async run(tc, { question }) {
+      await recordGap(tc.ctx, question, tc.now);
+      return { noted: true, note: "The owner will see this question and can add the answer. Tell the customer you'll have the team confirm." };
     },
   }),
 
