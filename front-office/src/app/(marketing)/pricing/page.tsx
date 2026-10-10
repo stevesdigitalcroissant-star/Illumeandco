@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Simple monthly plans in USD, each with a clear monthly allowance of AI conversations and texts. 14-day free trial, no card needed.",
+  description: `Simple monthly plans in USD, each with a clear monthly allowance of AI conversations and texts. ${TRIAL_DAYS}-day free trial, no card needed.`,
 };
 
 const n = (v: number | null | undefined) => (v == null ? "Unlimited" : v.toLocaleString("en-US"));

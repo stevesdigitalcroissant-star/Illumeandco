@@ -55,7 +55,7 @@ export const DEFAULT_PLANS: (typeof plans.$inferInsert)[] = [
 /** What an organization without a paid plan can use while trying the product (when billing is on). */
 export const TRIAL_ALLOWANCE = { aiConversationsPerMonth: 50, textsPerMonth: 25 };
 /** Free trial without a card, counted from sign-up. */
-export const TRIAL_DAYS = 14;
+export const TRIAL_DAYS = 5;
 
 /** Insert default plans if missing (never overwrites edited plans). */
 export async function seedPlans() {

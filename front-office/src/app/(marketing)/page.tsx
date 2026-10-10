@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CalendarClock, CalendarX, Flower2, HeartPulse, MessageSquare, MoonStar, PhoneMissed, Repeat, Scissors, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { listPlans } from "@/server/services/billing";
+import { listPlans, TRIAL_DAYS } from "@/server/services/billing";
 import { RecoveryDemo } from "./_components/recovery-demo";
 import { RoiCalculator } from "./_components/roi-calculator";
 import { Container, CtaBand, PlanCards, SectionHeading } from "./_components/ui";
@@ -60,7 +60,7 @@ export default async function LandingPage() {
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg">
                 <Link href="/signup">
-                  Start 14-day free trial <ArrowRight />
+                  Start {TRIAL_DAYS}-day free trial <ArrowRight />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">

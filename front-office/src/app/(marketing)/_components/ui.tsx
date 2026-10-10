@@ -4,6 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { plans } from "@/db/schema";
+import { TRIAL_DAYS } from "@/server/services/billing";
 
 export function Container({ className, children }: { className?: string; children: React.ReactNode }) {
   return <div className={cn("mx-auto w-full max-w-6xl px-5 sm:px-8", className)}>{children}</div>;
@@ -84,7 +85,7 @@ export function FaqList({ items }: { items: { q: string; a: string }[] }) {
   );
 }
 
-export function CtaBand({ title = "Stop losing bookings you already earned.", body = "Set up in about ten minutes. Free for 14 days — no card needed." }: { title?: string; body?: string }) {
+export function CtaBand({ title = "Stop losing bookings you already earned.", body = `Set up in about ten minutes. Free for ${TRIAL_DAYS} days — no card needed.` }: { title?: string; body?: string }) {
   return (
     <section className="border-t py-20 sm:py-28">
       <Container>
@@ -133,7 +134,7 @@ export function PlanCards({ items, compact }: { items: Plan[]; compact?: boolean
             <span className="text-[13px] text-muted-foreground">/ month</span>
           </p>
           <Button asChild className="mt-6 w-full" variant={p.highlighted ? "dark" : "outline"}>
-            <Link href="/signup">Start 14-day free trial</Link>
+            <Link href="/signup">Start {TRIAL_DAYS}-day free trial</Link>
           </Button>
           <ul className="mt-7 space-y-2.5 border-t pt-6">
             {(compact ? p.features.slice(0, 4) : p.features).map((f, i) => (

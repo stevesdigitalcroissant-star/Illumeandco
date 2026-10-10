@@ -9,7 +9,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { ModelProvider, ProviderInput, ProviderOutput } from "./types";
 
-const DEFAULT_MODEL = "claude-opus-5-5";
+const DEFAULT_MODEL = "claude-sonnet-5-5";
 
 export function createAnthropicProvider(client?: Pick<Anthropic, "beta">): ModelProvider {
   let lazy: Pick<Anthropic, "beta"> | null = client ?? null;

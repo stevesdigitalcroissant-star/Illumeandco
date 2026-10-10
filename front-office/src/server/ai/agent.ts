@@ -43,7 +43,7 @@ export function defaultProvider(): ModelProvider {
 
 export function activeEngineInfo() {
   const p = defaultProvider();
-  return { id: p.id, label: p.label, model: p.id === "anthropic" ? process.env.AI_MODEL || "claude-opus-5-5" : null };
+  return { id: p.id, label: p.label, model: p.id === "anthropic" ? process.env.AI_MODEL || "claude-sonnet-5-5" : null };
 }
 
 export type AgentTurnResult = {

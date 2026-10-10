@@ -3,11 +3,11 @@
  * loop wiring, permission enforcement, refusal handling and the claim guard
  * without calling the real API.
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { appointments } from "@/db/schema";
-import { runAgentTurn } from "@/server/ai/agent";
+import { activeEngineInfo, runAgentTurn } from "@/server/ai/agent";
 import { handleInbound } from "@/server/ai/orchestrator";
 import { createAnthropicProvider } from "@/server/ai/providers/anthropic";
 import type { ModelProvider } from "@/server/ai/providers/types";
@@ -44,6 +44,15 @@ const toolUse = (id: string, name: string, input: unknown) => ({
 const final = (text: string) => ({ id: "msg", model: "claude-opus-5-5", stop_reason: "end_turn", usage, content: [{ type: "text", text }] });
 
 describe("Anthropic provider", () => {
+  it("runs on Sonnet 5.5 unless AI_MODEL says otherwise", () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-test");
+    vi.stubEnv("AI_MODEL", "");
+    expect(activeEngineInfo()).toMatchObject({ id: "anthropic", model: "claude-sonnet-5-5" });
+    vi.stubEnv("AI_MODEL", "claude-opus-5-5");
+    expect(activeEngineInfo().model).toBe("claude-opus-5-5");
+    vi.unstubAllEnvs();
+  });
+
   it("runs the tool loop: real tool results go back to the model, real booking happens", async () => {
     const c = await createClinic();
     const conv = await handleInbound({ businessId: c.business.id, channel: "web_chat", identity: visitor(), text: "hello" });

@@ -150,7 +150,7 @@ The database needs the `vector`, `pg_trgm` and `btree_gist` extensions (the firs
 | `APP_URL` | Widget snippet, review links, Stripe redirects | Derived from the request where possible |
 | `APP_ENCRYPTION_KEY` | Storing integration secrets (webhook signing) | Webhook connector shows "configuration required" |
 | `CRON_SECRET` | `/api/cron/tick` (follow-ups, reminders, review requests) | Endpoint returns 401; use **Automations → Run due automations now** manually |
-| `ANTHROPIC_API_KEY` (+ `AI_MODEL`, default `claude-opus-5-5`; `AI_EFFORT`) | Claude as the receptionist | Built-in rules engine answers (clearly labelled in the dashboard) |
+| `ANTHROPIC_API_KEY` (+ `AI_MODEL`, default `claude-sonnet-5-5`; `AI_EFFORT`) | Claude as the receptionist | Built-in rules engine answers (clearly labelled in the dashboard) |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Rate limits shared by every server instance | Per-instance in-memory limits |
 | `AI_PRICING` (optional JSON) | Override/add $-per-million-token prices for the AI usage tracker | Anthropic list prices built in (Billing → AI usage) |
 | `VOYAGE_API_KEY` | Semantic knowledge search | Full-text + trigram search only |

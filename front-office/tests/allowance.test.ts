@@ -7,7 +7,7 @@ import { aiUsage, conversations, notifications, organizations, plans, subscripti
 import { handleInbound } from "@/server/ai/orchestrator";
 import type { ModelProvider } from "@/server/ai/providers/types";
 import { aiConversationAllowed, allowanceFor, automatedTextAllowed, monthlyUsage, periodStart } from "@/server/services/allowance";
-import { DEFAULT_PLANS, seedPlans, TRIAL_ALLOWANCE } from "@/server/services/billing";
+import { DEFAULT_PLANS, seedPlans, TRIAL_ALLOWANCE, TRIAL_DAYS } from "@/server/services/billing";
 import { createCustomer } from "@/server/services/customers";
 import { deliverToCustomer } from "@/server/services/messaging";
 import { updateSenders } from "@/server/services/senders";
@@ -66,8 +66,10 @@ describe("allowance", () => {
     expect(await allowanceFor(c.ctx)).toMatchObject({ source: "unlimited", aiConversations: null, texts: null });
     vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_allowance");
     expect(await allowanceFor(c.ctx)).toMatchObject({ source: "trial", aiConversations: TRIAL_ALLOWANCE.aiConversationsPerMonth, texts: TRIAL_ALLOWANCE.textsPerMonth });
-    // The no-card trial ends 14 days after sign-up.
-    expect(await allowanceFor(c.ctx, new Date(Date.now() + 15 * 86_400_000))).toMatchObject({ source: "none", aiConversations: 0, texts: 0 });
+    // The no-card trial lasts 5 days from sign-up.
+    expect(TRIAL_DAYS).toBe(5);
+    expect(await allowanceFor(c.ctx, new Date(Date.now() + 4.5 * 86_400_000))).toMatchObject({ source: "trial" });
+    expect(await allowanceFor(c.ctx, new Date(Date.now() + 5.5 * 86_400_000))).toMatchObject({ source: "none", aiConversations: 0, texts: 0 });
     await subscribe(c.organization.id, "growth", "trialing");
     expect(await allowanceFor(c.ctx)).toMatchObject({ source: "trial", plan: "growth", aiConversations: TRIAL_ALLOWANCE.aiConversationsPerMonth });
     await subscribe(c.organization.id, "growth");

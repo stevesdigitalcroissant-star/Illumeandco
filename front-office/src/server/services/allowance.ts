@@ -11,7 +11,7 @@
  *   is told a person will reply, never left unanswered — and the owner is
  *   alerted once per month.
  * - Limits apply only when billing is on (Stripe configured): the plan's
- *   allowance; the smaller trial allowance during a free trial (14 days from
+ *   allowance; the smaller trial allowance during a free trial (TRIAL_DAYS from
  *   sign-up, or a Stripe trial); nothing automated without an active plan.
  */
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
