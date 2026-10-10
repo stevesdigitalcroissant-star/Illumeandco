@@ -123,7 +123,7 @@ type Plan = typeof plans.$inferSelect;
 export function PlanCards({ items, compact }: { items: Plan[]; compact?: boolean }) {
   if (!items.length) return <p className="mt-12 text-center text-sm text-muted-foreground">Pricing will be published soon.</p>;
   return (
-    <div className={cn("mx-auto mt-12 grid grid-cols-1 gap-4", items.length >= 3 ? "lg:grid-cols-3" : items.length === 2 ? "max-w-3xl md:grid-cols-2" : "max-w-sm")}>
+    <div className={cn("mx-auto mt-12 grid grid-cols-1 gap-4", items.length >= 3 ? "md:grid-cols-2 xl:grid-cols-4" : items.length === 2 ? "max-w-5xl md:grid-cols-3" : "max-w-3xl md:grid-cols-2")}>
       {items.map((p) => (
         <div key={p.id} className={cn("relative flex min-w-0 flex-col rounded-xl border bg-background p-7", p.highlighted && "border-foreground/80 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.18)]")}>
           {p.highlighted ? <span className="absolute -top-3 left-7 rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-medium text-background">Most popular</span> : null}
@@ -151,6 +151,32 @@ export function PlanCards({ items, compact }: { items: Plan[]; compact?: boolean
           ) : null}
         </div>
       ))}
+      <EnterpriseCard compact={compact} />
+    </div>
+  );
+}
+
+/** Custom plan for groups and chains — priced on a call, not online. */
+function EnterpriseCard({ compact }: { compact?: boolean }) {
+  const points = ["Any number of locations", "Allowances sized to your volume", "Hands-on onboarding & integrations", "Named contact & priority support"];
+  return (
+    <div className="relative flex min-w-0 flex-col rounded-xl border bg-foreground p-7 text-background">
+      <h3 className="text-[15px] font-semibold">Enterprise</h3>
+      <p className="mt-1.5 min-h-10 text-[13px] leading-relaxed text-background/70">For groups, chains and high-volume practices.</p>
+      <p className="mt-6 flex items-baseline gap-1">
+        <span className="text-4xl font-semibold tracking-tight">Custom</span>
+      </p>
+      <Button asChild className="mt-6 w-full bg-background text-foreground hover:bg-background/90">
+        <Link href="/contact">Contact us</Link>
+      </Button>
+      <ul className="mt-7 space-y-2.5 border-t border-background/15 pt-6">
+        {(compact ? points.slice(0, 3) : points).map((f) => (
+          <li key={f} className="flex gap-2.5 text-[13px] text-background/85">
+            <Check className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

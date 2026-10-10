@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   ListChecks,
   LogOut,
+  Mail,
   Menu,
   Network,
   Settings,
@@ -53,6 +54,7 @@ const ICONS = {
   analytics: BarChart3,
   audit: ClipboardList,
   team: Network,
+  inquiries: Mail,
   settings: Settings,
   billing: CreditCard,
 };

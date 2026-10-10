@@ -73,7 +73,7 @@ describe("plan limits", () => {
     await assertCanAddLocation(c.organization.id);
     await createBusiness(c.organization.id, { name: "Branch 2" });
     await createBusiness(c.organization.id, { name: "Branch 3" });
-    await expect(assertCanAddLocation(c.organization.id)).rejects.toThrow(/up to 3 locations/);
+    await expect(assertCanAddLocation(c.organization.id)).rejects.toThrow(/up to 3 locations\. Contact us about an Enterprise plan/);
     // A brand-new organization can always create its first location.
     const [org] = await db.insert(organizations).values({ name: "New" }).returning();
     await assertCanAddLocation(org!.id);

@@ -1157,6 +1157,24 @@ export const usageCredits = pgTable(
   (t) => [uniqueIndex("usage_credits_ref_idx").on(t.organizationId, t.kind, t.ref), index("usage_credits_org_idx").on(t.organizationId, t.kind)],
 );
 
+/** "Contact sales" requests from the website (custom plans for larger organizations). Not tenant data. */
+export const salesInquiries = pgTable(
+  "sales_inquiries",
+  {
+    id: id(),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone"),
+    organization: text("organization").notNull(),
+    locations: text("locations").notNull(),
+    message: text("message"),
+    status: text("status").notNull().default("new"), // new | contacted | closed
+    emailedAt: timestamp("emailed_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("sales_inquiries_created_idx").on(t.createdAt)],
+);
+
 // ─── AI usage ─────────────────────────────────────────────────────────
 /** One row per AI turn that used a paid model: tokens as reported by the API, cost at list prices. */
 export const aiUsage = pgTable(

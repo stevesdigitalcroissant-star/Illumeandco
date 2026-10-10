@@ -26,6 +26,7 @@ const FAQS = [
   { q: "Are replies to my customers ever blocked?", a: "No. Your team can always reply, and a customer who already started a conversation this month keeps getting answers from the AI. Limits only affect new AI conversations and automated texts." },
   { q: "Why are texts limited separately?", a: "Every SMS and WhatsApp message has a real carrier cost. Website chat and email are much cheaper, so they're not counted as texts." },
   { q: "Can I top up instead of upgrading?", a: `Yes. ${CREDIT_PACKS.map((p) => `${formatPrice(p.priceCents, "USD")} adds ${p.aiConversations} AI conversations and ${p.texts} texts`).join("; ")}. Top-up credits are used only after your monthly allowance, never expire, and work alongside any plan. If you top up every month, upgrading is cheaper.` },
+  { q: "We have more than three locations. What do we do?", a: "Ask us for an Enterprise plan: any number of locations, allowances sized to your volume and hands-on onboarding. Use the contact form and we'll come back with a plan and price." },
   { q: "Can I change plans or cancel?", a: "Yes. Upgrade, downgrade or cancel from Billing at any time; changes are prorated by Stripe. There's no contract." },
   { q: "What currency do you charge in?", a: "All prices are in US dollars, billed monthly by Stripe. Prices exclude applicable taxes." },
   { q: "Do I pay for text messages separately?", a: "No. Texts are sent from a number set up for your business, and their cost is covered by your plan's monthly text allowance. Website chat works from day one without any extra setup." },
@@ -33,11 +34,11 @@ const FAQS = [
 
 export default async function PricingPage() {
   const plans = await listPlans();
-  const rows: { label: string; value: (p: (typeof plans)[number]) => React.ReactNode }[] = [
-    { label: "AI conversations / month", value: (p) => n(p.entitlements.aiConversationsPerMonth) },
-    { label: "Texts (SMS + WhatsApp) / month", value: (p) => n(p.entitlements.textsPerMonth) },
-    { label: "Locations", value: (p) => n(p.entitlements.maxLocations) },
-    { label: "Team members", value: (p) => n(p.entitlements.maxStaff) },
+  const rows: { label: string; value: (p: (typeof plans)[number]) => React.ReactNode; enterprise?: string }[] = [
+    { label: "AI conversations / month", value: (p) => n(p.entitlements.aiConversationsPerMonth), enterprise: "Custom" },
+    { label: "Texts (SMS + WhatsApp) / month", value: (p) => n(p.entitlements.textsPerMonth), enterprise: "Custom" },
+    { label: "Locations", value: (p) => n(p.entitlements.maxLocations), enterprise: "Any number" },
+    { label: "Team members", value: (p) => n(p.entitlements.maxStaff), enterprise: "Unlimited" },
     { label: "Missed call & lead recovery", value: () => true },
     { label: "AI website chat & booking", value: () => true },
     { label: "Revenue dashboard & staff alerts", value: () => true },
@@ -62,6 +63,7 @@ export default async function PricingPage() {
                     {plans.map((p) => (
                       <th key={p.id} scope="col" className="px-4 py-3 text-center font-semibold">{p.name}</th>
                     ))}
+                    <th scope="col" className="px-4 py-3 text-center font-semibold">Enterprise</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -76,6 +78,7 @@ export default async function PricingPage() {
                           </td>
                         );
                       })}
+                      <td className="px-4 py-3 text-center">{r.enterprise ?? <Check className="mx-auto size-4 text-primary" aria-label="Included" />}</td>
                     </tr>
                   ))}
                 </tbody>

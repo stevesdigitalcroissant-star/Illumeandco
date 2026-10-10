@@ -159,7 +159,10 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
       ) : (
         <Card><EmptyState title="No plans are available" description="Plans are configured in the database (plans table)." /></Card>
       )}
-      <p className="mt-4 text-xs text-muted-foreground">Prices exclude applicable taxes. Payments are processed by Stripe; card details never touch our servers.</p>
+      <p className="mt-4 text-sm">
+        More than 3 locations or higher volume? <a href="/contact" className="font-medium text-primary hover:underline">Ask about an Enterprise plan</a>.
+      </p>
+      <p className="mt-2 text-xs text-muted-foreground">Prices exclude applicable taxes. Payments are processed by Stripe; card details never touch our servers.</p>
       <Card className="mt-6">
         <CardHeader title="AI usage · last 30 days" description="Tokens reported by the AI provider for this location, and the estimated cost at list prices. Turns answered by the built-in rules engine cost nothing and aren't counted." />
         {usage.turns ? (

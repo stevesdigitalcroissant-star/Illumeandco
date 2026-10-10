@@ -120,6 +120,13 @@
       "when": 1791642951894,
       "tag": "0016_reports_to",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791643894926,
+      "tag": "0017_sales_inquiries",
+      "breakpoints": true
     }
   ]
 }

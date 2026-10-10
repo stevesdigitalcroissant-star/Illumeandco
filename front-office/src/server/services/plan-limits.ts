@@ -55,7 +55,7 @@ export async function planLimits(ctx: Ctx, now = new Date()): Promise<PlanLimits
 /** The cheapest plan that would allow this, for the upgrade message. */
 function upgradeHint(test: (e: (typeof DEFAULT_PLANS)[number]["entitlements"]) => boolean) {
   const p = DEFAULT_PLANS.find((x) => test(x.entitlements));
-  return p ? ` Upgrade to ${p.name} on the Billing page.` : "";
+  return p ? ` Upgrade to ${p.name} on the Billing page.` : " Contact us about an Enterprise plan.";
 }
 
 export const planError = (msg: string) => new AppError("forbidden", msg);

@@ -9,6 +9,7 @@ import { ONBOARDING_STEPS } from "@/server/services/business";
 import { AppShell, type NavItem } from "./shell";
 import { VerifyEmailBanner } from "./verify-banner";
 import { emailConfigured } from "@/server/account";
+import { isPlatformAdmin } from "@/server/services/sales";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { ctx, user, business, role, businesses } = await requireBusiness();
@@ -47,6 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     [
       ...(can("business.manage") ? [{ href: "/app/settings", label: "Settings", icon: "settings" as const }] : []),
       ...(can("billing.manage") ? [{ href: "/app/billing", label: "Billing", icon: "billing" as const }] : []),
+      ...(isPlatformAdmin(user.email) ? [{ href: "/app/inquiries", label: "Sales enquiries", icon: "inquiries" as const }] : []),
     ],
   ];
   const nav = groups.filter((g) => g.length);

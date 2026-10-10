@@ -57,6 +57,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
           <nav aria-label="Footer — account" className="space-y-2 text-[13px]">
             <p className="font-medium">Account</p>
             <Link href="/signup" className="block text-muted-foreground hover:text-foreground">Start free trial</Link>
+            <Link href="/contact" className="block text-muted-foreground hover:text-foreground">Contact sales</Link>
             <Link href="/login" className="block text-muted-foreground hover:text-foreground">Sign in</Link>
           </nav>
         </Container>
