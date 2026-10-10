@@ -1132,6 +1132,28 @@ export const subscriptions = pgTable(
   (t) => [uniqueIndex("subscriptions_org_idx").on(t.organizationId)],
 );
 
+/**
+ * Prepaid credits (top-ups) per organization, as a ledger: purchases add,
+ * use subtracts. Used only after the plan's monthly allowance runs out; never
+ * expire. `ref` makes every entry idempotent (a Stripe checkout session, a
+ * conversation-month, or a sent message).
+ */
+export const usageCredits = pgTable(
+  "usage_credits",
+  {
+    id: id(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(), // ai | texts
+    delta: integer("delta").notNull(),
+    reason: text("reason").notNull(), // purchase | ai_conversation | text
+    ref: text("ref").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("usage_credits_ref_idx").on(t.organizationId, t.kind, t.ref), index("usage_credits_org_idx").on(t.organizationId, t.kind)],
+);
+
 // ─── AI usage ─────────────────────────────────────────────────────────
 /** One row per AI turn that used a paid model: tokens as reported by the API, cost at list prices. */
 export const aiUsage = pgTable(

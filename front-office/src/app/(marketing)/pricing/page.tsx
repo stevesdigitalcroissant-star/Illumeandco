@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Check, Minus, MessageSquare, Smartphone, Gauge, Gift } from "lucide-react";
 import { listPlans, TRIAL_ALLOWANCE, TRIAL_DAYS } from "@/server/services/billing";
-import { Container, CtaBand, FaqList, PageHero, PlanCards, SectionHeading } from "../_components/ui";
+import { CREDIT_PACKS } from "@/server/services/credits";
+import { Container, CtaBand, FaqList, formatPrice, PageHero, PlanCards, SectionHeading } from "../_components/ui";
 
 // Plans are read from the database on every request.
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ const n = (v: number | null | undefined) => (v == null ? "Unlimited" : v.toLocal
 const ALLOWANCE = [
   { icon: MessageSquare, title: "What's an AI conversation?", body: "One customer's conversation with the AI in a calendar month — however many messages it takes. A customer who chats on the 3rd and again on the 20th counts once. Answers from the built-in rules engine don't count." },
   { icon: Smartphone, title: "What's a text?", body: "One SMS or WhatsApp message sent to a customer: a missed-call text-back, a first reply, a follow-up, a slot offer or a reminder. Website chat and email don't count as texts." },
-  { icon: Gauge, title: "What if I reach my limit?", body: "Nothing breaks and no one is left unanswered. New conversations go to your team (the customer is told a person will reply), automated texts pause and fall back to email or chat, and you get an alert. Upgrade any time, or wait for the 1st." },
+  { icon: Gauge, title: "What if I reach my limit?", body: "Nothing breaks and no one is left unanswered. New conversations go to your team (the customer is told a person will reply), automated texts pause and fall back to email or chat, and you get an alert. Upgrade, add a top-up, or wait for the 1st." },
   { icon: Gift, title: "How does the free trial work?", body: `${TRIAL_DAYS} days free, no card needed, with ${TRIAL_ALLOWANCE.aiConversationsPerMonth} AI conversations and ${TRIAL_ALLOWANCE.textsPerMonth} texts to see it working on real customers. Pick a plan whenever you're ready.` },
 ];
 
@@ -24,6 +25,7 @@ const FAQS = [
   { q: "How many conversations do I need?", a: "Roughly one per new customer contact a month: missed callers who reply, website chats and enquiries. About 25 new contacts a week is roughly 110 a month — inside Starter's 150. Busier practices, or anyone who wants cancellations refilled from a waitlist, should look at Growth." },
   { q: "Are replies to my customers ever blocked?", a: "No. Your team can always reply, and a customer who already started a conversation this month keeps getting answers from the AI. Limits only affect new AI conversations and automated texts." },
   { q: "Why are texts limited separately?", a: "Every SMS and WhatsApp message has a real carrier cost. Website chat and email are much cheaper, so they're not counted as texts." },
+  { q: "Can I top up instead of upgrading?", a: `Yes. ${CREDIT_PACKS.map((p) => `${formatPrice(p.priceCents, "USD")} adds ${p.aiConversations} AI conversations and ${p.texts} texts`).join("; ")}. Top-up credits are used only after your monthly allowance, never expire, and work alongside any plan. If you top up every month, upgrading is cheaper.` },
   { q: "Can I change plans or cancel?", a: "Yes. Upgrade, downgrade or cancel from Billing at any time; changes are prorated by Stripe. There's no contract." },
   { q: "What currency do you charge in?", a: "All prices are in US dollars, billed monthly by Stripe. Prices exclude applicable taxes." },
   { q: "Do I pay for text messages separately?", a: "No. Texts are sent from a number set up for your business, and their cost is covered by your plan's monthly text allowance. Website chat works from day one without any extra setup." },

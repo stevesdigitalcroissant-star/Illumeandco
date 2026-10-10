@@ -106,6 +106,13 @@
       "when": 1791641765906,
       "tag": "0014_plan_feature_flags",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791642259333,
+      "tag": "0015_usage_credits",
+      "breakpoints": true
     }
   ]
 }

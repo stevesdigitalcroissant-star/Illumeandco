@@ -9,6 +9,7 @@ import { getAiSettings, getBusiness } from "./business";
 import type { WhatsappPurpose } from "@/db/schema";
 import { appendMessage, createConversation } from "./conversations";
 import { automatedTextAllowed, notifyLimitReached } from "./allowance";
+import { spendCredit } from "./credits";
 import { hasFeature } from "./plan-limits";
 
 export { renderTemplate } from "@/lib/templates";
@@ -63,6 +64,7 @@ export async function deliverToCustomer(
   const template = input.whatsapp ? await whatsappTemplateFor(ctx, input.whatsapp.purpose, input.whatsapp.vars) : null;
   // Automated texts count against the plan's monthly allowance (a team member's own message never does).
   let textsOk: boolean | null = input.role === "human" ? true : null;
+  let textViaCredits = false;
   for (const kind of PROACTIVE_ORDER) {
     const adapter = getChannel(kind);
     const sender = available.get(kind);
@@ -75,6 +77,7 @@ export async function deliverToCustomer(
       if (textsOk === null) {
         const check = await automatedTextAllowed(ctx);
         textsOk = check.ok;
+        textViaCredits = check.ok && "viaCredits" in check && Boolean(check.viaCredits);
         if (!check.ok) await notifyLimitReached(ctx, "texts", check.allowance);
       }
       if (!textsOk) {
@@ -99,6 +102,7 @@ export async function deliverToCustomer(
       deliveryStatus: result.status,
       metadata: { proactive: true, ...input.metadata },
     });
+    if (textViaCredits && (kind === "sms" || kind === "whatsapp")) await spendCredit(ctx, "texts", `message:${m.id}`).catch((e) => console.error("[credits] text credit not recorded", e));
     return { ...result, channel: kind, conversationId: conv.id, messageId: m.id, detail: skipped.length ? `Fell back to ${adapter.label} (${skipped.join("; ")})` : result.detail };
   }
 

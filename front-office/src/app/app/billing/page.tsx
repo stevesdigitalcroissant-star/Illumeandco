@@ -9,6 +9,7 @@ import { billingConfigured, entitlementsFor, getSubscription, listPlans } from "
 import { BillingButton } from "./billing-client";
 import { usageSummary } from "@/server/ai/usage";
 import { allowanceFor, monthlyUsage } from "@/server/services/allowance";
+import { balances, CREDIT_PACKS } from "@/server/services/credits";
 
 export const metadata = { title: "Billing" };
 
@@ -25,7 +26,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
   const { business, ctx } = await requirePermission("billing.manage");
   const sp = await searchParams;
   const orgId = business.organizationId;
-  const [plans, sub, ent, usage, allowance, month] = await Promise.all([listPlans(), getSubscription(orgId), entitlementsFor(orgId), usageSummary(ctx), allowanceFor(ctx), monthlyUsage(ctx)]);
+  const [plans, sub, ent, usage, allowance, month, credits] = await Promise.all([listPlans(), getSubscription(orgId), entitlementsFor(orgId), usageSummary(ctx), allowanceFor(ctx), monthlyUsage(ctx), balances(ctx)]);
   const usd = (v: number) => `$${v < 1 ? v.toFixed(3) : v.toFixed(2)}`;
   const tokens = (v: number) => (v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${Math.round(v / 1e3)}K` : String(v));
   const configured = billingConfigured();
@@ -38,6 +39,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
       <PageHeader title="Billing" description="Your AI Front Office subscription. Billing covers every location in this organization." />
 
       {sp.status === "success" ? <Notice tone="success" className="mb-6">Thanks — your checkout completed. Your subscription will update here as soon as Stripe confirms it (usually within a few seconds).</Notice> : null}
+      {sp.status === "topup" ? <Notice tone="success" className="mb-6">Thanks — your top-up is paid. The credits appear below as soon as Stripe confirms the payment (usually within a few seconds).</Notice> : null}
       {sp.status === "cancelled" ? <Notice tone="neutral" className="mb-6">Checkout was cancelled. No charge was made.</Notice> : null}
       {!configured ? (
         <Notice tone="info" className="mb-6">
@@ -81,10 +83,35 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           }
         />
         <CardBody className="grid gap-6 sm:grid-cols-2">
-          <Meter label="AI conversations" hint="A conversation counts once a month, the first time the AI answers in it." used={month.aiConversations} limit={allowance.aiConversations} />
-          <Meter label="Texts (SMS + WhatsApp)" hint="Outgoing texts. Replies to customers who wrote to you are never blocked." used={month.texts} limit={allowance.texts} />
+          <Meter label="AI conversations" hint="A conversation counts once a month, the first time the AI answers in it." used={month.aiConversations} limit={allowance.aiConversations} credits={credits.ai} />
+          <Meter label="Texts (SMS + WhatsApp)" hint="Outgoing texts. Replies to customers who wrote to you are never blocked." used={month.texts} limit={allowance.texts} credits={credits.texts} />
         </CardBody>
       </Card>
+
+      {allowance.source !== "unlimited" ? (
+        <Card className="mb-6">
+          <CardHeader
+            title="Top up"
+            description="Ran out this month and don't want to upgrade? Add credits. They're used only after your monthly allowance and never expire. If you top up often, upgrading is cheaper."
+          />
+          <CardBody className="grid gap-4 sm:grid-cols-2">
+            {CREDIT_PACKS.map((pk) => (
+              <div key={pk.id} className="flex flex-col justify-between gap-4 rounded-lg border p-4">
+                <div>
+                  <p className="text-sm font-semibold">{pk.name}</p>
+                  <p className="mt-1 text-2xl font-semibold tracking-tight">{formatMoney(pk.priceCents, "USD")}</p>
+                  <p className="mt-1 text-[13px] text-muted-foreground">
+                    {pk.aiConversations} AI conversations + {pk.texts} texts
+                  </p>
+                </div>
+                <BillingButton packId={pk.id} variant="outline" disabledReason={!configured ? "Billing isn't configured in this environment." : allowance.source === "none" ? "Top-ups work alongside a plan — choose one below first." : null}>
+                  Buy for {formatMoney(pk.priceCents, "USD")}
+                </BillingButton>
+              </div>
+            ))}
+          </CardBody>
+        </Card>
+      ) : null}
 
       {plans.length ? (
         <div className="grid gap-4 lg:grid-cols-3">
@@ -157,7 +184,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
   );
 }
 
-function Meter({ label, hint, used, limit }: { label: string; hint: string; used: number; limit: number | null }) {
+function Meter({ label, hint, used, limit, credits }: { label: string; hint: string; used: number; limit: number | null; credits: number }) {
   const pct = limit ? Math.min(100, Math.round((used / limit) * 100)) : 0;
   return (
     <div>
@@ -173,7 +200,10 @@ function Meter({ label, hint, used, limit }: { label: string; hint: string; used
           <div className={cn("h-full rounded-full", pct >= 100 ? "bg-danger" : pct >= 80 ? "bg-warning" : "bg-primary")} style={{ width: `${pct}%` }} />
         </div>
       ) : null}
-      <p className="mt-1.5 text-xs text-muted-foreground">{limit !== null && used >= limit ? "Limit reached — upgrade to keep everything automatic." : hint}</p>
+      <p className="mt-1.5 text-xs text-muted-foreground">
+        {limit !== null && used >= limit ? (credits > 0 ? "Allowance used — now using your top-up credits." : "Limit reached — upgrade or top up to keep everything automatic.") : hint}
+      </p>
+      {credits > 0 ? <p className="mt-1 text-xs font-medium text-success">{credits.toLocaleString("en-US")} top-up credits left</p> : null}
     </div>
   );
 }

@@ -69,7 +69,7 @@ export async function listPlans() {
 export const billingConfigured = () => Boolean(process.env.STRIPE_SECRET_KEY);
 
 let stripeClient: Stripe | null = null;
-function stripe() {
+export function stripe() {
   if (!process.env.STRIPE_SECRET_KEY) throw new AppError("not_configured", "Billing is not configured (STRIPE_SECRET_KEY).");
   return (stripeClient ??= new Stripe(process.env.STRIPE_SECRET_KEY));
 }
@@ -136,6 +136,23 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
   if (!secret) throw new AppError("not_configured", "STRIPE_WEBHOOK_SECRET is not set.");
   if (!signature) throw new AppError("invalid", "Missing signature");
   const event = stripe().webhooks.constructEvent(rawBody, signature, secret);
+  if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    if (session.metadata?.kind !== "credit_pack") return { handled: false };
+    if (session.payment_status !== "paid") return { handled: false }; // async methods: granted on async_payment_succeeded
+    const organizationId = session.metadata.organizationId;
+    const org = organizationId ? await db.query.organizations.findFirst({ where: eq(organizations.id, organizationId) }) : null;
+    if (!org) return { handled: false };
+    const { grantPack } = await import("./credits");
+    const { pack, granted } = await grantPack(org.id, session.metadata.packId ?? "", session.id);
+    const firstBusiness = await db.query.businesses.findFirst({ where: eq(businesses.organizationId, org.id) });
+    if (granted && firstBusiness)
+      await audit(
+        { businessId: firstBusiness.id, actor: { type: "system", name: "Stripe" } },
+        { action: "billing.updated", summary: `${pack.name} added: ${pack.aiConversations} AI conversations and ${pack.texts} texts`, entityType: "credit_pack", entityId: session.id },
+      );
+    return { handled: true };
+  }
   if (event.type.startsWith("customer.subscription.")) {
     const sub = event.data.object as Stripe.Subscription;
     const organizationId = sub.metadata?.organizationId;

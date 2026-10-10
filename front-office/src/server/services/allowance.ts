@@ -10,6 +10,8 @@
  * - At the AI limit, new conversations go to the team instead — the customer
  *   is told a person will reply, never left unanswered — and the owner is
  *   alerted once per month.
+ * - Past the allowance, prepaid credits (top-ups) are used if the business
+ *   bought any — only while on a plan or trial.
  * - Limits apply only when billing is on (Stripe configured): the plan's
  *   allowance; the smaller trial allowance during a free trial (TRIAL_DAYS from
  *   sign-up, or a Stripe trial); nothing automated without an active plan.
@@ -20,6 +22,7 @@ import { db as rootDb } from "@/db";
 import { aiUsage, businesses, conversations, messages, organizations } from "@/db/schema";
 import type { Ctx } from "../context";
 import { notifyStaff } from "./alerts";
+import { creditBalance, purchaseCount, spendCredit } from "./credits";
 import { entitlementsFor, getSubscription, TRIAL_ALLOWANCE, TRIAL_DAYS } from "./billing";
 
 export type Allowance = {
@@ -88,21 +91,36 @@ export async function aiConversationAllowed(ctx: Ctx, conversationId: string, no
     .limit(1);
   if (counted) return { ok: true as const, allowance: a };
   const usage = await monthlyUsage(ctx, now);
-  return usage.aiConversations < a.aiConversations ? { ok: true as const, allowance: a } : { ok: false as const, allowance: a, used: usage.aiConversations };
+  if (usage.aiConversations < a.aiConversations) return { ok: true as const, allowance: a };
+  // Over the allowance: one prepaid credit per new conversation this month.
+  const month = DateTime.fromJSDate(now).setZone(tz).toFormat("yyyy-LL");
+  if (canUseCredits(a) && (await spendCredit(ctx, "ai", `${conversationId}:${month}`))) return { ok: true as const, allowance: a, viaCredits: true };
+  return { ok: false as const, allowance: a, used: usage.aiConversations };
 }
+
+const canUseCredits = (a: Allowance) => a.source === "plan" || a.source === "trial";
 
 /** May an automated (proactive) text go out? */
 export async function automatedTextAllowed(ctx: Ctx, now = new Date()) {
   const a = await allowanceFor(ctx, now);
   if (a.texts === null) return { ok: true as const, allowance: a };
   const usage = await monthlyUsage(ctx, now);
-  return usage.texts < a.texts ? { ok: true as const, allowance: a } : { ok: false as const, allowance: a, used: usage.texts };
+  if (usage.texts < a.texts) return { ok: true as const, allowance: a };
+  // Over the allowance: prepaid text credits, used once a text is actually sent (see messaging).
+  if (canUseCredits(a) && (await creditBalance(await orgIdOf(ctx), "texts")) > 0) return { ok: true as const, allowance: a, viaCredits: true };
+  return { ok: false as const, allowance: a, used: usage.texts };
+}
+
+async function orgIdOf(ctx: Ctx) {
+  return (await orgAndTz(ctx.businessId)).organizationId;
 }
 
 /** Tell the owner once per month (per location) that an allowance ran out. */
 export async function notifyLimitReached(ctx: Ctx, kind: "ai" | "texts", a: Allowance, now = new Date()) {
-  const { tz } = await orgAndTz(ctx.businessId);
+  const { tz, organizationId } = await orgAndTz(ctx.businessId);
   const month = DateTime.fromJSDate(now).setZone(tz).toFormat("yyyy-LL");
+  // Bought credits running out later in the month alerts again.
+  const packs = await purchaseCount(organizationId, kind === "ai" ? "ai" : "texts");
   const what = kind === "ai" ? `${a.aiConversations} AI conversations` : `${a.texts} texts`;
   const used = a.source === "none" ? "You don't have an active plan." : `You've used all ${what} ${a.source === "trial" ? "in your trial" : "on your plan"} this month.`;
   const effect =
@@ -114,9 +132,9 @@ export async function notifyLimitReached(ctx: Ctx, kind: "ai" | "texts", a: Allo
     {
       kind: "allowance",
       title: a.source === "none" ? "No active plan — automation paused" : kind === "ai" ? "Monthly AI conversation allowance reached" : "Monthly text allowance reached",
-      body: `${used} ${effect} ${a.source === "none" ? "Choose a plan" : "Upgrade"} to keep everything automatic.`,
+      body: `${used} ${effect} ${a.source === "none" ? "Choose a plan to keep everything automatic." : "Upgrade, or add a top-up on the Billing page, to keep everything automatic."}`,
       link: "/app/settings/billing",
-      dedupeKey: `limit:${kind}:${month}`,
+      dedupeKey: `limit:${kind}:${month}:${packs}`,
       urgent: true,
     },
     now,
