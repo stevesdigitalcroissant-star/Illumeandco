@@ -5,6 +5,8 @@ import {
   Check,
   Globe,
   Camera,
+  CalendarClock,
+  CalendarX,
   Mail,
   MessageCircle,
   MessageSquare,
@@ -24,19 +26,21 @@ import {
   BookingIllustration,
   FollowUpIllustration,
   HandoffIllustration,
-  HeroChat,
 } from "./_components/illustrations";
+import { RecoveryDemo } from "./_components/recovery-demo";
+import { RoiCalculator } from "./_components/roi-calculator";
 
 // Pricing is read from the database on every request (the DB is not available at build time).
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { absolute: "AI Front Office — An AI receptionist for clinics, salons and spas" },
-  description: "Answers customers. Books appointments. Follows up. While you run your business.",
+  title: { absolute: "AI Front Office — Recover the bookings you're losing" },
+  description: "Missed calls texted back in seconds, every enquiry answered and followed up, cancellations refilled from your waitlist — and the revenue it recovers, shown in your dashboard.",
 };
 
 const NAV = [
   { href: "#how-it-works", label: "How it works" },
+  { href: "#calculator", label: "What it's worth" },
   { href: "#integrations", label: "Integrations" },
   { href: "#pricing", label: "Pricing" },
   { href: "#faq", label: "FAQ" },
@@ -115,6 +119,19 @@ const PROBLEMS = [
   { icon: PhoneMissed, title: "Missed calls", body: "The phone rings while you're with a client. Most people who reach voicemail don't leave a message — they book somewhere else." },
   { icon: MoonStar, title: "After-hours messages", body: "Questions arrive at 10 PM on your website and in your DMs. By the time you reply the next morning, the moment has passed." },
   { icon: Repeat, title: "No follow-up", body: "Someone asks about a price, then goes quiet. Nobody has time to chase every enquiry, so good leads quietly slip away." },
+  { icon: CalendarX, title: "Empty slots", body: "A patient cancels the day before. The time sits empty even though someone on your list would have taken it." },
+];
+
+const STEPS = [
+  { n: "1", title: "Connect what you already use", body: "Your phone line, website, forms and WhatsApp. Nothing to replace — it works on top of your existing tools." },
+  { n: "2", title: "The AI recovers lost bookings", body: "Texts back missed callers, answers every enquiry within seconds, follows up the quiet ones and refills cancellations." },
+  { n: "3", title: "You see the money it brought back", body: "A dashboard shows every booking that came after one of our messages — and anything that needs a person is sent straight to your team." },
+];
+
+const WORKERS = [
+  { icon: PhoneMissed, title: "Missed call recovery", body: "Every unanswered call gets a text within seconds: “Sorry we missed you — how can we help?” The reply goes to the AI, which answers and books.", stat: "Seconds, not hours" },
+  { icon: MessageSquare, title: "Lead recovery", body: "Website forms, ads and DMs get an instant first reply, then smart follow-ups timed to what the person said — until they book or say no.", stat: "No enquiry goes cold" },
+  { icon: CalendarClock, title: "Slot recovery", body: "When someone cancels, the best-fitting people on your waitlist get the slot offered. First to reply YES is booked automatically.", stat: "Cancellations refilled" },
 ];
 
 const INTEGRATIONS: { icon: typeof Globe; name: string; status: string; tone: "live" | "setup" | "soon" }[] = [
@@ -144,8 +161,16 @@ const FAQS = [
     a: "Yes. Any conversation can be taken over by a person at any time, and the AI hands off automatically when a customer asks for a human or when a request is outside what it's allowed to do.",
   },
   {
+    q: "Do I have to change my phone system or booking software?",
+    a: "No. AI Front Office works on top of what you already use: your phone system reports missed calls, your website and forms send new enquiries, and it can use its own calendar or hand bookings to your team for your existing system.",
+  },
+  {
+    q: "How do I know it's actually making me money?",
+    a: "The revenue dashboard only counts a booking as recovered when one of our messages went out before it — a missed-call text, a first reply, a follow-up or a slot offer — and shows separately which of those appointments were actually completed.",
+  },
+  {
     q: "Which channels are supported?",
-    a: "Website chat works out of the box. WhatsApp and SMS connect through your own Twilio account, and email through Resend. Instagram and voice are not available yet.",
+    a: "Website chat works out of the box. SMS and WhatsApp connect through Twilio, and email through Resend. Instagram and AI voice answering are not available yet.",
   },
   {
     q: "How long does setup take?",
@@ -197,17 +222,17 @@ export default async function LandingPage() {
       <main id="main">
         {/* Hero */}
         <section className="pb-20 pt-14 sm:pb-28 sm:pt-20">
-          <Container className="grid items-center gap-14 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
-            <div>
+          <Container className="grid grid-cols-1 items-center gap-14 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
+            <div className="min-w-0">
               <p className="inline-flex items-center gap-2 rounded-full border bg-surface px-3 py-1 text-xs text-muted-foreground">
                 <span className="size-1.5 rounded-full bg-primary" aria-hidden />
-                For clinics, salons, spas and wellness studios
+                For clinics, dentists, salons, spas and wellness studios
               </p>
-              <h1 className="mt-6 text-[2.75rem] font-semibold leading-[1.05] tracking-[-0.035em] text-balance sm:text-6xl lg:text-[4.25rem]">
-                Your AI Front Office.
+              <h1 className="mt-6 text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.035em] text-balance sm:text-6xl lg:text-[4rem]">
+                Stop losing bookings you already earned.
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground text-pretty sm:text-xl">
-                Answers customers. Books appointments. Follows up. While you run your business.
+                AI Front Office texts back every missed call, answers every enquiry in seconds, follows up the ones who go quiet and refills cancelled slots from your waitlist — then shows you exactly how much revenue it brought back.
               </p>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg">
@@ -219,10 +244,10 @@ export default async function LandingPage() {
                   <a href="#how-it-works">See How It Works</a>
                 </Button>
               </div>
-              <p className="mt-5 text-[13px] text-muted-foreground">Set up in about ten minutes. You stay in control of what the AI can do.</p>
+              <p className="mt-5 text-[13px] text-muted-foreground">Works with your existing phone, website and booking system. Set up in about ten minutes.</p>
             </div>
-            <div className="mx-auto w-full max-w-md lg:max-w-none">
-              <HeroChat />
+            <div className="mx-auto w-full min-w-0 max-w-md lg:max-w-none">
+              <RecoveryDemo />
             </div>
           </Container>
         </section>
@@ -235,7 +260,7 @@ export default async function LandingPage() {
               title="Every unanswered message is a booking you didn't get."
               description="Small teams are busy doing the actual work. The front desk is where customers fall through the cracks."
             />
-            <div className="mt-12 grid gap-4 md:grid-cols-3">
+            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {PROBLEMS.map((p) => (
                 <div key={p.title} className="rounded-xl border bg-background p-6">
                   <p.icon className="size-5 text-muted-foreground" aria-hidden />
@@ -247,8 +272,53 @@ export default async function LandingPage() {
           </Container>
         </section>
 
+        {/* How it works */}
+        <section id="how-it-works" className="scroll-mt-16 border-t py-20 sm:py-24">
+          <Container>
+            <SectionHeading center eyebrow="How it works" title="It works on top of what you already have." description="No new phone system, no new booking software, no retraining your team." />
+            <ol className="mt-12 grid gap-4 md:grid-cols-3">
+              {STEPS.map((st, i) => (
+                <li key={st.n} className="landing-rise relative rounded-xl border bg-background p-6" style={{ animationDelay: `${i * 120}ms` }}>
+                  <span className="flex size-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">{st.n}</span>
+                  <h3 className="mt-4 text-[15px] font-semibold tracking-tight">{st.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{st.body}</p>
+                </li>
+              ))}
+            </ol>
+          </Container>
+        </section>
+
+        {/* What it recovers */}
+        <section className="border-t bg-surface py-20 sm:py-24">
+          <Container>
+            <SectionHeading eyebrow="What it recovers" title="Three places your revenue leaks — handled automatically." description="Each one runs on its own, within rules you set, and hands anything sensitive to a person." />
+            <div className="mt-12 grid gap-4 md:grid-cols-3">
+              {WORKERS.map((w, i) => (
+                <div key={w.title} className="landing-rise group rounded-xl border bg-background p-6 transition-shadow hover:shadow-[0_16px_40px_-24px_rgba(0,0,0,0.35)]" style={{ animationDelay: `${i * 120}ms` }}>
+                  <span className="inline-flex size-10 items-center justify-center rounded-lg bg-primary-soft text-primary transition-transform group-hover:scale-110">
+                    <w.icon className="size-5" aria-hidden />
+                  </span>
+                  <h3 className="mt-4 text-[15px] font-semibold tracking-tight">{w.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{w.body}</p>
+                  <p className="mt-4 text-[13px] font-medium text-primary">{w.stat}</p>
+                </div>
+              ))}
+            </div>
+          </Container>
+        </section>
+
+        {/* Calculator */}
+        <section id="calculator" className="scroll-mt-16 border-t py-20 sm:py-24">
+          <Container>
+            <SectionHeading center eyebrow="What it's worth" title="What are missed calls and empty slots costing you?" description="Move the sliders to match your week. It takes ten seconds." />
+            <div className="mx-auto mt-12 max-w-5xl">
+              <RoiCalculator />
+            </div>
+          </Container>
+        </section>
+
         {/* 2–6. Product */}
-        <div id="how-it-works" className="scroll-mt-16">
+        <div id="features" className="scroll-mt-16">
           <section className="border-t py-20 sm:py-24">
             <Container className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
               <div>
