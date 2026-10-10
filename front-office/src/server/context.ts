@@ -62,6 +62,7 @@ export type Permission =
   | "members.manage"
   | "analytics.view"
   | "audit.view"
+  | "team.view" // see the people under you and how they're doing
   | "conversations.view_all"
   | "conversations.reply"
   | "customers.view_all"
@@ -75,6 +76,7 @@ const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
     "business.manage",
     "billing.manage",
     "members.manage",
+    "team.view",
     "analytics.view",
     "audit.view",
     "conversations.view_all",
@@ -87,6 +89,7 @@ const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
   ]),
   manager: new Set<Permission>([
     "business.manage",
+    "team.view",
     "analytics.view",
     "audit.view",
     "conversations.view_all",

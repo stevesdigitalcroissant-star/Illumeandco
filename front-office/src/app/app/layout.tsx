@@ -40,6 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             { href: "/app/reviews", label: "Reviews", icon: "reviews" as const },
           ]
         : []),
+      ...(can("team.view") ? [{ href: "/app/team", label: "My team", icon: "team" as const }] : []),
       ...(can("analytics.view") ? [{ href: "/app/analytics", label: "Analytics", icon: "analytics" as const }] : []),
       ...(can("audit.view") ? [{ href: "/app/audit", label: "Audit log", icon: "audit" as const }] : []),
     ],

@@ -13,6 +13,7 @@
  */
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   customType,
   date,
@@ -186,6 +187,8 @@ export const organizationMembers = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     role: memberRole("role").notNull(),
+    /** The manager this person reports to (staff only). Managers see the people who report to them. */
+    reportsToMemberId: uuid("reports_to_member_id").references((): AnyPgColumn => organizationMembers.id, { onDelete: "set null" }),
     createdAt: createdAt(),
   },
   (t) => [unique("org_member_unique").on(t.organizationId, t.userId)],

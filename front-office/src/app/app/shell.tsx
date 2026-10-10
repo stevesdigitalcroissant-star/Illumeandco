@@ -15,6 +15,7 @@ import {
   ListChecks,
   LogOut,
   Menu,
+  Network,
   Settings,
   Sparkles,
   Star,
@@ -51,6 +52,7 @@ const ICONS = {
   reviews: Star,
   analytics: BarChart3,
   audit: ClipboardList,
+  team: Network,
   settings: Settings,
   billing: CreditCard,
 };
