@@ -127,6 +127,13 @@
       "when": 1791643894926,
       "tag": "0017_sales_inquiries",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791644740501,
+      "tag": "0018_plan_prices_2",
+      "breakpoints": true
     }
   ]
 }

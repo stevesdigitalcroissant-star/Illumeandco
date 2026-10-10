@@ -16,8 +16,8 @@ import { getSubscription, stripe } from "./billing";
 export type CreditKind = "ai" | "texts";
 
 export const CREDIT_PACKS = [
-  { id: "topup_small", name: "Top-up", priceCents: 4500, aiConversations: 100, texts: 50 },
-  { id: "topup_large", name: "Large top-up", priceCents: 12000, aiConversations: 300, texts: 150 },
+  { id: "topup_small", name: "Top-up", priceCents: 6900, aiConversations: 100, texts: 50 },
+  { id: "topup_large", name: "Large top-up", priceCents: 19900, aiConversations: 300, texts: 150 },
 ] as const;
 export type CreditPack = (typeof CREDIT_PACKS)[number];
 

@@ -62,7 +62,15 @@ export default async function MarketingLayout({ children }: { children: React.Re
           </nav>
         </Container>
         <Container className="border-t py-6 text-xs text-muted-foreground">
-          <span>© {new Date().getFullYear()} AI Front Office · Prices in USD, excluding applicable taxes.</span>
+          <span className="flex flex-col gap-1 sm:flex-row sm:justify-between">
+            <span>© {new Date().getFullYear()} AI Front Office · Prices in USD, excluding applicable taxes.</span>
+            <span>
+              Website created by{" "}
+              <a href="https://www.illumeandco.online" target="_blank" rel="noopener" className="font-medium text-foreground/80 underline-offset-2 hover:underline">
+                Illume &amp; Co
+              </a>
+            </span>
+          </span>
         </Container>
       </footer>
     </div>

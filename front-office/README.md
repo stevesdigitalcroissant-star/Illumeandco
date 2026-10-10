@@ -178,7 +178,7 @@ Replies stream to the widget (`POST /api/widget/<key>/messages` with `"stream": 
 
 ### Pricing
 
-Plans live in the `plans` table (`DEFAULT_PLANS` in `services/billing.ts` seeds Starter $49, Growth $149, Pro $399 once). Edit rows to change prices, features or entitlements without a deploy; the landing page and billing page read from the table.
+Plans live in the `plans` table (`DEFAULT_PLANS` in `services/billing.ts` seeds Starter $99, Growth $249, Pro $499 once). Edit rows to change prices, features or entitlements without a deploy; the landing page and billing page read from the table.
 
 ## Testing
 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { listPlans, TRIAL_DAYS } from "@/server/services/billing";
 import { RecoveryDemo } from "./_components/recovery-demo";
 import { RoiCalculator } from "./_components/roi-calculator";
-import { Container, CtaBand, PlanCards, SectionHeading } from "./_components/ui";
+import { Container, CtaBand, formatPrice, PlanCards, SectionHeading } from "./_components/ui";
 
 // Pricing is read from the database on every request (the DB is not available at build time).
 export const dynamic = "force-dynamic";
@@ -67,7 +67,9 @@ export default async function LandingPage() {
                 <Link href="/product">See how it works</Link>
               </Button>
             </div>
-            <p className="mt-5 text-[13px] text-muted-foreground">No card needed. Plans from $59/month. Works with your existing phone, website and booking system.</p>
+            <p className="mt-5 text-[13px] text-muted-foreground">
+              No card needed.{plans.length ? ` Plans from ${formatPrice(Math.min(...plans.map((p) => p.priceMonthlyCents)), plans[0]!.currency)}/month.` : ""} Works with your existing phone, website and booking system.
+            </p>
           </div>
           <div className="mx-auto w-full min-w-0 max-w-md lg:max-w-none">
             <RecoveryDemo />
