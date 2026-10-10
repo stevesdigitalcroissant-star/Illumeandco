@@ -13,7 +13,8 @@ export async function runMigrations(url: string) {
 
 const isMain = import.meta.url === `file://${process.argv[1]}`;
 if (isMain) {
-  const url = process.env.DATABASE_URL;
+  // Schema changes go over a direct connection (poolers like Neon's/PgBouncer don't suit DDL + advisory locks).
+  const url = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set");
   await runMigrations(url);
   // Pricing lives in the database so it can be changed without a deploy.
