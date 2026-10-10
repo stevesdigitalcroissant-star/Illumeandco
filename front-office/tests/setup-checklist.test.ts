@@ -18,7 +18,8 @@ describe("recovery setup checklist", () => {
     for (const k of ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_SMS_FROM", "TWILIO_WHATSAPP_FROM", "RESEND_API_KEY", "EMAIL_FROM"]) vi.stubEnv(k, "");
     vi.stubEnv("APP_ENCRYPTION_KEY", "a".repeat(64));
     const c = await createClinic();
-    const first = await setupChecklist(c.ctx);
+    await ingestEvent(c.business.id, { connector: "test", externalId: "t1", type: "call.missed", payload: { from: "+971501230770" } });
+    const first = await setupChecklist(c.ctx); // test events don't count as a connected phone system
     expect(first.every((i) => !i.done)).toBe(true);
     expect(first.find((i) => i.key === "number")).toMatchObject({ needsOperator: true });
     expect(first.find((i) => i.key === "templates")).toBeUndefined(); // only when WhatsApp is available

@@ -2,7 +2,7 @@
  * "Get recovery running" checklist — every item is checked against the
  * business's real data and configuration, so it can't say done when it isn't.
  */
-import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { and, eq, isNotNull, ne, sql } from "drizzle-orm";
 import { conversations, integrationEvents, integrations, opportunities, slotRecoveries, waitlistEntries } from "@/db/schema";
 import { channelsFor } from "../channels/registry";
 import { assertCan, dbOf, type Ctx } from "../context";
@@ -19,8 +19,8 @@ export async function setupChecklist(ctx: Ctx): Promise<SetupItem[]> {
   const exists = async (q: Promise<unknown[]>) => (await q).length > 0;
   const [hook, callEvent, leadEvent, waitlist, chat, won] = await Promise.all([
     exists(db.select({ id: integrations.id }).from(integrations).where(and(eq(integrations.businessId, b), isNotNull(integrations.secretCiphertext))).limit(1)),
-    exists(db.select({ id: integrationEvents.id }).from(integrationEvents).where(and(eq(integrationEvents.businessId, b), sql`${integrationEvents.type} like 'call.%'`)).limit(1)),
-    exists(db.select({ id: integrationEvents.id }).from(integrationEvents).where(and(eq(integrationEvents.businessId, b), eq(integrationEvents.type, "lead.created"))).limit(1)),
+    exists(db.select({ id: integrationEvents.id }).from(integrationEvents).where(and(eq(integrationEvents.businessId, b), ne(integrationEvents.connector, "test"), sql`${integrationEvents.type} like 'call.%'`)).limit(1)),
+    exists(db.select({ id: integrationEvents.id }).from(integrationEvents).where(and(eq(integrationEvents.businessId, b), ne(integrationEvents.connector, "test"), eq(integrationEvents.type, "lead.created"))).limit(1)),
     exists(db.select({ id: waitlistEntries.id }).from(waitlistEntries).where(eq(waitlistEntries.businessId, b)).limit(1)),
     exists(db.select({ id: conversations.id }).from(conversations).where(and(eq(conversations.businessId, b), eq(conversations.channel, "web_chat"))).limit(1)),
     exists(

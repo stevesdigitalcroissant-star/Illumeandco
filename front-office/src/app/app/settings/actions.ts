@@ -20,6 +20,7 @@ import { rotateWebhookSecret } from "@/server/integrations/connectors";
 import { updateSenders } from "@/server/services/senders";
 import { updateAlertsConfig } from "@/server/services/alerts";
 import { updateWhatsappTemplates } from "@/server/services/whatsapp-templates";
+import { ingestEvent } from "@/server/integrations/ingest";
 import { updateRecoveryConfig } from "@/server/recovery/config";
 import { addExistingMember, changeMemberRole, inviteNewMember, listMembers, removeMember } from "@/server/services/team";
 
@@ -238,6 +239,20 @@ export async function saveWhatsappTemplatesAction(input: Record<string, { conten
     await updateWhatsappTemplates(ctx, input);
     revalidate();
   }, "Saved.");
+}
+
+// ─── Try it: simulated events (go through the real pipeline, labelled "test") ──
+export async function simulateEventAction(input: { type: "call.missed" | "lead.created"; name: string; phone: string; email: string; service: string; message: string }) {
+  return run(async () => {
+    const { ctx } = await requirePermission("business.manage");
+    const payload =
+      input.type === "call.missed"
+        ? { from: input.phone, callerName: input.name || undefined, reason: "no_answer" }
+        : { name: input.name || undefined, phone: input.phone || undefined, email: input.email || undefined, service: input.service || undefined, message: input.message || undefined, source: "test form" };
+    const r = await ingestEvent(ctx.businessId, { connector: "test", externalId: `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, type: input.type, payload });
+    revalidate();
+    return { status: r.event.status, result: r.event.result ?? "" };
+  });
 }
 
 // ─── Staff alerts ────────────────────────────────────────────────────

@@ -21,7 +21,7 @@ import { getAiSettings, getBusinessHours } from "@/server/services/business";
 import { getStaffAvailability, listBlackouts, listServices, listStaff } from "@/server/services/catalog";
 import { listMembers } from "@/server/services/team";
 import { addBlackoutAction, saveBusinessAction, savePoliciesAction, saveSendersAction } from "./actions";
-import { AlertsCard, WhatsappTemplatesCard, CardFooter, HoursCard, RecoveryCard, RemoveBlackoutButton, ServicesCard, StaffCard, TeamCard, WebhookSecretButton } from "./settings-client";
+import { AlertsCard, SimulateCard, WhatsappTemplatesCard, CardFooter, HoursCard, RecoveryCard, RemoveBlackoutButton, ServicesCard, StaffCard, TeamCard, WebhookSecretButton } from "./settings-client";
 
 export const metadata = { title: "Settings" };
 
@@ -382,6 +382,7 @@ async function IntegrationsTab({ r }: { r: R }) {
           <CardFooter><SubmitButton>Save numbers</SubmitButton></CardFooter>
         </ActionForm>
       </Card>
+      <SimulateCard />
       <WhatsappTemplatesCard purposes={WHATSAPP_PURPOSES} initial={settings.whatsappTemplates} />
       <RecoveryCard
         worker="missedCall"
@@ -426,7 +427,7 @@ async function IntegrationsTab({ r }: { r: R }) {
               {events.map((e) => (
                 <tr key={e.id}>
                   <td className="whitespace-nowrap text-muted-foreground">{DateTime.fromJSDate(e.createdAt).setZone(tz).toFormat("d LLL, h:mm a")}</td>
-                  <td>{e.connector === "twilio_voice" ? "Twilio Voice" : "Webhook"}</td>
+                  <td>{e.connector === "twilio_voice" ? "Twilio Voice" : e.connector === "test" ? "Test" : "Webhook"}</td>
                   <td><code className="text-xs">{e.type}</code></td>
                   <td><Badge tone={EVENT_TONE[e.status]}>{e.status}</Badge></td>
                   <td className="text-[13px] text-muted-foreground">{e.result}</td>

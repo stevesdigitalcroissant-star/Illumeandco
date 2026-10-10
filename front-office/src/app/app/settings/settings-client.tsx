@@ -21,6 +21,7 @@ import {
   saveAlertsAction,
   saveRecoveryAction,
   saveWhatsappTemplatesAction,
+  simulateEventAction,
   saveServiceAction,
   saveStaffAction,
   saveStaffAvailabilityAction,
@@ -613,6 +614,56 @@ export function WhatsappTemplatesCard({ purposes, initial }: { purposes: { purpo
         <div className="flex items-center justify-end gap-3 pt-1">
           <span className="mr-auto"><Msg state={state} /></span>
           <Button size="sm" disabled={pending} onClick={() => exec(() => saveWhatsappTemplatesAction(f))}>{pending ? "Saving…" : "Save templates"}</Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ─── Try it ──────────────────────────────────────────────────────────
+export function SimulateCard() {
+  const [type, setType] = useState<"call.missed" | "lead.created">("call.missed");
+  const [f, setF] = useState({ name: "", phone: "", email: "", service: "", message: "" });
+  const [pending, start] = useTransition();
+  const [out, setOut] = useState<{ ok: boolean; text: string } | null>(null);
+  const router = useRouter();
+  return (
+    <Card>
+      <CardHeader title="Try it" description="Send a test missed call or website lead through the real recovery pipeline — exactly what happens when your phone system or form sends one. Test events are labelled “Test”." />
+      <div className="space-y-3 px-5 pb-5">
+        <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-1 text-[13px]" role="radiogroup">
+          {(["call.missed", "lead.created"] as const).map((t) => (
+            <button key={t} type="button" role="radio" aria-checked={type === t} onClick={() => { setType(t); setOut(null); }} className={cn("rounded px-3 py-1.5", type === t ? "bg-background font-medium shadow-sm" : "text-muted-foreground")}>
+              {t === "call.missed" ? "Missed call" : "Website lead"}
+            </button>
+          ))}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Name" hint="Optional"><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Sara Ahmed" /></Field>
+          <Field label="Phone" hint={type === "call.missed" ? "The caller's number" : "Phone or email needed"}><Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="+971501234567" /></Field>
+          {type === "lead.created" ? (
+            <>
+              <Field label="Email"><Input value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="sara@example.com" /></Field>
+              <Field label="Service they asked about"><Input value={f.service} onChange={(e) => setF({ ...f, service: e.target.value })} placeholder="Teeth whitening" /></Field>
+              <Field label="Their message" className="sm:col-span-2"><Input value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} placeholder="Is it painful? How much is it?" /></Field>
+            </>
+          ) : null}
+        </div>
+        <div className="flex items-center justify-end gap-3">
+          {out ? <span className={cn("mr-auto text-[13px]", out.ok ? "text-success" : "text-danger")}>{out.text}</span> : null}
+          <Button
+            size="sm"
+            disabled={pending}
+            onClick={() =>
+              start(async () => {
+                const r = await simulateEventAction({ type, ...f });
+                setOut(r.ok ? { ok: r.data!.status === "processed", text: `${r.data!.status}: ${r.data!.result}` } : { ok: false, text: r.error });
+                router.refresh();
+              })
+            }
+          >
+            {pending ? "Sending…" : type === "call.missed" ? "Simulate missed call" : "Simulate new lead"}
+          </Button>
         </div>
       </div>
     </Card>
