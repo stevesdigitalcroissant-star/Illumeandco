@@ -10,6 +10,8 @@ import { knowledgeStats, listSources, parseFaqs } from "@/server/services/knowle
 import { AddSourceDialog, KindIcon, SourceActions, TestRetrieval } from "./knowledge-client";
 
 export const metadata = { title: "Knowledge base" };
+// Importing a whole website can take up to ~45 seconds.
+export const maxDuration = 60;
 
 const KIND_LABEL: Record<string, string> = { text: "Text", faq: "FAQ", document: "Document", url: "Website" };
 
@@ -24,7 +26,7 @@ export default async function KnowledgePage() {
       <PageHeader
         title="Knowledge base"
         description="What your AI receptionist knows about your business. It answers from this information first and won't invent details that aren't here."
-        actions={<AddSourceDialog />}
+        actions={<AddSourceDialog website={business.website} />}
       />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -99,8 +101,8 @@ export default async function KnowledgePage() {
             <EmptyState
               icon={<BookOpen />}
               title="Your knowledge base is empty"
-              description="Add your FAQs, policies or website pages. Until then the AI can only use your services, prices, hours and policies from Settings."
-              action={<AddSourceDialog />}
+              description={business.website ? `Start by importing ${business.website.replace(/^https?:\/\//, "").replace(/\/$/, "")} — the AI reads your pages in about a minute. Then add price lists, menus or policies as PDF or Word files.` : "Import your website, upload price lists, menus or policies (PDF or Word), or add FAQs. Until then the AI can only use your services, prices, hours and policies from Settings."}
+              action={<AddSourceDialog website={business.website} initialTab="url" />}
             />
           )}
         </Card>

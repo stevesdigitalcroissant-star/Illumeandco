@@ -10,7 +10,7 @@ import { Notice } from "@/components/ui/misc";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ActionResult } from "@/lib/action";
 import { cn } from "@/lib/utils";
-import { addSourceAction, uploadDocumentAction, deleteSourceAction, reindexSourceAction, testRetrievalAction, updateSourceAction } from "./actions";
+import { addSourceAction, importWebsiteAction, uploadDocumentAction, deleteSourceAction, reindexSourceAction, testRetrievalAction, updateSourceAction } from "./actions";
 
 type Faq = { q: string; a: string };
 
@@ -47,10 +47,11 @@ export function FaqEditor({ value, onChange }: { value: Faq[]; onChange: (v: Faq
 const DOC_EXT = /\.(pdf|docx|txt|md|markdown|csv|html?)$/i;
 const MAX_UPLOAD = 4 * 1024 * 1024;
 
-export function AddSourceDialog() {
+export function AddSourceDialog({ website, initialTab = "text" }: { website?: string | null; initialTab?: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState("text");
+  const [tab, setTab] = useState(initialTab);
+  const [siteMode, setSiteMode] = useState<"site" | "page">("site");
   const [state, setState] = useState<ActionResult<unknown> | null>(null);
   const [pending, start] = useTransition();
   const [faqs, setFaqs] = useState<Faq[]>([{ q: "", a: "" }]);
@@ -95,6 +96,16 @@ export function AddSourceDialog() {
     }
     start(async () => {
       let r: ActionResult<unknown>;
+      if (tab === "url" && siteMode === "site") {
+        const res = await importWebsiteAction(String(fd.get("url") ?? ""));
+        if (res.ok) {
+          const d = res.data!;
+          setState({ ok: true, data: d, message: `Imported ${d.added + d.updated} pages from ${d.site}${d.failed ? ` (${d.failed} couldn't be read)` : ""}.` });
+          router.refresh();
+          setTimeout(() => { setOpen(false); reset(); }, 1800);
+        } else setState(res);
+        return;
+      }
       if (tab === "document") {
         const up = new FormData();
         up.set("file", doc!);
@@ -132,9 +143,9 @@ export function AddSourceDialog() {
             <TabsTrigger value="url">Website</TabsTrigger>
           </TabsList>
           <form ref={formRef} action={submit} className="space-y-4 pt-5">
-            <Field label="Title" hint={tab === "url" ? "Optional — we'll use the page title." : undefined}>
+            {tab === "url" && siteMode === "site" ? null : <Field label="Title" hint={tab === "url" ? "Optional — we'll use the page title." : undefined}>
               <Input name="title" placeholder={tab === "faq" ? "e.g. General FAQs" : tab === "url" ? "e.g. Our pricing page" : "e.g. Aftercare instructions"} maxLength={200} required={tab === "text"} />
-            </Field>
+            </Field>}
             <TabsContent value="text" className="pt-0">
               <Field label="Content" hint="Paste anything a receptionist should know: services, preparation, aftercare, parking, payment options…">
                 <Textarea name="content" className="min-h-[200px]" required={tab === "text"} />
@@ -153,16 +164,31 @@ export function AddSourceDialog() {
               {fileError ? <Notice tone="warning">{fileError}</Notice> : null}
               <p className="text-xs text-muted-foreground">Price lists, treatment menus, aftercare sheets, policies. Scanned PDFs (photos of pages) have no readable text — paste those into the Text tab.</p>
             </TabsContent>
-            <TabsContent value="url" className="pt-0">
-              <Field label="Page URL" hint="We fetch this one page now and whenever you re-index it. Only public http(s) pages can be imported.">
-                <Input name="url" type="url" placeholder="https://yourclinic.com/faq" required={tab === "url"} />
+            <TabsContent value="url" className="pt-0 space-y-4">
+              <div role="radiogroup" aria-label="What to import" className="grid grid-cols-2 gap-2">
+                {([["site", "Whole website", "Up to 25 pages — services, prices, team, FAQ"], ["page", "Just one page", "A single page you choose"]] as const).map(([v, label, hint]) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={siteMode === v}
+                    onClick={() => setSiteMode(v)}
+                    className={cn("rounded-md border px-3 py-2.5 text-left", siteMode === v ? "border-primary bg-primary-soft" : "hover:bg-muted")}
+                  >
+                    <span className="block text-sm font-medium">{label}</span>
+                    <span className="block text-xs text-muted-foreground">{hint}</span>
+                  </button>
+                ))}
+              </div>
+              <Field label={siteMode === "site" ? "Website address" : "Page URL"} hint={siteMode === "site" ? "We read your sitemap and follow links on your site, most useful pages first. Importing again updates the pages instead of duplicating them." : "We fetch this one page now and whenever you re-index it."}>
+                <Input name="url" type="url" defaultValue={website ?? ""} placeholder={siteMode === "site" ? "https://yourclinic.com" : "https://yourclinic.com/faq"} required={tab === "url"} />
               </Field>
             </TabsContent>
             <Result state={state} />
             <div className="flex justify-end gap-2 border-t pt-4">
               <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={pending}>
-                {pending ? <><Loader2 className="animate-spin" /> Indexing…</> : "Add & index"}
+                {pending ? <><Loader2 className="animate-spin" /> {tab === "url" && siteMode === "site" ? "Reading your website…" : "Indexing…"}</> : tab === "url" && siteMode === "site" ? "Import website" : "Add & index"}
               </Button>
             </div>
           </form>

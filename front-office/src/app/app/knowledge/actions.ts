@@ -4,6 +4,7 @@ import { run } from "@/lib/action";
 import { requirePermission } from "@/lib/session";
 import { invalid } from "@/server/context";
 import { extractDocumentText } from "@/server/services/documents";
+import { importWebsite } from "@/server/services/website-import";
 import { addSource, deleteSource, formatFaqs, htmlToText, indexSource, searchKnowledge, updateSourceContent } from "@/server/services/knowledge";
 
 type Faq = { q: string; a: string };
@@ -85,4 +86,14 @@ export async function uploadDocumentAction(fd: FormData) {
     if (s.status === "failed") throw invalid(`Saved, but indexing failed: ${s.error ?? "unknown error"}`);
     return { chunks: s.chunkCount, truncated: text.length > 200_000 };
   }, "Document added. The AI can use it now.");
+}
+
+/** Import up to 25 pages of a website (sitemap + links on the same site). */
+export async function importWebsiteAction(url: string) {
+  return run(async () => {
+    const { ctx } = await requirePermission("business.manage");
+    const r = await importWebsite(ctx, String(url ?? ""));
+    revalidatePath("/app/knowledge");
+    return { added: r.added, updated: r.updated, failed: r.failed, more: r.more, site: r.site };
+  });
 }

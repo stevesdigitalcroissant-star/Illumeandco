@@ -112,9 +112,13 @@ export function htmlToText(html: string) {
     .trim();
 }
 
-async function fetchUrlText(raw: string) {
+/**
+ * Fetch one public page. Redirects are followed manually so every hop is
+ * re-checked against private addresses. Returns the final URL, the raw HTML
+ * (for link discovery) and its readable text.
+ */
+export async function fetchPage(raw: string, opts: { xml?: boolean } = {}) {
   let url = await assertPublicUrl(raw);
-  // Follow redirects manually so every hop is re-checked.
   for (let hop = 0; hop < 4; hop++) {
     const res = await fetch(url, {
       redirect: "manual",
@@ -127,12 +131,22 @@ async function fetchUrlText(raw: string) {
     }
     if (!res.ok) throw invalid(`The website returned ${res.status}.`);
     const type = res.headers.get("content-type") ?? "";
-    if (!/text\/(html|plain)/.test(type)) throw invalid("Only HTML or plain-text pages can be imported.");
+    if (!/text\/(html|plain)|application\/xhtml/.test(type) && !(opts.xml && /xml/.test(type))) throw invalid("Only HTML or plain-text pages can be imported.");
     const body = (await res.text()).slice(0, 2_000_000);
-    const title = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(body)?.[1]?.trim();
-    return { text: type.includes("html") ? htmlToText(body) : body, title };
+    const isHtml = /html/.test(type);
+    const title = isHtml ? decodeEntities(/<title[^>]*>([\s\S]*?)<\/title>/i.exec(body)?.[1]?.trim() ?? "") || undefined : undefined;
+    return { url, html: isHtml ? body : null, body, text: isHtml ? htmlToText(body) : body, title };
   }
   throw invalid("Too many redirects.");
+}
+
+function decodeEntities(s: string) {
+  return s.replace(/&amp;/g, "&").replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ");
+}
+
+async function fetchUrlText(raw: string) {
+  const page = await fetchPage(raw);
+  return { text: page.text, title: page.title };
 }
 
 // ─── Sources ─────────────────────────────────────────────────────────
@@ -193,14 +207,14 @@ export async function deleteSource(ctx: Ctx, id: string) {
   await audit(ctx, { action: "knowledge.updated", summary: `Knowledge source "${s.title}" removed`, entityType: "knowledge_source", entityId: id });
 }
 
-/** (Re)build chunks for a source. URL sources are re-fetched. */
-export async function indexSource(ctx: Ctx, id: string) {
+/** (Re)build chunks for a source. URL sources are re-fetched unless the page was just fetched (`prefetched`). */
+export async function indexSource(ctx: Ctx, id: string, prefetched?: { text: string; title?: string }) {
   const s = await getSource(ctx, id);
   try {
     let content = s.content ?? "";
     let title = s.title;
     if (s.kind === "url" && s.url) {
-      const page = await fetchUrlText(s.url);
+      const page = prefetched ?? (await fetchUrlText(s.url));
       content = page.text;
       if (page.title && (!s.title || s.title === s.url)) title = page.title;
     }
