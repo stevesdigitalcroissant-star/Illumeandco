@@ -64,6 +64,7 @@ type LocationValues = {
   address: string | null;
   city: string | null;
   country: string | null;
+  countryCode: string | null;
   timezone: string;
   currency: string;
   phone: string | null;
@@ -71,14 +72,28 @@ type LocationValues = {
   website: string | null;
 };
 
-export function LocationStep({ business, timezones, guessTimezone }: { business: LocationValues; timezones: string[]; guessTimezone: boolean }) {
+export function LocationStep({ business, timezones, countries, guessTimezone }: { business: LocationValues; timezones: string[]; countries: { code: string; name: string; currency: string }[]; guessTimezone: boolean }) {
   const [state, action] = useActionState<State, FormData>(saveLocationAction, null);
   const tzRef = useRef<HTMLSelectElement>(null);
+  const countryRef = useRef<HTMLSelectElement>(null);
+  const currencyRef = useRef<HTMLSelectElement>(null);
   useEffect(() => {
-    if (!guessTimezone || !tzRef.current) return;
+    if (!guessTimezone) return;
     const guess = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (guess && timezones.includes(guess)) tzRef.current.value = guess;
-  }, [guessTimezone, timezones]);
+    if (tzRef.current && guess && timezones.includes(guess)) tzRef.current.value = guess;
+    // A new business: preselect the owner's country (from the browser) and its currency.
+    if (!business.countryCode && countryRef.current) {
+      let region: string | undefined;
+      try {
+        region = new Intl.Locale(navigator.language).maximize().region;
+      } catch {}
+      const c = countries.find((x) => x.code === region);
+      if (c) {
+        countryRef.current.value = c.code;
+        if (currencyRef.current && [...currencyRef.current.options].some((o) => o.value === c.currency)) currencyRef.current.value = c.currency;
+      }
+    }
+  }, [guessTimezone, timezones, countries, business.countryCode]);
   const tzList = timezones.includes(business.timezone) ? timezones : [business.timezone, ...timezones];
   const currencies = CURRENCIES.some((c) => c.code === business.currency) ? CURRENCIES : [{ code: business.currency, label: business.currency }, ...CURRENCIES];
 
@@ -91,8 +106,22 @@ export function LocationStep({ business, timezones, guessTimezone }: { business:
         <Field label="City">
           <Input name="city" defaultValue={business.city ?? ""} autoComplete="address-level2" />
         </Field>
-        <Field label="Country">
-          <Input name="country" defaultValue={business.country ?? ""} autoComplete="country-name" />
+        <Field label="Country" hint="Lets us read local phone numbers and use your emergency number.">
+          <NativeSelect
+            ref={countryRef}
+            name="countryCode"
+            defaultValue={business.countryCode ?? ""}
+            required
+            onChange={(e) => {
+              const c = countries.find((x) => x.code === e.target.value);
+              if (c && currencyRef.current && [...currencyRef.current.options].some((o) => o.value === c.currency)) currencyRef.current.value = c.currency;
+            }}
+          >
+            <option value="" disabled>Choose…</option>
+            {countries.map((c) => (
+              <option key={c.code} value={c.code}>{c.name}</option>
+            ))}
+          </NativeSelect>
         </Field>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -104,7 +133,7 @@ export function LocationStep({ business, timezones, guessTimezone }: { business:
           </NativeSelect>
         </Field>
         <Field label="Currency">
-          <NativeSelect name="currency" defaultValue={business.currency} required>
+          <NativeSelect ref={currencyRef} name="currency" defaultValue={business.currency} required>
             {currencies.map((c) => (
               <option key={c.code} value={c.code}>{c.label}</option>
             ))}
@@ -113,7 +142,7 @@ export function LocationStep({ business, timezones, guessTimezone }: { business:
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Phone">
-          <Input name="phone" type="tel" defaultValue={business.phone ?? ""} autoComplete="tel" placeholder="+971 4 000 0000" />
+          <Input name="phone" type="tel" defaultValue={business.phone ?? ""} autoComplete="tel" placeholder="Your business number" />
         </Field>
         <Field label="Email">
           <Input name="email" type="email" defaultValue={business.email ?? ""} autoComplete="email" />

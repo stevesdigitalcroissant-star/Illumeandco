@@ -39,7 +39,7 @@ export async function saveBusinessAction(_prev: Prev, fd: FormData) {
     const type = str(fd, "type");
     if (!BUSINESS_TYPES.some((t) => t.value === type)) throw invalid("Choose a business type.");
     const currency = str(fd, "currency").toUpperCase();
-    if (!/^[A-Z]{3}$/.test(currency)) throw invalid("Currency must be a 3-letter code such as AED or USD.");
+    if (!/^[A-Z]{3}$/.test(currency)) throw invalid("Currency must be a 3-letter code such as USD.");
     const website = optStr(fd, "website");
     if (website && !/^https?:\/\//i.test(website)) throw invalid("Website must start with http:// or https://.");
     const email = optStr(fd, "email");
@@ -50,7 +50,7 @@ export async function saveBusinessAction(_prev: Prev, fd: FormData) {
       description: optStr(fd, "description"),
       address: optStr(fd, "address"),
       city: optStr(fd, "city"),
-      country: optStr(fd, "country"),
+      countryCode: str(fd, "countryCode") || null,
       phone: optStr(fd, "phone"),
       email,
       website,

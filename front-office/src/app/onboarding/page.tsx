@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { COUNTRY_OPTIONS, defaultCurrency } from "@/lib/countries";
 import { requireBusiness, requireUser } from "@/lib/session";
 import { AI_PERMISSION_LABELS } from "@/server/ai/permissions";
 import { listAccessibleBusinesses } from "@/server/auth";
@@ -79,10 +80,12 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
       body = (
         <LocationStep
           timezones={timezones()}
+          countries={COUNTRY_OPTIONS.map((c) => ({ ...c, currency: defaultCurrency(c.code) }))}
           business={{
             address: business.address,
             city: business.city,
             country: business.country,
+            countryCode: business.countryCode,
             timezone: business.timezone,
             currency: business.currency,
             phone: business.phone,

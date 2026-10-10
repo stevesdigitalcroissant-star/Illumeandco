@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { COUNTRY_OPTIONS } from "@/lib/countries";
+import { CURRENCIES } from "@/app/onboarding/options";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
@@ -93,7 +95,12 @@ function BusinessTab({ r }: { r: R }) {
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Address" className="sm:col-span-3"><Input name="address" defaultValue={b.address ?? ""} /></Field>
             <Field label="City"><Input name="city" defaultValue={b.city ?? ""} /></Field>
-            <Field label="Country"><Input name="country" defaultValue={b.country ?? ""} /></Field>
+            <Field label="Country" hint="Used to read local phone numbers and give the right emergency number.">
+              <NativeSelect name="countryCode" defaultValue={b.countryCode ?? ""}>
+                <option value="">Not set</option>
+                {COUNTRY_OPTIONS.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
+              </NativeSelect>
+            </Field>
             <Field label="Phone"><Input name="phone" defaultValue={b.phone ?? ""} /></Field>
             <Field label="Email"><Input name="email" type="email" defaultValue={b.email ?? ""} /></Field>
             <Field label="Website" className="sm:col-span-2"><Input name="website" type="url" defaultValue={b.website ?? ""} placeholder="https://" /></Field>
@@ -102,7 +109,11 @@ function BusinessTab({ r }: { r: R }) {
             <Field label="Timezone" hint="All opening hours and appointment times use this timezone.">
               <NativeSelect name="timezone" defaultValue={b.timezone}>{timezones().map((tz) => <option key={tz} value={tz}>{tz}</option>)}</NativeSelect>
             </Field>
-            <Field label="Currency" hint="3-letter code used for prices, e.g. AED."><Input name="currency" defaultValue={b.currency} maxLength={3} className="uppercase" required /></Field>
+            <Field label="Currency" hint="Used for your service prices and revenue figures.">
+              <NativeSelect name="currency" defaultValue={b.currency}>
+                {(CURRENCIES.some((c) => c.code === b.currency) ? CURRENCIES : [{ code: b.currency, label: b.currency }, ...CURRENCIES]).map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+              </NativeSelect>
+            </Field>
           </div>
         </CardBody>
         <div className="border-t">
@@ -360,7 +371,7 @@ async function IntegrationsTab({ r }: { r: R }) {
                   </div>
                   <div className="text-xs text-muted-foreground">
                     Headers <code>X-AFO-Timestamp</code> (unix seconds) and <code>X-AFO-Signature</code> = hex HMAC-SHA256 of <code>{"`${timestamp}.${body}`"}</code> with your secret. Body:{" "}
-                    <code className="break-all">{`{"id":"call-123","type":"call.missed","data":{"from":"+971501234567","reason":"no_answer"}}`}</code> or{" "}
+                    <code className="break-all">{`{"id":"call-123","type":"call.missed","data":{"from":"+15125550142","reason":"no_answer"}}`}</code> or{" "}
                     <code className="break-all">{`{"id":"form-88","type":"lead.created","data":{"name":"Sara","email":"sara@example.com","service":"Teeth whitening","message":"…","source":"website form"}}`}</code>. Repeated ids are ignored.
                   </div>
                   <WebhookSecretButton hasSecret={hook.hasSecret} disabled={!hook.encryption} />
@@ -380,8 +391,8 @@ async function IntegrationsTab({ r }: { r: R }) {
         <ActionForm action={saveSendersAction} className="space-y-0 [&>p]:px-5 [&>p]:pb-3">
           <CardHeader title="Your messaging numbers" description="Texts and WhatsApp messages to your customers come from your own number, and replies to it reach only your business." />
           <CardBody className="grid gap-4 sm:grid-cols-2">
-            <Field label="SMS number" hint={senderNote("sms")}><Input name="smsFrom" defaultValue={r.business.smsFrom ?? ""} placeholder="+9715XXXXXXXX" /></Field>
-            <Field label="WhatsApp number" hint={senderNote("whatsapp")}><Input name="whatsappFrom" defaultValue={r.business.whatsappFrom ?? ""} placeholder="+9715XXXXXXXX" /></Field>
+            <Field label="SMS number" hint={senderNote("sms")}><Input name="smsFrom" defaultValue={r.business.smsFrom ?? ""} placeholder="+1 512 555 0142" /></Field>
+            <Field label="WhatsApp number" hint={senderNote("whatsapp")}><Input name="whatsappFrom" defaultValue={r.business.whatsappFrom ?? ""} placeholder="+1 512 555 0142" /></Field>
             <p className="text-xs text-muted-foreground sm:col-span-2">
               In Twilio, set each number&apos;s messaging webhook to <code className="break-all">{origin}/api/channels/twilio/{key}</code>.
             </p>

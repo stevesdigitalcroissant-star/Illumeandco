@@ -8,7 +8,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-const CURRENCIES = ["USD", "AED", "GBP", "EUR", "SAR"] as const;
+const CURRENCIES = ["USD", "CAD", "AUD", "GBP", "EUR", "NZD", "AED"] as const;
 
 function NumberField({ label, hint, value, onChange, min = 0, max = 1000, step = 1 }: { label: string; hint: string; value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number }) {
   return (

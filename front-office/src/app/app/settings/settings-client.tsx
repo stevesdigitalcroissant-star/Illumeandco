@@ -563,7 +563,7 @@ export function AlertsCard({ initial, hint }: { initial: { instant: boolean; dig
       <CardHeader title="Staff alerts" description="When something only a person can do comes up — a missed caller to call back, a new lead to reach, an accepted slot to book, a customer asking for a person — your team is told straight away, not just in the dashboard." />
       <div className="space-y-4 px-5 pb-5">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Text alerts to" hint="Phone numbers, comma-separated (international format)"><Input value={f.smsTo} placeholder="+971501234567" onChange={(e) => setF({ ...f, smsTo: e.target.value })} /></Field>
+          <Field label="Text alerts to" hint="Phone numbers, comma-separated (international format)"><Input value={f.smsTo} placeholder="+15125550142" onChange={(e) => setF({ ...f, smsTo: e.target.value })} /></Field>
           <Field label="Email alerts to" hint="Email addresses, comma-separated"><Input value={f.emailTo} placeholder="frontdesk@clinic.com" onChange={(e) => setF({ ...f, emailTo: e.target.value })} /></Field>
         </div>
         <label className="flex items-center justify-between gap-4">
@@ -640,7 +640,7 @@ export function SimulateCard() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Name" hint="Optional"><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Sara Ahmed" /></Field>
-          <Field label="Phone" hint={type === "call.missed" ? "The caller's number" : "Phone or email needed"}><Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="+971501234567" /></Field>
+          <Field label="Phone" hint={type === "call.missed" ? "The caller's number" : "Phone or email needed"}><Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="+15125550142" /></Field>
           {type === "lead.created" ? (
             <>
               <Field label="Email"><Input value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="sara@example.com" /></Field>

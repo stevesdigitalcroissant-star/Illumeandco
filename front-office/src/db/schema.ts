@@ -217,6 +217,8 @@ export const businesses = pgTable(
     address: text("address"),
     city: text("city"),
     country: text("country"),
+    /** ISO 3166 country code (US, CA, AU, AE…): phone number format, default currency, emergency number. */
+    countryCode: text("country_code"),
     phone: text("phone"),
     email: text("email"),
     website: text("website"),

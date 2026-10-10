@@ -17,7 +17,7 @@ export function CustomerDetailsForm({
         <Input name="name" defaultValue={customer.name ?? ""} placeholder="Full name" />
       </Field>
       <Field label="Phone">
-        <Input name="phone" defaultValue={customer.phone ?? ""} inputMode="tel" placeholder="+971 50 123 4567" />
+        <Input name="phone" defaultValue={customer.phone ?? ""} inputMode="tel" placeholder="Mobile number" />
       </Field>
       <Field label="Email">
         <Input name="email" type="email" defaultValue={customer.email ?? ""} placeholder="name@example.com" />

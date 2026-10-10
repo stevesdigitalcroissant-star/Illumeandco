@@ -8,6 +8,7 @@
  * Claim guard (after the model): blocks replies that claim an action happened
  * (booked, rescheduled, cancelled, sent) when no matching tool call succeeded.
  */
+import { emergencyNumber } from "@/lib/countries";
 import { MEDICAL_TYPES } from "../defaults";
 import type { TurnEvent } from "./tools/registry";
 
@@ -30,15 +31,16 @@ const CLINICAL_RE =
 const REFUND_RE = /\b(refund|money\s+back|chargeback|charge\s*back|dispute\s+(the\s+)?charge|overcharged)\b/i;
 const LEGAL_RE = /\b(lawyer|attorney|sue\s+you|legal\s+action|lawsuit|solicitor|negligence\s+claim)\b/i;
 
-export function preCheck(text: string, businessType: string): PreCheck {
+export function preCheck(text: string, businessType: string, country?: string | null): PreCheck {
   if (OPT_OUT_RE.test(text)) return { kind: "opt_out" };
-  if (EMERGENCY_RE.test(text))
+  if (EMERGENCY_RE.test(text)) {
+    const local = emergencyNumber(country);
     return {
       kind: "handoff",
       reason: "Possible medical emergency",
-      reply:
-        "If this is an emergency, please call your local emergency number right away (999 in the UAE, 911 in the US, 112 in the EU). I've also alerted our team so a person can follow up with you.",
+      reply: `If this is an emergency, please call ${local ? local : "your local emergency number"} right away. I've also alerted our team so a person can follow up with you.`,
     };
+  }
   if (MEDICAL_TYPES.has(businessType) && CLINICAL_RE.test(text))
     return {
       kind: "handoff",

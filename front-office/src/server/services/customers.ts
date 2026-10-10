@@ -1,5 +1,7 @@
 import { and, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
-import { appointments, conversations, customers, staff, type CustomerMemory } from "@/db/schema";
+import { db as rootDb } from "@/db";
+import { appointments, businesses, conversations, customers, staff, type CustomerMemory } from "@/db/schema";
+import { toE164 } from "@/lib/countries";
 import { audit } from "../audit";
 import { assertCan, dbOf, invalid, isRestrictedStaff, notFound, type Ctx } from "../context";
 
@@ -12,12 +14,28 @@ export type CustomerInput = {
   tags?: string[];
 };
 
-export function normalizePhone(phone: string | null | undefined) {
+/**
+ * Normalize a phone number. Given the business's country, local formats
+ * ("0412 345 678", "(512) 555-0142") become international (+61…, +1…), which
+ * texting needs. Otherwise the digits are kept (with + when given).
+ */
+export function normalizePhone(phone: string | null | undefined, country?: string | null) {
   if (!phone) return null;
   const trimmed = phone.trim();
   const digits = trimmed.replace(/[^\d]/g, "");
   if (digits.length < 7 || digits.length > 15) throw invalid("That phone number doesn't look right.");
-  return (trimmed.startsWith("+") ? "+" : "") + digits;
+  return toE164(trimmed, country) ?? (trimmed.startsWith("+") ? "+" : "") + digits;
+}
+
+/** The business's country code, for reading phone numbers typed in local format. */
+export async function businessCountry(ctx: Ctx) {
+  const b = await rootDb.query.businesses.findFirst({ where: eq(businesses.id, ctx.businessId), columns: { countryCode: true } });
+  return b?.countryCode ?? null;
+}
+
+/** normalizePhone in this business's country. */
+export async function phoneFor(ctx: Ctx, phone: string | null | undefined) {
+  return phone ? normalizePhone(phone, await businessCountry(ctx)) : null;
 }
 
 export function normalizeCustomerEmail(email: string | null | undefined) {
@@ -62,7 +80,7 @@ export async function getCustomer(ctx: Ctx, customerId: string) {
 /** Find a customer by email or phone within this business. */
 export async function findCustomerByContact(ctx: Ctx, contact: { email?: string | null; phone?: string | null }) {
   const email = normalizeCustomerEmail(contact.email);
-  const phone = normalizePhone(contact.phone);
+  const phone = await phoneFor(ctx, contact.phone);
   if (!email && !phone) return null;
   const conds = [];
   if (email) conds.push(sql`lower(${customers.email}) = ${email}`);
@@ -77,7 +95,7 @@ export async function findCustomerByContact(ctx: Ctx, contact: { email?: string 
 
 export async function createCustomer(ctx: Ctx, input: CustomerInput) {
   const email = normalizeCustomerEmail(input.email);
-  const phone = normalizePhone(input.phone);
+  const phone = await phoneFor(ctx, input.phone);
   const existing = await findCustomerByContact(ctx, { email, phone });
   if (existing) return { customer: existing, created: false };
   const [c] = await dbOf(ctx)
@@ -118,7 +136,7 @@ export async function updateCustomer(ctx: Ctx, customerId: string, patch: Custom
   const values: Partial<typeof customers.$inferInsert> = {};
   if (patch.name !== undefined) values.name = patch.name?.trim() || null;
   if (patch.email !== undefined) values.email = normalizeCustomerEmail(patch.email);
-  if (patch.phone !== undefined) values.phone = normalizePhone(patch.phone);
+  if (patch.phone !== undefined) values.phone = await phoneFor(ctx, patch.phone);
   if (patch.notes !== undefined) values.notes = patch.notes;
   if (patch.tags !== undefined) values.tags = patch.tags;
   if (patch.optedOut !== undefined) values.optedOut = patch.optedOut;

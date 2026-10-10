@@ -116,7 +116,7 @@ describe("staff alerts", () => {
 
   it("validates recipients and is owner/manager only", async () => {
     const c = await createClinic();
-    await expect(updateAlertsConfig(c.ctx, { instant: true, digest: true, digestHour: 8, smsTo: "0501234567", emailTo: "" })).rejects.toThrow(/international format/);
+    await expect(updateAlertsConfig(c.ctx, { instant: true, digest: true, digestHour: 8, smsTo: "0501234567", emailTo: "" })).rejects.toThrow(/isn.t a valid phone number/);
     await expect(updateAlertsConfig(c.ctx, { instant: true, digest: true, digestHour: 8, smsTo: "", emailTo: "not-an-email" })).rejects.toThrow(/valid email/);
     await expect(updateAlertsConfig({ ...c.ctx, actor: { ...c.ctx.actor, role: "staff" } as typeof c.ctx.actor }, { instant: true, digest: true, digestHour: 8, smsTo: "", emailTo: "" })).rejects.toThrow();
     const saved = await updateAlertsConfig(c.ctx, { instant: false, digest: true, digestHour: 7, smsTo: "+971 50 111 0007; +971501110007", emailTo: "Desk@Clinic.com" });

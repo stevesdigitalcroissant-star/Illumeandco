@@ -117,7 +117,7 @@ export async function saveLocationAction(_: ActionResult<unknown> | null, fd: Fo
     await updateBusiness(ctx, {
       address: optStr(fd, "address"),
       city: optStr(fd, "city"),
-      country: optStr(fd, "country"),
+      countryCode: str(fd, "countryCode") || null,
       timezone,
       currency,
       phone: optStr(fd, "phone"),

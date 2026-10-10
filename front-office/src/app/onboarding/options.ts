@@ -14,24 +14,29 @@ export const WEEKDAYS = [
 ] as const;
 
 export const CURRENCIES = [
+  { code: "USD", label: "USD — US dollar" },
+  { code: "CAD", label: "CAD — Canadian dollar" },
+  { code: "AUD", label: "AUD — Australian dollar" },
+  { code: "NZD", label: "NZD — New Zealand dollar" },
+  { code: "GBP", label: "GBP — British pound" },
+  { code: "EUR", label: "EUR — Euro" },
   { code: "AED", label: "AED — UAE dirham" },
   { code: "SAR", label: "SAR — Saudi riyal" },
   { code: "QAR", label: "QAR — Qatari riyal" },
   { code: "KWD", label: "KWD — Kuwaiti dinar" },
   { code: "BHD", label: "BHD — Bahraini dinar" },
   { code: "OMR", label: "OMR — Omani rial" },
-  { code: "EGP", label: "EGP — Egyptian pound" },
-  { code: "USD", label: "USD — US dollar" },
-  { code: "CAD", label: "CAD — Canadian dollar" },
-  { code: "EUR", label: "EUR — Euro" },
-  { code: "GBP", label: "GBP — British pound" },
   { code: "CHF", label: "CHF — Swiss franc" },
+  { code: "SGD", label: "SGD — Singapore dollar" },
+  { code: "HKD", label: "HKD — Hong Kong dollar" },
   { code: "INR", label: "INR — Indian rupee" },
   { code: "PKR", label: "PKR — Pakistani rupee" },
-  { code: "SGD", label: "SGD — Singapore dollar" },
-  { code: "AUD", label: "AUD — Australian dollar" },
-  { code: "NZD", label: "NZD — New Zealand dollar" },
+  { code: "EGP", label: "EGP — Egyptian pound" },
   { code: "ZAR", label: "ZAR — South African rand" },
+  { code: "MXN", label: "MXN — Mexican peso" },
+  { code: "BRL", label: "BRL — Brazilian real" },
+  { code: "JPY", label: "JPY — Japanese yen" },
+  { code: "PHP", label: "PHP — Philippine peso" },
 ] as const;
 
 /** Must match the tones accepted by updateAgent() in server/services/ai-config. */

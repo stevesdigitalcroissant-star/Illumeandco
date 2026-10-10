@@ -15,7 +15,7 @@ const json = (body: unknown, status = 200) => Response.json(body, { status });
  *
  *   X-AFO-Timestamp: <unix seconds>
  *   X-AFO-Signature: hex HMAC-SHA256(secret, `${timestamp}.${rawBody}`)
- *   { "id": "your-event-id", "type": "call.missed", "occurredAt": "…", "data": { "from": "+9715…" } }
+ *   { "id": "your-event-id", "type": "call.missed", "occurredAt": "…", "data": { "from": "+1512…" } }
  *
  * The business is identified by the URL; the signature proves the sender
  * holds that business's secret. Duplicate ids are acknowledged, not re-run.

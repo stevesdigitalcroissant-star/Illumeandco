@@ -4,20 +4,23 @@ import { businesses } from "@/db/schema";
 import { audit } from "../audit";
 import { assertCan, conflict, dbOf, invalid, type Ctx } from "../context";
 import { assertFeature } from "./plan-limits";
+import { toE164 } from "@/lib/countries";
 
 const E164 = /^\+[1-9]\d{6,14}$/;
 
-function clean(v: string | null | undefined, label: string) {
-  const s = (v ?? "").replace(/[\s()-]/g, "").replace(/^whatsapp:/i, "");
-  if (!s) return null;
-  if (!E164.test(s)) throw invalid(`${label} must be in international format, e.g. +971501234567.`);
+function clean(v: string | null | undefined, label: string, country: string | null) {
+  const raw = (v ?? "").replace(/^whatsapp:/i, "").trim();
+  if (!raw) return null;
+  const s = toE164(raw, country) ?? raw.replace(/[\s()-]/g, "");
+  if (!E164.test(s)) throw invalid(`${label} must be in international format, e.g. +1 512 555 0142.`);
   return s;
 }
 
 export async function updateSenders(ctx: Ctx, input: { smsFrom?: string | null; whatsappFrom?: string | null }) {
   assertCan(ctx, "business.manage");
-  const smsFrom = clean(input.smsFrom, "SMS number");
-  const whatsappFrom = clean(input.whatsappFrom, "WhatsApp number");
+  const country = (await dbOf(ctx).query.businesses.findFirst({ where: eq(businesses.id, ctx.businessId), columns: { countryCode: true } }))?.countryCode ?? null;
+  const smsFrom = clean(input.smsFrom, "SMS number", country);
+  const whatsappFrom = clean(input.whatsappFrom, "WhatsApp number", country);
   if (whatsappFrom) {
     const current = await dbOf(ctx).query.businesses.findFirst({ where: eq(businesses.id, ctx.businessId), columns: { whatsappFrom: true } });
     if (current?.whatsappFrom !== whatsappFrom) await assertFeature(ctx, "whatsapp");

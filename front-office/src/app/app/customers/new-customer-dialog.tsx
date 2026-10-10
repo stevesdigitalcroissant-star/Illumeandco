@@ -20,7 +20,7 @@ export function NewCustomerDialog() {
             <Input name="name" required autoFocus placeholder="Full name" />
           </Field>
           <Field label="Phone">
-            <Input name="phone" inputMode="tel" placeholder="+971 50 123 4567" />
+            <Input name="phone" inputMode="tel" placeholder="Mobile number" />
           </Field>
           <Field label="Email">
             <Input name="email" type="email" placeholder="name@example.com" />

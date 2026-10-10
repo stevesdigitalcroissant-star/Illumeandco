@@ -23,7 +23,7 @@ import { canReachWith, channelsFor, type BusinessSenders } from "../channels/reg
 import { dbOf, type Ctx } from "../context";
 import { evaluateLead, findOpen } from "../opportunities/engine";
 import { getAiSettings, getBusiness } from "../services/business";
-import { createCustomer, findCustomerByContact, normalizeCustomerEmail, normalizePhone } from "../services/customers";
+import { businessCountry, createCustomer, findCustomerByContact, normalizeCustomerEmail, normalizePhone } from "../services/customers";
 import { civilHours, processFollowUp, scheduleFollowUp } from "../services/followups";
 import { upsertLead } from "../services/leads";
 import { notifyStaff } from "../services/alerts";
@@ -73,7 +73,8 @@ export async function onLeadCreated(ctx: Ctx, input: LeadInput, now = new Date()
   const settings = await getAiSettings(ctx);
   if (!settings.recovery.leads.enabled) return { handled: false, detail: "Lead recovery is turned off" };
   const email = safe(() => normalizeCustomerEmail(input.email));
-  const phone = safe(() => normalizePhone(input.phone));
+  const country = await businessCountry(ctx);
+  const phone = safe(() => normalizePhone(input.phone, country));
   if (!email && !phone) return { handled: false, detail: "No usable email or phone number" };
 
   const db = dbOf(ctx);

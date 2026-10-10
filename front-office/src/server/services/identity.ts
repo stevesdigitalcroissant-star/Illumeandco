@@ -12,14 +12,14 @@ import { db as rootDb, type Tx } from "@/db";
 import { appointments, conversations, customers, followUps, leads, opportunities, reviews } from "@/db/schema";
 import { audit } from "../audit";
 import { dbOf, invalid, notFound, type Ctx } from "../context";
-import { findCustomerByContact, normalizeCustomerEmail, normalizePhone } from "./customers";
+import { findCustomerByContact, normalizeCustomerEmail, phoneFor } from "./customers";
 
 export async function attachContactDetails(
   ctx: Ctx,
   input: { conversationId: string; customerId: string; name?: string | null; email?: string | null; phone?: string | null },
 ): Promise<{ customerId: string; merged: boolean }> {
   const email = normalizeCustomerEmail(input.email);
-  const phone = normalizePhone(input.phone);
+  const phone = await phoneFor(ctx, input.phone);
   const name = input.name?.trim().slice(0, 120) || null;
   if (!email && !phone && !name) throw invalid("No contact details provided.");
 

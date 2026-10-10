@@ -108,7 +108,7 @@ export async function runAgentTurn(
     await execute("escalate_to_human", { reason: "AI receptionist is turned off" });
     reply = HANDOFF_ACK;
   } else {
-    const check = lastCustomer ? preCheck(lastCustomer.content, business.type) : { kind: "none" as const };
+    const check = lastCustomer ? preCheck(lastCustomer.content, business.type, business.countryCode) : { kind: "none" as const };
     const provider = opts.provider ?? defaultProvider();
     // A paid AI model counts against the plan's monthly conversation allowance (the rules engine is free).
     const allowance = check.kind !== "handoff" && provider.id !== "rules" ? await aiConversationAllowed(ctx, conversationId, now) : null;

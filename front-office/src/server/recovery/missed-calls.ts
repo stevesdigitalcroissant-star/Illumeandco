@@ -30,7 +30,7 @@ import { channelsFor, hasPhoneChannel, type BusinessSenders } from "../channels/
 import { dbOf, type Ctx } from "../context";
 import { close, findOpen, upsertOpen } from "../opportunities/engine";
 import { getAiSettings, getBusiness } from "../services/business";
-import { createCustomer, findCustomerByContact, normalizePhone } from "../services/customers";
+import { createCustomer, findCustomerByContact, phoneFor } from "../services/customers";
 import { notifyStaff } from "../services/alerts";
 import { civilHours, processFollowUp, scheduleFollowUp } from "../services/followups";
 
@@ -97,7 +97,7 @@ export async function onMissedCall(ctx: Ctx, input: MissedCallInput, now = new D
 
   let phone: string | null;
   try {
-    phone = normalizePhone(input.from);
+    phone = await phoneFor(ctx, input.from);
   } catch {
     phone = null;
   }
@@ -222,7 +222,7 @@ export async function onMissedCall(ctx: Ctx, input: MissedCallInput, now = new D
 export async function onCallCompleted(ctx: Ctx, input: { customer: string; direction: "inbound" | "outbound"; occurredAt: Date }) {
   let phone: string | null;
   try {
-    phone = normalizePhone(input.customer);
+    phone = await phoneFor(ctx, input.customer);
   } catch {
     phone = null;
   }

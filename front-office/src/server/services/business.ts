@@ -1,4 +1,5 @@
 import { and, asc, eq } from "drizzle-orm";
+import { countryName, isCountryCode } from "@/lib/countries";
 import { randomBytes } from "node:crypto";
 import { db as rootDb } from "@/db";
 import {
@@ -91,6 +92,7 @@ export type BusinessUpdate = Partial<
     | "address"
     | "city"
     | "country"
+    | "countryCode"
     | "phone"
     | "email"
     | "website"
@@ -105,6 +107,11 @@ export async function updateBusiness(ctx: Ctx, patch: BusinessUpdate) {
   assertCan(ctx, "business.manage");
   if (patch.timezone && !isValidTimezone(patch.timezone)) throw invalid(`Unknown timezone "${patch.timezone}".`);
   if (patch.name !== undefined && !patch.name.trim()) throw invalid("Business name is required.");
+  if (patch.countryCode !== undefined && patch.countryCode !== null) {
+    if (!isCountryCode(patch.countryCode)) throw invalid("Please choose a country.");
+    patch = { ...patch, countryCode: patch.countryCode.toUpperCase(), country: patch.country ?? countryName(patch.countryCode) };
+  }
+  if (patch.currency !== undefined && !/^[A-Z]{3}$/.test(patch.currency)) throw invalid("Currency must be a 3-letter code such as USD.");
   if (patch.slotIntervalMinutes !== undefined && (patch.slotIntervalMinutes < 5 || patch.slotIntervalMinutes > 240))
     throw invalid("Slot interval must be between 5 and 240 minutes.");
   const [b] = await dbOf(ctx)

@@ -171,7 +171,7 @@ function BookingForm({
               <Input value={newCustomer.name} onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })} placeholder="Full name" autoFocus />
             </Field>
             <Field label="Phone">
-              <Input value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} placeholder="+971 50 123 4567" inputMode="tel" />
+              <Input value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} placeholder="Mobile number" inputMode="tel" />
             </Field>
             <Field label="Email">
               <Input value={newCustomer.email} onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })} placeholder="name@example.com" type="email" />
