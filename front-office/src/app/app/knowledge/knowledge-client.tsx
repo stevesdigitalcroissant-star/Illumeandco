@@ -10,7 +10,7 @@ import { Notice } from "@/components/ui/misc";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ActionResult } from "@/lib/action";
 import { cn } from "@/lib/utils";
-import { addSourceAction, deleteSourceAction, reindexSourceAction, testRetrievalAction, updateSourceAction } from "./actions";
+import { addSourceAction, uploadDocumentAction, deleteSourceAction, reindexSourceAction, testRetrievalAction, updateSourceAction } from "./actions";
 
 type Faq = { q: string; a: string };
 
@@ -44,8 +44,8 @@ export function FaqEditor({ value, onChange }: { value: Faq[]; onChange: (v: Faq
   );
 }
 
-const TEXT_EXT = /\.(txt|md|markdown|csv|html?)$/i;
-const UNSUPPORTED_EXT = /\.(pdf|docx?|pptx?|xlsx?|rtf|pages)$/i;
+const DOC_EXT = /\.(pdf|docx|txt|md|markdown|csv|html?)$/i;
+const MAX_UPLOAD = 4 * 1024 * 1024;
 
 export function AddSourceDialog() {
   const router = useRouter();
@@ -54,7 +54,7 @@ export function AddSourceDialog() {
   const [state, setState] = useState<ActionResult<unknown> | null>(null);
   const [pending, start] = useTransition();
   const [faqs, setFaqs] = useState<Faq[]>([{ q: "", a: "" }]);
-  const [doc, setDoc] = useState<{ name: string; text: string; html: boolean } | null>(null);
+  const [doc, setDoc] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -66,24 +66,19 @@ export function AddSourceDialog() {
     formRef.current?.reset();
   };
 
-  async function onFile(file: File | undefined) {
+  function onFile(file: File | undefined) {
     setFileError(null);
     setDoc(null);
     if (!file) return;
-    if (UNSUPPORTED_EXT.test(file.name)) {
-      setFileError("PDF and Word files are not supported yet — open the file, copy its text and paste it into the Text tab instead.");
+    if (!DOC_EXT.test(file.name)) {
+      setFileError(/\.doc$/i.test(file.name) ? "Old Word (.doc) files aren't supported — save it as .docx or PDF first." : "Upload a PDF, Word (.docx), .txt, .md, .csv or .html file.");
       return;
     }
-    if (!TEXT_EXT.test(file.name)) {
-      setFileError("Only .txt, .md, .csv and .html files can be uploaded.");
+    if (file.size > MAX_UPLOAD) {
+      setFileError("That file is larger than 4 MB. Split it, or save a smaller PDF.");
       return;
     }
-    if (file.size > 1_000_000) {
-      setFileError("That file is larger than 1 MB. Split it into smaller files.");
-      return;
-    }
-    const text = await file.text();
-    setDoc({ name: file.name, text, html: /\.html?$/i.test(file.name) });
+    setDoc(file);
   }
 
   function submit(fd: FormData) {
@@ -93,15 +88,19 @@ export function AddSourceDialog() {
         ? { kind: "text" as const, title, content: String(fd.get("content") ?? "") }
         : tab === "faq"
           ? { kind: "faq" as const, title: title || "FAQs", faqs }
-          : tab === "document"
-            ? { kind: "document" as const, title: title || doc?.name || "Document", content: doc?.text ?? "", html: doc?.html }
-            : { kind: "url" as const, title, url: String(fd.get("url") ?? "") };
+          : { kind: "url" as const, title, url: String(fd.get("url") ?? "") };
     if (tab === "document" && !doc) {
       setState({ ok: false, error: "Choose a file to upload." });
       return;
     }
     start(async () => {
-      const r = await addSourceAction(payload);
+      let r: ActionResult<unknown>;
+      if (tab === "document") {
+        const up = new FormData();
+        up.set("file", doc!);
+        up.set("title", title);
+        r = await uploadDocumentAction(up);
+      } else r = await addSourceAction(payload);
       setState(r);
       router.refresh();
       if (r.ok) {
@@ -148,11 +147,11 @@ export function AddSourceDialog() {
               <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed bg-surface px-4 py-8 text-center hover:bg-muted">
                 <Upload className="size-5 text-muted-foreground" />
                 <span className="text-sm font-medium">{doc ? doc.name : "Choose a file"}</span>
-                <span className="text-xs text-muted-foreground">{doc ? `${doc.text.length.toLocaleString()} characters read` : ".txt, .md, .csv or .html — up to 1 MB"}</span>
-                <input type="file" className="sr-only" accept=".txt,.md,.markdown,.csv,.html,.htm,.pdf,.doc,.docx" onChange={(e) => onFile(e.target.files?.[0])} />
+                <span className="text-xs text-muted-foreground">{doc ? `${(doc.size / 1024).toFixed(0)} KB — text is read when you add it` : "PDF, Word (.docx), .txt, .md, .csv or .html — up to 4 MB"}</span>
+                <input type="file" className="sr-only" accept=".pdf,.docx,.txt,.md,.markdown,.csv,.html,.htm" onChange={(e) => onFile(e.target.files?.[0])} />
               </label>
               {fileError ? <Notice tone="warning">{fileError}</Notice> : null}
-              <p className="text-xs text-muted-foreground">PDF and Word documents are not supported yet — paste their text into the Text tab instead.</p>
+              <p className="text-xs text-muted-foreground">Price lists, treatment menus, aftercare sheets, policies. Scanned PDFs (photos of pages) have no readable text — paste those into the Text tab.</p>
             </TabsContent>
             <TabsContent value="url" className="pt-0">
               <Field label="Page URL" hint="We fetch this one page now and whenever you re-index it. Only public http(s) pages can be imported.">

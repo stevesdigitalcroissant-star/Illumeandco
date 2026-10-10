@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   // This app lives in a subfolder of a larger repository.
   turbopack: { root: import.meta.dirname },
   serverExternalPackages: ["pg"],
+  // Knowledge document uploads (max 4 MB file, plus multipart overhead; Vercel caps bodies at 4.5 MB).
+  experimental: { serverActions: { bodySizeLimit: "4.4mb" } },
   async headers() {
     return [
       {

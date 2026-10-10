@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { run } from "@/lib/action";
 import { requirePermission } from "@/lib/session";
 import { invalid } from "@/server/context";
+import { extractDocumentText } from "@/server/services/documents";
 import { addSource, deleteSource, formatFaqs, htmlToText, indexSource, searchKnowledge, updateSourceContent } from "@/server/services/knowledge";
 
 type Faq = { q: string; a: string };
@@ -69,4 +70,19 @@ export async function testRetrievalAction(query: string) {
     const hits = await searchKnowledge(ctx, q, 5);
     return hits.map((h) => ({ chunkId: h.chunkId, sourceTitle: h.sourceTitle, content: h.content }));
   });
+}
+
+/** Upload a document (PDF, Word .docx, or text). Text is extracted on the server. */
+export async function uploadDocumentAction(fd: FormData) {
+  return run(async () => {
+    const { ctx } = await requirePermission("business.manage");
+    const file = fd.get("file");
+    if (!(file instanceof File)) throw invalid("Choose a file to upload.");
+    const { text } = await extractDocumentText(file.name, new Uint8Array(await file.arrayBuffer()));
+    const title = String(fd.get("title") ?? "").trim().slice(0, 200) || file.name.replace(/\.[^.]+$/, "").slice(0, 200);
+    const s = await addSource(ctx, { kind: "document", title, content: text.slice(0, 200_000) });
+    revalidatePath("/app/knowledge");
+    if (s.status === "failed") throw invalid(`Saved, but indexing failed: ${s.error ?? "unknown error"}`);
+    return { chunks: s.chunkCount, truncated: text.length > 200_000 };
+  }, "Document added. The AI can use it now.");
 }
